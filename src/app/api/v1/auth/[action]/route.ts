@@ -3,6 +3,7 @@ import { executeAuth } from "@/modules/identity/application/auth-service";
 import { isAuthAction } from "@/modules/identity/domain/auth";
 import { getAuthEnvironment } from "@/modules/identity/infrastructure/environment";
 import { createAuthClient } from "@/modules/identity/infrastructure/supabase-server";
+import { proofCookie,proofCookiePath } from "@/modules/identity/infrastructure/security";
 import { supabaseGateway } from "@/modules/identity/infrastructure/supabase-gateway";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ ac
     const gateway = supabaseGateway(client);
     if (action === "logout" && !await gateway.identity()) return error(401, "UNAUTHENTICATED", "Tu sesión terminó. Inicia sesión de nuevo.");
     const response = await executeAuth(action, input, gateway);
-    return NextResponse.json(response.body, { status: response.status, headers });
+    const result = NextResponse.json(response.body, { status: response.status, headers });
+    if (action === "logout" && response.body.ok) result.cookies.set(proofCookie,"",{httpOnly:true,secure:env.secure,sameSite:"strict",path:proofCookiePath,maxAge:0});
+    return result;
   } catch {
     return error(400, "INVALID_REQUEST", "No se pudo procesar la solicitud. Recarga la página e inténtalo de nuevo.");
   }

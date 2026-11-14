@@ -80,23 +80,13 @@ test("alta completa, revisión, fallo recuperable, persistencia, dashboard y log
 test("edición y conflicto preservan el borrador y no sobrescriben otra pestaña", async ({ page, context }) => {
   await enter(page); await review(page); await page.getByRole("button", { name: "Guardar y continuar" }).click(); await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole("link", { name: "Mi perfil", exact: true }).click();
-  await review(page, "Mi borrador");
-  const current = (await (await context.request.get("/api/v1/profile")).json()).profile;
-  const other = await context.request.post("/api/v1/profile", { headers: { Origin: origin }, data: { displayName: "Otra pestaña", preferredCurrency: "USD", timezone: "UTC", expectedVersion: current.version } });
-  expect(other.status()).toBe(200);
-  const refreshed = page.waitForResponse((response) => new URL(response.url()).pathname === "/onboarding" && response.request().headers()["rsc"] === "1");
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
-  await refreshed;
-  const saveRequest = page.waitForRequest((request) => request.url().endsWith("/api/v1/profile") && request.method() === "POST");
-  await page.getByRole("button", { name: "Guardar y continuar" }).click();
-  expect((await saveRequest).postDataJSON().expectedVersion).toBe(current.version);
-  await expect(page.getByText("Tu perfil cambió en otra pestaña. Revisa la versión guardada antes de continuar.")).toBeVisible();
-  await expect(page.getByText("Mi borrador", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Guardar y continuar" })).toBeDisabled();
-  await page.getByRole("button", { name: "Descartar este borrador y cargar la versión guardada" }).click();
-  await expect(page.getByLabel("Tu nombre", { exact: true })).toHaveValue("Otra pestaña");
-  await review(page, "Nombre definitivo"); await page.getByRole("button", { name: "Guardar y continuar" }).click();
-  await expect(page.getByRole("heading", { name: "Hola, Nombre definitivo." })).toBeVisible();
+  await expect(page).toHaveURL(/\/profile$/);await page.getByLabel("Tu nombre",{exact:true}).fill("Mi borrador");
+  const current=(await(await context.request.get("/api/v1/profile")).json()).profile;
+  expect((await context.request.post("/api/v1/profile",{headers:{Origin:origin},data:{displayName:"Otra pestaña",preferredCurrency:"USD",timezone:"UTC",expectedVersion:current.version}})).status()).toBe(200);
+  const refreshed=page.waitForResponse(r=>new URL(r.url()).pathname==="/profile"&&r.request().headers()["rsc"]==="1");await page.evaluate(()=>window.dispatchEvent(new Event("focus")));await refreshed;
+  const save=page.waitForRequest(r=>r.url().endsWith("/api/v1/profile")&&r.method()==="PATCH");await page.getByRole("button",{name:"Guardar cambios",exact:true}).click();expect((await save).postDataJSON().expectedVersion).toBe(current.version);
+  await expect(page.getByText("Tu perfil cambió en otra pestaña. Revisa la versión guardada antes de continuar.")).toBeVisible();await expect(page.getByLabel("Tu nombre",{exact:true})).toHaveValue("Mi borrador");await expect(page.locator(".settings-conflict")).toContainText("Otra pestaña");await expect(page.getByRole("button",{name:"Guardar cambios",exact:true})).toBeDisabled();
+  await page.getByRole("button",{name:"Descartar este borrador y cargar la versión guardada",exact:true}).click();await expect(page.getByLabel("Tu nombre",{exact:true})).toHaveValue("Otra pestaña");await page.getByLabel("Tu nombre",{exact:true}).fill("Nombre definitivo");await page.getByRole("button",{name:"Guardar cambios",exact:true}).click();await expect(page.getByText("Perfil actualizado.",{exact:true})).toBeVisible();await page.getByRole("link",{name:"Volver a Inicio",exact:true}).click();await expect(page.getByRole("heading",{name:"Hola, Nombre definitivo."})).toBeVisible();
 });
 test("sesión terminada no guarda el perfil y conserva la revisión", async ({ page, context }) => {
   await enter(page); await review(page, "Mi perfil pendiente");

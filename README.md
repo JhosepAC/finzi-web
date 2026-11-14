@@ -1,6 +1,6 @@
 # Finzi
 
-Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos, seis períodos, comparación, evolución y distribución con acceso al historial, separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
+Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding inicial, perfil y seguridad, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos, seis períodos, comparación, evolución y distribución con acceso al historial, separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
 
 ## Ejecutar localmente
 
@@ -27,7 +27,7 @@ Con Supabase local iniciado, aplicar las migraciones pendientes:
 pnpm exec supabase migration up --local
 ```
 
-A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. A-08 añade 20261114001000, RPC de reporting de solo lectura con instantánea coherente. No hay nuevas dependencias, servicios, claves o variables.
+A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. A-08 añade 20261114001000, RPC de reporting de solo lectura con instantánea coherente. A-09 añade 20261114001100, auditoría de preferencias y comprobantes de reautenticación de un solo uso con RLS. No hay nuevas dependencias, servicios, claves o variables.
 
 ## Recorrido actual
 
@@ -45,7 +45,11 @@ Límite inicial compartido: 10000 registros por usuario, incluyendo anulados y r
 
 Inicio permite elegir día, semana (lunes–domingo), mes, trimestre, año y personalizado (hasta 3660 días, terminado hoy o antes). Compara con período anterior completo; rango personalizado con igual cantidad de días. Período en curso y base cero quedan señalados; no inventa porcentajes sin base. Saldo actual se etiqueta aparte de ingresos/gastos/flujo. Evolución muestra cierres diarios o mensuales con tabla exacta y sin saldos anteriores a aperturas. Distribución padre/hijos cuenta cada movimiento una vez. Los accesos desde métricas, categorías, cierres, cuentas y recientes conservan moneda/período al abrir su historial. Filtros/cursor/detalle sobreviven cambios de vista en memoria, sin URL o almacenamiento persistente de búsquedas. Duplicación explícita requiere revisar importe/fecha, usa clave nueva y conserva el original.
 
-Exportación personal, eliminación, perfil/seguridad completos y endurecimiento siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
+Mi perfil abre /profile: formulario directo de nombre, moneda preferida y zona, correo verificado en consulta y español inicial. Cambiar zona avisa que reagrupará días/períodos y exige confirmación; no cambia instantes o saldos. Versión esperada, comparación de conflicto y reintentos conservan borrador; auditoría mínima atómica no duplica el nombre. El onboarding queda para usuarios nuevos; su antiguo enlace de edición lleva a /profile.
+
+/security muestra estado de acceso y permite cambiar contraseña confirmando primero la actual. El servidor emite autorización de cinco minutos, un solo uso, ligada a usuario/sesión/finalidad; secreto solo en cookie HttpOnly y hash privado en BD. Refresh no equivale a volver a verificar contraseña. Tras cambiar se solicita cierre global y nuevo inicio; un resultado incierto no se repite automáticamente. Cierres local/global explican vigencia residual de access tokens. /session conserva acceso compatible de AUTH. No hay administración avanzada de dispositivos, MFA o cambio de correo en este alcance. La autorización adicional protege rutas Finzi; no sustituye políticas del proveedor Auth directo, que deben verificarse antes de publicación.
+
+Exportación personal, eliminación y endurecimiento siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
 
 ## Comprobar
 
@@ -67,7 +71,7 @@ Para comprobar producción, detener desarrollo antes de build/start. Playwright 
 ## Documentación y estado
 
 - [ROADMAP](docs/product/ROADMAP.md) y [avance incremental](IMPLEMENTATION_PROGRESS.md).
-- [Reporting real](docs/development/REAL_REPORTING.md), [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
+- [Perfil y seguridad](docs/development/PROFILE_SECURITY.md), [Reporting real](docs/development/REAL_REPORTING.md), [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
 - [Índice documental](docs/README.md), [decisiones](docs/architecture/DECISIONS.md) y [sistema visual](DESIGN.md).
 
 Se conserva el `.gitignore` original, incluidas docs/, AGENTS.md y carpetas de agentes. Solo docs/product/ROADMAP.md está versionado explícitamente por petición del usuario; los demás documentos ignorados son locales. Nunca incluir `.env`, cachés, capturas o logs con información personal en commits.

@@ -10,8 +10,8 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   if (!identity?.verified) redirect("/login");
   const profile = await readProfile();
   if (!profile) redirect("/login");
-  const editing = Boolean(profile.onboarding_completed_at) && (await searchParams).edit === "1";
-  if (profile.onboarding_completed_at && !editing) redirect("/dashboard");
+  if (profile.onboarding_completed_at) redirect((await searchParams).edit === "1" ? "/profile" : "/dashboard");
+  const editing = false;
   const zones = Array.from(new Set(["America/Lima", "America/Bogota", "UTC", ...Intl.supportedValuesOf("timeZone"), ...(profile.timezone ? [profile.timezone] : [])]));
   return <Onboarding key={profile.user_id} initial={profile} zones={zones} editing={editing} />;
 }
