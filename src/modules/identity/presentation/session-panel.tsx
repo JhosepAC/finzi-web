@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Check, CircleAlert } from "lucide-react";
@@ -23,6 +24,7 @@ export function SessionPanel({ user, confirmed }: { user: AuthIdentity; confirme
   }
   return <>
     <div className="form-heading"><h1>Tu sesión está activa</h1><p>{confirmed ? "Tu correo está confirmado y ya puedes acceder a tu identidad de Finzi." : "Has accedido a tu identidad de Finzi."}</p></div>
+    <Link className="text-link" href="/dashboard">Ir a mi espacio financiero</Link>
     <dl className="identity-details"><div><dt>Correo electrónico</dt><dd>{user.email}</dd></div><div><dt>Estado del correo</dt><dd className="verified"><Check size={16} aria-hidden="true" />Confirmado</dd></div></dl>
     <div className="session-actions"><button className="button button-primary" onClick={() => logout("local")} disabled={Boolean(pending)}><LogOut size={18} aria-hidden="true" />{pending === "local" ? "Cerrando sesión…" : "Cerrar esta sesión"}</button><button className="button button-secondary" onClick={() => logout("global")} disabled={Boolean(pending)}>{pending === "global" ? "Cerrando sesiones…" : "Cerrar en todos los dispositivos"}</button></div>
     <p className="field-hint session-hint">El cierre global impide renovar las otras sesiones. Sus accesos pueden seguir vigentes hasta que expire su token actual.</p>

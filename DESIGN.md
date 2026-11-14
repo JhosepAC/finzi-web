@@ -55,3 +55,11 @@ No se cambian endpoints, cookies, CSP, RLS, migraciones ni flujos de identidad. 
 ## Evidencia
 
 Capturas locales en .impeccable/review/redesign-*.png, revisadas en escritorio, tablet y móvil. La evidencia anterior de tasteskill/Impeccable corresponde a la versión previa; no certifica este rediseño. Esta revisión utiliza frontend-design y las comprobaciones funcionales del proyecto.
+
+## Onboarding y dashboard inicial — A-02
+
+Se conserva la tipografía local y el azul aprobado. Para una tarea secuencial se cambia el panel decorativo por un rail azul claro de 340 px con tres pasos reales: nombre, preferencias y revisión. Contenido de hasta 540 px, selección de moneda como radios nativos con área completa y resumen en lista descriptiva. Móvil usa cabecera compacta y progreso textual de tres segmentos; hasta 360 px las acciones se apilan para evitar texto comprimido. Foco en el título al cambiar de paso y error de nombre corregido al introducir un valor válido.
+
+El dashboard es una bienvenida privada con nombre, preferencias guardadas y ausencia explícita de cuentas/movimientos. No representa indicadores, ceros provisionales o acciones a pantallas inexistentes. Los únicos enlaces operativos son edición del perfil y gestión de sesión.
+
+Capturas de producción en .impeccable/review/onboarding-*.png y dashboard-empty-*.png; pruebas de escritorio, tablet y móvil desde 320 px. La numeración aquí representa el proceso real; no es decoración.

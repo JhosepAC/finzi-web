@@ -1,6 +1,6 @@
 # Finzi · AUTH
 
-Autenticación real en español con Next.js y Supabase. Esta entrega implementa exclusivamente identidad: registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. No incluye módulos financieros ni servicios de pago.
+Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria; el dashboard muestra preferencias reales y un estado vacío. No incluye cuentas, movimientos o servicios de pago.
 
 ## Ejecutar localmente
 
@@ -48,3 +48,11 @@ El `.gitignore` conserva las exclusiones originales del usuario, incluidas `docs
 ## Interfaz AUTH
 
 Rediseño en `feat/auth-ui-redesign`, usando las referencias locales de login y el icono azul con f como logo. Manrope se sirve localmente; su licencia SIL OFL 1.1 está incluida en `src/app/fonts/OFL.txt`. El sistema actual se documenta en [DESIGN.md](DESIGN.md). Los cambios se revisan en esta rama antes de integrar a main.
+
+## Avance por interfaces
+
+[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) registra la secuencia, alcance y aceptación de cada entrega. AUTH está integrado en main; onboarding se desarrolla en `feat/financial-profile-onboarding`.
+
+Después de confirmar el correo, `/onboarding` guía nombre, preferencias y revisión. Guarda en Supabase y abre `/dashboard`. Login posterior retoma la configuración pendiente o entra al inicio. `/onboarding?edit=1` permite editar; `/session` mantiene los cierres. No hay saldos o movimientos de ejemplo.
+
+Migración nueva: `supabase/migrations/20261114000100_profile_onboarding.sql`. Tras actualizar un entorno local existente, aplicar con `pnpm exec supabase migration up --local`; no hace falta resetear ni borrar usuarios. Debe aplicarse también antes de desplegar esta versión en otro entorno. La primera migración AUTH es un prerrequisito. Sin variables adicionales ni dependencias nuevas.

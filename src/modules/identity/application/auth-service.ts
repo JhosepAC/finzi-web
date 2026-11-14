@@ -50,7 +50,7 @@ export async function executeAuth(action: AuthAction, input: unknown, gateway: A
         }
         const profile = await gateway.ensureProfile();
         if (profile.error) { await gateway.logout("local"); return unavailable(); }
-        return success("Sesión iniciada.", "/session");
+        return success("Sesión iniciada.", "/dashboard");
       }
       case "forgot-password": {
         const { error } = await gateway.recover((data as { email: string }).email);
@@ -74,7 +74,7 @@ export async function executeAuth(action: AuthAction, input: unknown, gateway: A
           return success("Enlace verificado.", "/reset-password");
         }
         if ((await gateway.ensureProfile()).error) { await gateway.logout("local"); return unavailable(); }
-        return success("Correo confirmado.", "/session?notice=email-verified");
+        return success("Correo confirmado.", "/onboarding");
       }
       case "reset-password": {
         if (!await gateway.identity() || !await gateway.recoverySession()) return fail(401, "RECOVERY_REQUIRED", "El enlace de recuperación expiró. Solicita uno nuevo.");

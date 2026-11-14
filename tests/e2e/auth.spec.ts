@@ -24,7 +24,8 @@ async function confirm(page: Page, link: string) {
   await page.goto(link);
   await expect(page.getByRole("heading", { name: "Confirma tu correo", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Confirmar correo", exact: true }).click();
-  await expect(page).toHaveURL(/\/session/);
+  await expect(page).toHaveURL(/\/onboarding/);
+  await page.goto("/session");
 }
 
 test.describe("AUTH real con Supabase local", () => {
@@ -68,12 +69,13 @@ test.describe("AUTH real con Supabase local", () => {
     const cookies = (await context.cookies()).filter((c) => c.name.includes("auth-token"));
     expect(cookies.length).toBeGreaterThan(0); expect(cookies.every((c) => c.httpOnly && c.sameSite === "Lax")).toBe(true);
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-    for (const path of ["/login", "/register"]) { await page.goto(path); await expect(page).toHaveURL(/\/session/); }
+    for (const path of ["/login", "/register"]) { await page.goto(path); await expect(page).toHaveURL(/\/onboarding/); }
+    await page.goto("/session");
     const sibling = await context.newPage(); await sibling.goto(`${origin}/session`);
     // A second independent browser session must survive a local-only sign-out.
     const other = await browser.newContext(); const otherPage = await other.newPage();
     await otherPage.goto(`${origin}/login`); await fillCredentials(otherPage, email);
-    await otherPage.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(otherPage).toHaveURL(/\/session/);
+    await otherPage.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(otherPage).toHaveURL(/\/onboarding/); await otherPage.goto(`${origin}/session`);
     await page.getByRole("button", { name: "Cerrar esta sesión", exact: true }).click(); await expect(page).toHaveURL(/\/login\?notice=signed-out/);
     await sibling.bringToFront(); await expect(sibling).toHaveURL(/\/login/); await sibling.close();
     expect((await context.request.get("/api/v1/auth/session")).status()).toBe(401);
@@ -102,7 +104,7 @@ test.describe("AUTH real con Supabase local", () => {
     const email = uniqueEmail(); await confirm(page, await register(page, email));
     // A password-only login does not authorize the recovery endpoint.
     await page.getByRole("button", { name: "Cerrar esta sesión" }).click();
-    await fillCredentials(page, email); await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(page).toHaveURL(/\/session/);
+    await fillCredentials(page, email); await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(page).toHaveURL(/\/onboarding/); await page.goto("/session");
     const denied = await page.request.post("/api/v1/auth/reset-password", { headers: { Origin: origin }, data: { password: "nueva frase de prueba 91", confirmPassword: "nueva frase de prueba 91" } }); expect(denied.status()).toBe(401);
     await page.getByRole("button", { name: "Cerrar esta sesión" }).click();
     await page.goto("/forgot-password"); await page.getByLabel("Correo electrónico").fill(email);
@@ -115,7 +117,7 @@ test.describe("AUTH real con Supabase local", () => {
     const newer = "una nueva frase de acceso finzi 82";
     await page.getByLabel("Nueva contraseña", { exact: true }).fill(newer); await page.getByLabel("Confirmar contraseña").fill(newer);
     await page.getByRole("button", { name: "Guardar contraseña" }).click(); await expect(page).toHaveURL(/\/login\?notice=password-updated/);
-    await fillCredentials(page, email, newer); await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(page).toHaveURL(/\/session/);
+    await fillCredentials(page, email, newer); await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click(); await expect(page).toHaveURL(/\/onboarding/); await page.goto("/session");
     await page.getByRole("button", { name: "Cerrar esta sesión" }).click();
     await page.goto(link); await page.getByRole("button", { name: "Continuar recuperación" }).click();
     await expect(page.getByText("Este enlace no es válido o ya expiró. Solicita uno nuevo.")).toBeVisible();

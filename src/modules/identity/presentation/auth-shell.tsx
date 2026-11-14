@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-function FinziMark() {
+export function FinziMark() {
   return <svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="10" fill="#1d4ed8" /><path d="M17 35V18c0-6 3-9 9-9h6v6h-5c-3 0-4 1-4 4v2h9v6h-9v8z" fill="white" /></svg>;
 }
 

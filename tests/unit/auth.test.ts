@@ -59,7 +59,7 @@ describe("casos de uso AUTH", () => {
   });
   it("login exige sesión verificada y perfil propio", async () => {
     const g = gateway(); const r = await executeAuth("login", { email: user.email, password }, g);
-    expect(r.status).toBe(200); expect(r.body.redirectTo).toBe("/session"); expect(g.identity).toHaveBeenCalledOnce(); expect(g.ensureProfile).toHaveBeenCalledOnce();
+    expect(r.status).toBe(200); expect(r.body.redirectTo).toBe("/dashboard"); expect(g.identity).toHaveBeenCalledOnce(); expect(g.ensureProfile).toHaveBeenCalledOnce();
   });
   it.each(["invalid_credentials", "email_not_confirmed", "user_not_found"])("no enumera cuentas con %s", async (error) => {
     const r = await executeAuth("login", { email: user.email, password }, gateway({ login: async () => ({ error }) }));
@@ -90,7 +90,7 @@ describe("casos de uso AUTH", () => {
   });
   it("confirmación válida da acceso a la identidad", async () => {
     const g = gateway(); const r = await executeAuth("verify", { tokenHash: "a".repeat(64), type: "signup" }, g);
-    expect(r.body.redirectTo).toBe("/session?notice=email-verified"); expect(g.ensureProfile).toHaveBeenCalledOnce();
+    expect(r.body.redirectTo).toBe("/onboarding"); expect(g.ensureProfile).toHaveBeenCalledOnce();
   });
   it("recuperación verificada abre exclusivamente el formulario de cambio", async () => {
     const g = gateway(); const r = await executeAuth("verify", { tokenHash: "a".repeat(64), type: "recovery" }, g);
