@@ -1,0 +1,11 @@
+import { describe, expect, it } from "vitest";
+import { createMovementSchema, postTransferSchema, replaceMovementSchema, movementDetailQuerySchema, movementQuerySchema } from "../../src/modules/transactions/domain/movement";
+const transfer = { requestId: crypto.randomUUID(), kind: "transfer", accountId: crypto.randomUUID(), destinationId: crypto.randomUUID(), amount: "0,10", description: " Entre cuentas ", note: "", occurredAt: null };
+const correction = { ...transfer, id: crypto.randomUUID(), expectedVersion: 1, reason: " Revisión del comprobante " };
+describe("contrato de transferencias y reemplazos", () => {
+  it("normaliza dinero exacto y motivo, sin aceptar moneda o dueño del cliente", () => { expect(postTransferSchema.parse(transfer)).toMatchObject({ amount: "0.10", description: "Entre cuentas" }); expect(replaceMovementSchema.parse(correction).reason).toBe("Revisión del comprobante"); });
+  it.each([{ destinationId: transfer.accountId }, { destinationId: "" }, { categoryId: crypto.randomUUID() }, { currency: "USD" }, { user_id: crypto.randomUUID() }, { amount: "1.001" }, { amount: "-1" }])("rechaza transferencia manipulada %j", (change) => { expect(createMovementSchema.safeParse({ ...transfer, ...change }).success).toBe(false); });
+  it.each([{ id: undefined }, { reason: " " }, { reason: "x".repeat(301) }, { expectedVersion: 0 }, { replaces_id: crypto.randomUUID() }])("rechaza corrección incompleta %j", (change) => { expect(replaceMovementSchema.safeParse({ ...correction, ...change }).success).toBe(false); });
+  it("corrige a ingreso/gasto con categoría y sin destino", () => { const { destinationId: _destination, ...input } = correction; void _destination; expect(replaceMovementSchema.parse({ ...input, kind: "expense", categoryId: crypto.randomUUID() }).kind).toBe("expense"); expect(replaceMovementSchema.safeParse({ ...correction, kind: "expense", categoryId: crypto.randomUUID() }).success).toBe(false); });
+  it("filtro de transferencia/reemplazados y detalle son contratos distintos", () => { expect(movementQuerySchema.parse({ kind: "transfer", status: "replaced" })).toMatchObject({ kind: "transfer", status: "replaced" }); expect(movementDetailQuerySchema.safeParse({ id: correction.id, currency: "PEN" }).success).toBe(false); });
+});

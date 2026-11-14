@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-06 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-07 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -12,7 +12,7 @@ Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 4 | Cuentas y saldos iniciales | Implementado — A-04, feat/accounts-and-opening-balances | Alta, listado, edición, archivo/restauración, aperturas exactas y totales por moneda; RPC, RLS, reintentos y concurrencia probados localmente |
 | 5 | Categorías propias | Implementado — A-05, feat/personal-categories | Ingreso/gasto, dos niveles, personalización, plantillas propias opcionales, búsqueda y archivo efectivo; RLS, concurrencia y reintentos probados |
 | 6 | Ingresos y gastos reales | Implementado — A-06, feat/real-income-expenses | Formulario inline, historial paginado, filtros, partidas firmadas, anulación con motivo, RLS/idempotencia/atomicidad y apertura bloqueada con cualquier historia |
-| 7 | Transferencias y reemplazos trazables | Siguiente entrega | Misma moneda, partidas atómicas, reemplazos trazables; transferencias nunca son ingreso/gasto |
+| 7 | Transferencias y reemplazos trazables | Implementado — A-07, feat/transfers-and-replacements | Formulario inline con ambos saldos, anulación atómica, corrección con motivo/versión y cadena navegable fuera de filtros; transferencias excluidas del flujo |
 | 8 | Historial e Inicio sobre movimientos reales | Parcial | Saldos, resumen mensual y filtros reales de ingreso/gasto disponibles; series/comparaciones y demás períodos siguen pendientes |
 | 9 | Perfil y seguridad completos | Parcial | Preferencias y cierres disponibles; reautenticación y estados pendientes; dispositivos avanzados diferidos |
 | 10 | Exportación y eliminación | Pendiente | JSON/CSV reales, confirmación, reautenticación, retención y borrado acordados; sin exportación de muestra, retirada en A-06 |
@@ -32,7 +32,7 @@ Ver [contrato y validación de cuentas](../development/ACCOUNTS.md). Desde A-06 
 
 ## Puertas de las próximas entregas
 
-1. Siguiente entrega: transferencias de la misma moneda y correcciones por reemplazo. Especificar operación, referencia anterior y permisos; ampliar la validación de conjunto de partidas y probar rollback, reintentos y concurrencia antes de habilitar escrituras.
+1. Siguiente entrega: completar el paso 8, historial e Inicio sobre movimientos reales. Las transferencias y los reemplazos de A-07 ya están incluidos en saldos, recientes, filtros y detalle; quedan series, comparaciones y otros períodos, sin añadir productos financieros diferidos.
 2. Ledger: precisión, aislamiento A/B con roles efectivos, atomicidad, concurrencia y reintentos reales. Saldos reconstruibles y correcciones por reemplazo. Coordinar bloqueos de cuenta, categoría/ancestro y perfil con los comandos existentes; impedir aperturas editables con cualquier historia.
 3. MVP: métricas reconciliadas, exportación/eliminación, accesibilidad y recuperación comprobadas antes del piloto.
 4. Lanzamiento: resolver los pendientes N-01–N-06 del [registro de decisiones](../architecture/DECISIONS.md), sin comprometer costes o disponibilidad no garantizada.
@@ -60,3 +60,16 @@ Ingreso/gasto, partida firmada, auditoría e idempotencia se confirman juntos. F
 Concreciones técnicas revisables: hasta 10000 movimientos por usuario incluyendo anulados, páginas de 25 (máximo 50), rango de saldo actual por cuenta de ±9999999999999999.99. La selección manual de horas ambiguas por DST se rechaza; Ahora usa un instante inequívoco del servidor. Sin transferencias, reemplazos, exportación completa o análisis avanzados por anticipado. Sin nuevas dependencias, servicios o costes.
 
 Validación funcional: 133 unitarias, 80 integración real y 37 E2E de producción, 250 en total; TypeScript, ESLint y build. Capturas de Inicio/historial/formulario a 320/390/768/1024/1440 px. Ver [contrato](../development/MOVEMENTS.md) y [registro](../../IMPLEMENTATION_PROGRESS.md) para límites de la revisión de diseño y pendientes de lanzamiento.
+
+
+## Entrega A-07: transferencias y reemplazos trazables — fase 7
+
+Autorización expresa del usuario para toda la fase 7, manteniendo formulario dentro de la página y el sistema visual Finzi. Transferencia entre cuentas propias activas, distintas y de la misma moneda; sin categoría/FX. Dos partidas opuestas, auditoría e idempotencia atómicas. Fecha no futura y posterior o igual a ambas aperturas. Aviso de saldo negativo, no bloqueo. Previsualización de ambos saldos; lectura actualizada antes de abrir el formulario. Se conserva el total de la moneda, incluidas cuentas archivadas; transferencias fuera de ingresos/gastos incluso con filtro de una sola cuenta. Anulación retira ambas partidas del cálculo, conservándolas.
+
+Corregir abre el original y el formulario inline: tipo, origen/destino, importe, categoría, descripción, nota y fecha; motivo obligatorio y revisión explícita. Versión esperada, anulación original, nuevo registro, partidas, vínculo y eventos confirman juntos. Un único sucesor, cadena sin ciclos y sin reescribir historia. Si no se edita la fecha, conserva el instante exacto. Las referencias archivadas exigen selección activa para el reemplazo. Cambiar una moneda equivocada es corrección explícita de registros, sin convertir dinero.
+
+Historial distingue Vigente, Anulado y Reemplazado, filtra transferencias/reemplazados y recorre anterior/sucesor independientemente de filtros o paginación. Inicio integra transferencias recientes sin sumarlas al flujo. Reintentos con clave estable incluso después de anular o volver a corregir; pérdida de confirmación conserva campos, conflicto retiene borrador y exige actualizar. Fallos de partidas/auditoría revierten toda la operación. El límite de 10000 incluye reemplazos: alcanzar cuota rechaza una corrección nueva sin anular el original; un reintento previo sigue permitido.
+
+Migraciones aditivas 20261114000800/00900 aplicadas solo al entorno local. No se añaden dependencias, costes, servicios, secretos o variables. Sin publicación, push o fusión a main. Siguiente puerta: completar paso 8; N-01–N-06 mantienen sus hitos de lanzamiento.
+
+Validación: 148 unitarias, 105 integración real y 43 E2E de producción aprobadas (296 total); revalidación final proporcional de 13 E2E de Movimientos/fase7 también aprobada. Dos capturas nuevas inspeccionadas por finish-reviewer fresco: escritorio de transferencia y móvil de corrección, disposición ship sin ajustes materiales. Anchos 320/390/768/1024/1440 y teclado comprobados funcionalmente; sin nuevas imágenes de producto. [Contrato](../development/TRANSFERS_REPLACEMENTS.md) y [evidencia](../../IMPLEMENTATION_PROGRESS.md).

@@ -1,6 +1,6 @@
 # Finzi
 
-Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding, cuentas personales, categorías propias e **ingresos/gastos reales**. Inicio muestra saldos reconstruidos y resumen mensual separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
+Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos y resumen mensual separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
 
 ## Ejecutar localmente
 
@@ -27,17 +27,23 @@ Con Supabase local iniciado, aplicar las migraciones pendientes:
 pnpm exec supabase migration up --local
 ```
 
-A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. No hay nuevas dependencias, servicios, claves o variables.
+A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. No hay nuevas dependencias, servicios, claves o variables.
 
 ## Recorrido actual
 
 Crear identidad → confirmar correo → configurar nombre/PEN/USD/zona → Inicio. Crear cuenta con moneda y saldo inicial; organizar categorías propias, opcionalmente copiar categorías iniciales; abrir Movimientos y registrar ingresos/gastos desde un formulario dentro de la página. Solo cuentas/categorías propias y activas; importes positivos y exactos; fecha ya ocurrida y no anterior a apertura.
 
-El historial permite búsqueda, filtros, detalle y paginación. Los totales corresponden al filtro completo y excluyen anulados/aperturas. Anular exige motivo y conserva el rastro. La apertura queda bloqueada con cualquier historia, incluida anulación. Archivo de cuentas/categorías conserva información; no habilita nuevos registros sobre referencias inactivas.
+El historial permite búsqueda, filtros, detalle y paginación. Los totales corresponden al filtro completo y excluyen anulados, reemplazados, aperturas y transferencias. Anular exige motivo y conserva el rastro. La apertura queda bloqueada con cualquier historia, incluida anulación. Archivo de cuentas/categorías conserva información; no habilita nuevos registros sobre referencias inactivas.
 
 Ingreso/gasto, partida firmada y auditoría se confirman atómicamente; los reintentos no duplican operaciones, incluso tras perder la respuesta. RLS, FKs propias, control de versiones y bloqueos coordinados protegen aislamiento y concurrencia. Nunca se suman PEN y USD entre sí ni se convierte moneda automáticamente.
 
-Transferencias, correcciones mediante reemplazo, análisis completos, exportación personal y eliminación siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). No se publican botones para estas capacidades. La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
+Transferir mueve dinero entre dos cuentas propias, activas y distintas de la misma moneda. La interfaz anticipa ambos saldos y advierte negativos; dos partidas opuestas se confirman juntas. El flujo neto excluye transferencias incluso al filtrar una sola cuenta. Anular una transferencia retira ambos efectos al mismo tiempo.
+
+Corregir permite cambiar tipo, cuentas, importe, categoría, descripción, nota y fecha; exige motivo, revisión y versión vigente. Anula el original y publica su reemplazo en una sola transacción. El original y sus partidas permanecen intactos; cada registro admite un sucesor y cada sucesor puede corregirse. Ver trazabilidad recorre registros anteriores/reemplazos aunque estén fuera del filtro o página. Una fecha que no se edita conserva su instante exacto. No hay FX: corregir una moneda equivocada retira un registro y crea otro explícitamente en la cuenta elegida.
+
+Límite inicial compartido: 10000 registros por usuario, incluyendo anulados y reemplazos. Al llegar al límite, una corrección nueva se rechaza sin anular el original; los reintentos ya confirmados siguen funcionando. Cuentas/categorías archivadas se conservan en la historia; para corregir hay que seleccionar referencias activas.
+
+Análisis completos, exportación personal y eliminación siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
 
 ## Comprobar
 
@@ -59,7 +65,7 @@ Para comprobar producción, detener desarrollo antes de build/start. Playwright 
 ## Documentación y estado
 
 - [ROADMAP](docs/product/ROADMAP.md) y [avance incremental](IMPLEMENTATION_PROGRESS.md).
-- [Contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
+- [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
 - [Índice documental](docs/README.md), [decisiones](docs/architecture/DECISIONS.md) y [sistema visual](DESIGN.md).
 
 Se conserva el `.gitignore` original, incluidas docs/, AGENTS.md y carpetas de agentes. Solo docs/product/ROADMAP.md está versionado explícitamente por petición del usuario; los demás documentos ignorados son locales. Nunca incluir `.env`, cachés, capturas o logs con información personal en commits.
