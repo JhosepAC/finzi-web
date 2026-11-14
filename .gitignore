@@ -1,0 +1,43 @@
+# Agents
+.agents/
+.codex/
+.impeccable/
+skills-lock.json
+docs/
+AGENTS.md
+PRODUCT.md
+
+# Dependencies and framework output
+node_modules/
+.pnpm-store/
+.next/
+out/
+build/
+*.tsbuildinfo
+.node-version
+
+# Environment and credentials (commit the blank example only)
+.env*
+!.env.example
+*.pem
+*.key
+
+# Test and design-check output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.taste-skill/
+shots/
+
+# Local Supabase state
+supabase/.temp/
+supabase/.branches/
+
+# Logs and operating system
+*.log
+.DS_Store
+Thumbs.db
+
+# IDEA
+.idea/
