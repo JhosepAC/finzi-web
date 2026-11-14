@@ -8,11 +8,11 @@ Registro incremental. Actualización: 14 de noviembre de 2026. Cada entrega sigu
 | --- | --- | --- | --- |
 | 1 | AUTH y rediseño | Integrada en main (345dea9) | Registro, correo, recuperación, sesión y cierres reales; diseño responsive probado |
 | 2 | Onboarding del perfil financiero | Implementada en feat/financial-profile-onboarding | Nombre, PEN/USD, zona horaria e idioma español persistidos por usuario; revisar antes de guardar; reintentos y aislamiento probados |
-| 3 | Inicio del dashboard | Interfaz y muestra opt-in implementadas (A-03) | Entrada privada, modo de prueba identificado, cálculos exactos, filtros y formularios simulados; sin datos ficticios en cuentas reales |
+| 3 | Inicio del dashboard | Inicio real A-06; muestra A-03 retirada | Entrada privada, modo de prueba identificado, cálculos exactos, filtros y formularios simulados; sin datos ficticios en cuentas reales |
 | 4 | Primera cuenta y listado de cuentas | Implementada — A-04 | Tipo personal, moneda, apertura exacta, RLS, edición/archivo; no integración bancaria |
 | 5 | Categorías | Implementada — A-05 | Ingreso/gasto y jerarquía propia, archivo y aislamiento |
-| 6 | Ingreso y gasto | Pendiente | Dinero exacto, fecha/zona, publicación atómica e idempotencia |
-| 7 | Transferencias y correcciones | Pendiente | Una moneda, partidas firmadas, reemplazos y rollback/concurrencia |
+| 6 | Ingreso y gasto | Implementada — A-06 | Dinero exacto, fecha/zona, publicación atómica e idempotencia |
+| 7 | Transferencias y reemplazos trazables | Siguiente entrega | Una moneda, partidas firmadas, reemplazos y rollback/concurrencia |
 | 8 | Historial y dashboard financiero | Pendiente de datos/reglas reales | Filtros, períodos y métricas reconciliadas por moneda; vacío distinto de error |
 | 9 | Perfil y seguridad completos | Parcial | Editar preferencias propias y cierres; administración avanzada de dispositivos diferida |
 | 10 | Exportación y eliminación | Pendiente | JSON/CSV, reautenticación, retención y proceso de borrado acordados |
@@ -122,3 +122,66 @@ Alcance: categorías propias reales y plantillas opcionales por usuario, ingreso
 Resultado A-05: categorías propias implementadas con migración aditiva aplicada localmente. Sin servicios, variables o dependencias nuevas. Se retiraron las clases pedidas, sus estilos y la entrada de simulación del onboarding; Abrir simulación solo en sidebar/menú móvil. Categorías sale de la muestra antes de operar datos reales.
 
 Validación: 129 unitarias, 57 integración y 32 E2E (218 en total). Se probaron creación/personalización, respuesta perdida y reintento, jerarquía y nombres, archivo del padre/individual, restauración, conflictos, sesión expirada, lectura fallida, aislamiento A/B, rol efectivo, cuota concurrente y rollback completo de inicialización. Capturas de lista/dialog a 320/390/768/1440 px. Revisión visual ajustó contraste de hijas y estado sin categorías activas. TypeScript, ESLint y build de producción correctos. Siguiente entrega: ingresos y gastos reales, con las puertas SQL de cuentas/categorías documentadas. Sin push, fusión de main o despliegue.
+
+
+## A-06 — Ingresos/gastos reales y retirada total de simulación
+
+Autorización explícita: eliminar toda simulación y avanzar con ingresos/gastos reales. Preferencia del usuario confirmada: «Formulario dentro de la página». Rama feat/real-income-expenses, basada en 7de41bc. Operate, extensión de la identidad Finzi, sin nueva marca o imágenes decorativas.
+
+Plan: historial paginado con filtros y formulario inline desplegable; el tipo en selección nativa, importe en moneda de cuenta y vista previa del efecto. Mantener Manrope, azul #1D4ED8, fondo #F4F7FC, tinta #152343 y semántica verde #16765A/gasto #B5473D. Sidebar, encabezado y bordes alineados; móvil apila filtros, formulario y filas. Comparada con formulario modal, se elige la composición dentro de página por preferencia expresa. Copia de tarea directa: Registrar ingreso / Registrar gasto, sin cifras ficticias.
+
+Frontera financiera: movimiento+partida firmada+auditoría+clave propia atómicos, importes exactos y positivos, PEN/USD separados, fecha UTC no futura ni anterior a apertura, categoría/cuenta propias y activas (incluye padre), saldos reconstruidos. Serialización por perfil antes de cuentas/categorías para coordinar archivo y apertura. Apertura bloqueada con cualquier historia, incluida anulación. Anulación explícita con motivo, sin borrar partidas o reabrir apertura; reemplazos y transferencias siguen posteriores. Límite técnico inicial revisable: 10000 movimientos por usuario, incluyendo anulados; página máxima 50. No nuevas dependencias o servicios.
+
+
+### Verificación de diseño A-06 — alcance y límites
+
+GATE: OPEN 22 (rounds used up). El gate de design-taste-frontend se ejecutó sobre /dashboard con un navegador sin sesión y fue redirigido al login. No certifica el ledger privado. Se conservaron sus 22 hallazgos abiertos, sin waivers ni cambios para ocultarlos. El script de layout no pudo ejecutarse: no Chrome found (set CHROME_PATH). No se declara aprobación de layout/perf de esa herramienta para la pantalla financiera.
+
+La identidad y el sistema Finzi existentes se mantienen: Manrope local, azul aprobado, logo de pestaña. Modo Operate, formulario dentro de página confirmado por el usuario, sin hero promocional, efectos o activos raster nuevos. Voz: español directo de tarea, términos estables cuenta/categoría/ingreso/gasto, sin hechos comerciales inventados. No hay fotos, contactos, nombres nuevos o precios supuestos. El sistema visual existente se preserva; no se reparan sidecars de skills no solicitados.
+
+Los 7 WARN del gate se conservaron: copy-buttons, copy-actions, section-gaps, link-styles y empty-area entre los identificados por la salida; corresponden al login inspeccionado. Ver el registro local .taste-skill/gate.json para el resultado completo de la herramienta. La verificación autenticada se realiza con E2E real y revisión visual independiente, con sus alcances propios.
+
+| # | Check abierto | Elemento inspeccionado | Hallazgo del gate |
+| --- | --- | --- | --- |
+| 1 | hero-fill | main#main > div.auth-content > header.auth-header "¿Primera vez en Finzi? Crear cuenta" | the next section shows on the first screen: it starts at 66px on a 900px screen (the hero ends at 866px) |
+| 2 | flush | main#main > aside.auth-intro > p.intro-foot "Siempre gratis. Sin publicidad." | aside.auth-intro and header.auth-header run together: -760px between their content, on one ground |
+| 3 | cta | main#main > aside.auth-intro | the hero has no button (the nav's does not count) |
+| 4 | copy-headline | div.auth-content > div.auth-task > div.form-heading > h1 "Iniciar sesión" | "Iniciar sesión" does not name what is sold (finanzas personales, finanzas, personales, from flags) |
+| 5 | copy-fact | div.auth-content > div.auth-task > div.form-heading > h1 "Iniciar sesión" | the first screen holds no number, price, date, place, platform or genre |
+| 6 | tilt | main#main > aside.auth-intro > div.brand-art > svg | rotated -11.0° |
+| 7 | focus-ring | .setup-main h1:focus | ".setup-main h1:focus" in 154i62c0ox6dd.css removes the focus outline and sets nothing in its place |
+| 8 | focus-ring | .home-title-row h1:focus | ".home-title-row h1:focus" in 154i62c0ox6dd.css removes the focus outline and sets nothing in its place |
+| 9 | moment-none | (the page) | a software page (--type) deals no moment: every kind carries one, two on a long page (moments.md) |
+| 10 | hero-screen | main#main > aside.auth-intro "finziDale espacioa tus finanzas.Un comie" | the hero ends at 866px on a 900px screen, 34px above the fold: it ends at the fold, 1px either way (SR-1) |
+| 11 | hero-screen | main#main > div.auth-content "finzi¿Primera vez en Finzi?Crear cuentaI" | 866px of the next section shows on the first screen (from 34px on a 900px screen): nothing below the hero shows at load (SR-1) |
+| 12 | section-height | main#main > div.auth-content "finzi¿Primera vez en Finzi?Crear cuentaI" | the section is 832px tall (0.9 screens), 68px short of one screen (900px): every section after the hero is one screen or two, 2px either way (SR-2) |
+| 13 | one-section | div.auth-content > div.auth-task > div.form-heading > h1 "Iniciar sesión" | the screen at scroll 0px (stride 0) shows 832px of section 2 and the heading of section 2 whole and the content of 2 sections, over 24px each beside section 1: a screen shows one section (another may peek 8px, 24px WARN) (SR-4) |
+| 14 | one-section | main#main > aside.auth-intro "finziDale espacioa tus finanzas.Un comie" | a <aside> sits directly in <main>: every part of <main> is a <section> (SR-4) |
+| 15 | one-heading | div.auth-content > div.auth-task > div.form-heading > h1 "Iniciar sesión" | headings of two sections show whole on one screen at 1 of 1 scroll positions (100%; at scroll 0px), here with "Dale espacioa tus finanzas.": at most 3% on a desktop (SR-5) |
+| 16 | container-edges | div.auth-page "Saltar al contenidofinziDale espacioa tu" | a <div> at the top of the page, outside header.nav, main, footer.closing and nav.actionbar (SR-6) |
+| 17 | container-edges | main#main > aside.auth-intro "finziDale espacioa tus finanzas.Un comie" | the section needs exactly one in-flow child .wrap (it has 4 in-flow children, 0 .wrap) (SR-6) |
+| 18 | container-edges | main#main > div.auth-content "finzi¿Primera vez en Finzi?Crear cuentaI" | the section needs exactly one in-flow child .wrap (it has 3 in-flow children, 0 .wrap) (SR-6) |
+| 19 | container-edges | div.auth-content > header.auth-header > nav > span "¿Primera vez en Finzi?" | 1 text block starts on a left line at x 1152, 1152px from the container's left: text starts on the container's left, or on one split line (x 610, 732, 854) (SR-6) |
+| 20 | container-edges | div.auth-content > div.auth-task > div.form-bottom > p "¿Todavía no tienes cuenta? Crear cuenta" | 1 text block starts on a left line at x 939, 939px from the container's left: text starts on the container's left, or on one split line (x 610, 732, 854) (SR-6) |
+| 21 | container-edges | div.auth-content > div.auth-task > div.form-heading > h1 "Iniciar sesión" | 4 text blocks start on a left line at x 863, 863px from the container's left: text starts on the container's left, or on one split line (x 610, 732, 854) (also "Escribe tus datos para entrar a ", "Correo electrónico", "Contraseña") (and 2 more like it: "Iniciar sesión", x 76) (SR-6) |
+| 22 | text-only | main#main > div.auth-content > div.auth-task "Iniciar sesión" | the closing section is only text: no picture, icon, mock or effect in it |
+
+
+### Resultado A-06
+
+Implementado y validado localmente. 133 pruebas unitarias, 80 integración y 37 E2E de producción aprobadas (250 total). Después de añadir verificación de foco de fecha servidor, se corrigió el foco para ejecutarse tras reactivar campos y se repitieron los tres escenarios afectados, también aprobados. TypeScript, ESLint y build de producción correctos. Las regresiones de Categorías/onboarding vistas con servidor de desarrollo no se reprodujeron en producción; la suite completa pasa sin ampliar timeouts. El recorrido de sesión expirada de Cuentas se ajustó a la nueva entrada de primera cuenta.
+
+Revisión visual independiente de Impeccable: disposition ship, cinco secciones completas, sin correcciones materiales en el alcance inspeccionado. 19 capturas válidas: Inicio/historial/formulario a 1440/1024/768/390/320 px y cuatro estados complementarios (fecha inválida, guardado incierto, lectura fallida y anulación) a 1280. Se validaron capturas desde el inicio del documento para evitar artefactos de screenshot en elementos sticky/fixed. La revisión no es una auditoría de seguridad o certificación de rendimiento.
+
+Se conserva DESIGN.md y el sistema Finzi por ser extensión Operate; ningún activo raster nuevo. Registro local del contrato en .impeccable/surfaces/src-app-dashboard-page-tsx.md. El gate genérico queda OPEN 22 con el alcance de login y las limitaciones descritas arriba, sin waivers; no se presenta como aprobado. Simulación retirada del producto, incluyendo modelo, fixtures, acceso, formularios y exportación. Transferencias y reemplazos siguen pendientes. Sin dependencias, servicios, claves, costes, push o fusión a main.
+
+
+WARN conservados del gate (login):
+
+- copy-buttons: div.auth-content > div.auth-task > form.auth-form > button.button.button-primary "Iniciar sesión" — "Iniciar sesión" does not start with a verb (book, buy, try, start, get, see...) Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- copy-actions: (the page) — the main action "Registrar movimiento" does not read word for word the same in the nav or hero and the closing section Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- section-gaps: main#main > aside.auth-intro / main#main > div.auth-content > header.auth-header — the sections overlap by 760px Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- link-styles: main#main > aside.auth-intro > a.wordmark "finzi" — text links in 3 looks: no line, bold (1, like "finzi"); underline, bold (2, like "¿Olvidaste tu contra"); underline, regular (1, like "Reenviar correo de c") Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- empty-area: main#main > div.auth-content "Iniciar sesión" — 42% of the section is empty: 112px of empty rows between its content, 29% beside content that covers under half the container, in its 832px of rows (WARN over 35%, FAIL over 50%) Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- share-meta: head — the head lacks og:image: a shared link shows no picture or title of its own Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.
+- link-styles: main#main > div.auth-content > header.auth-header > a.wordmark.mobile-brand "finzi" — text links in 3 looks: no line, bold (1, like "finzi"); underline, bold (2, like "¿Olvidaste tu contra"); underline, regular (1, like "Reenviar correo de c") Motivo de conservación: login heredado fuera del alcance de la interfaz financiera actual.

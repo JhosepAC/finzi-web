@@ -11,6 +11,7 @@ async function enter(page: Page) {
   await page.getByLabel("Tu nombre", { exact: true }).fill("Andrea"); await page.getByRole("button", { name: "Continuar", exact: true }).click(); await page.getByRole("button", { name: "Continuar", exact: true }).click(); await page.getByRole("button", { name: "Guardar y continuar" }).click(); await expect(page).toHaveURL(/\/dashboard$/);
 }
 async function create(page: Page, name: string, amount: string, currency = "PEN") {
+  await page.locator(".home-sidebar").getByRole("button", { name: "Cuentas", exact: true }).click();
   await page.getByRole("button", { name: "Añadir cuenta", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Crear cuenta financiera" });
   await dialog.getByLabel("Nombre de la cuenta").fill(name); await dialog.getByLabel("Moneda", { exact: true }).selectOption(currency); await dialog.getByLabel(`Saldo inicial en ${currency}`).fill(amount); await dialog.getByRole("button", { name: "Guardar cuenta", exact: true }).click(); await expect(dialog).not.toBeVisible();
@@ -53,7 +54,7 @@ test("cuentas reales: confirmación incierta, reintento, persistencia, PEN/USD y
   expect((await (await context.request.get("/api/v1/accounts")).json()).accounts).toHaveLength(1);
   await create(page, "Dólares", "200.25", "USD");
   await expect(page.locator(".real-balances")).toContainText("S/ 1,250.10"); await expect(page.locator(".real-balances")).toContainText("US$ 200.25");
-  await page.reload(); await expect(page.getByRole("heading", { name: "Diario", exact: true })).toBeVisible();
+  await page.reload(); await page.locator(".home-sidebar").getByRole("button", { name: "Cuentas", exact: true }).click(); await expect(page.getByRole("heading", { name: "Diario", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar cuenta Diario", exact: true }).click(); const edit = page.getByRole("dialog", { name: "Editar cuenta", exact: true });
   await expect(edit.getByLabel("Moneda", { exact: true })).toBeDisabled(); await expect(edit.getByLabel("Tipo de cuenta")).toBeDisabled();
   await edit.getByLabel("Nombre de la cuenta").fill("Diario corregido"); await edit.getByLabel("Saldo inicial en PEN").fill("-10.50"); await edit.getByRole("checkbox", { name: /Cuenta archivada/ }).check();
@@ -66,7 +67,7 @@ test("cuentas reales: confirmación incierta, reintento, persistencia, PEN/USD y
   expect(accounts).toHaveLength(2); expect(accounts.find((a: { name: string }) => a.name === "Diario corregido").status).toBe("active");
   for (const width of [1440, 768, 390, 320]) { await page.setViewportSize({ width, height: width > 767 ? 1000 : 844 }); await page.evaluate(() => document.fonts.ready); await page.evaluate(() => window.scrollTo(0, 0)); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.screenshot({ path: `.impeccable/review/real-accounts-${width}.png`, fullPage: true }); }
 });
-test("conflicto entre pestañas conserva el borrador y la muestra no reemplaza cuentas reales", async ({ page, context }) => {
+test("conflicto entre pestañas conserva el borrador y actualiza saldos reales", async ({ page, context }) => {
   await enter(page); await create(page, "Ahorros", "100");
   await page.getByRole("button", { name: "Editar cuenta Ahorros", exact: true }).click(); const edit = page.getByRole("dialog", { name: "Editar cuenta", exact: true });
   await edit.getByLabel("Nombre de la cuenta").fill("Mi borrador");
@@ -75,11 +76,10 @@ test("conflicto entre pestañas conserva el borrador y la muestra no reemplaza c
   await edit.getByRole("button", { name: "Guardar cambios" }).click(); await expect(edit.getByText("La cuenta cambió o este intento ya se utilizó. Actualiza las cuentas antes de continuar.")).toBeVisible();
   await expect(edit.getByLabel("Nombre de la cuenta")).toHaveValue("Mi borrador"); await expect(edit.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
   await edit.getByRole("button", { name: "Descartar el borrador y actualizar cuentas" }).click(); await expect(edit).not.toBeVisible(); await expect(page.getByRole("heading", { name: "Otra pestaña", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Abrir simulación" }).click(); await expect(page).toHaveURL(/demo=1/); await expect(page.locator(".balance-figure")).toHaveText("S/ 20,220.00");
-  await page.getByRole("button", { name: "Salir de la muestra" }).click(); await expect(page).toHaveURL(/\/dashboard$/); await expect(page.locator(".real-balances")).toContainText("S/ 500.00");
+  await page.locator(".home-sidebar").getByRole("button", { name: "Inicio", exact: true }).click(); await expect(page.locator(".overview-balance")).toContainText("S/ 500.00");
 });
 test("sesión terminada no guarda apertura y conserva campos del formulario", async ({ page, context }) => {
-  await enter(page); await page.getByRole("button", { name: "Añadir cuenta", exact: true }).click(); const dialog = page.getByRole("dialog", { name: "Crear cuenta financiera" });
+  await enter(page); await page.getByRole("button", { name: "Crear mi primera cuenta", exact: true }).click(); const dialog = page.getByRole("dialog", { name: "Crear cuenta financiera" });
   await dialog.getByLabel("Nombre de la cuenta").fill("Pendiente"); await dialog.getByLabel("Saldo inicial en PEN").fill("25.00"); await context.clearCookies();
   await dialog.getByRole("button", { name: "Guardar cuenta", exact: true }).click(); await expect(dialog.getByText("Tu sesión terminó. Inicia sesión de nuevo.")).toBeVisible();
   await expect(dialog.getByLabel("Nombre de la cuenta")).toHaveValue("Pendiente");

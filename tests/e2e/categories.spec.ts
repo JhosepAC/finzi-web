@@ -87,9 +87,7 @@ test("conflicto y sesión expirada conservan el borrador de categoría", async (
   await dialog.getByRole("button", { name: "Descartar el borrador y actualizar categorías" }).click(); await expect(dialog).not.toBeVisible(); await expect(page.getByRole("heading", { name: "Otra pestaña", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar categoría Otra pestaña" }).click(); await dialog.getByLabel("Nombre de la categoría").fill("Sin sesión"); await context.clearCookies(); await dialog.getByRole("button", { name: "Guardar cambios" }).click(); await expect(dialog.getByText(/Tu sesión terminó/)).toBeVisible(); await expect(dialog.getByLabel("Nombre de la categoría")).toHaveValue("Sin sesión");
 });
-test("simulación solo en sidebar y menú móvil; categorías siempre reales", async ({ page }) => {
-  await enter(page); await expect(page.locator(".home-footer, .real-sample-link")).toHaveCount(0); await expect(page.locator("main").getByRole("button", { name: /simulación|Explorar con datos/ })).toHaveCount(0);
-  await page.setViewportSize({ width: 390, height: 844 }); await page.getByRole("button", { name: "Abrir navegación", exact: true }).click();
-  const nav = page.getByRole("dialog", { name: "Navegación principal" }); await nav.getByRole("button", { name: "Abrir simulación", exact: true }).click(); await expect(nav).not.toBeVisible(); await expect(page).toHaveURL(/demo=1/);
-  await openCategories(page); await expect(page).toHaveURL(/\/dashboard$/); await expect(page.locator(".demo-banner")).toHaveCount(0); await expect(page.getByRole("heading", { name: "Dale un lugar a cada gasto." })).toBeVisible();
+test("categorías reales accesibles en menú móvil sin simulación", async ({ page }) => {
+  await enter(page); await expect(page.locator(".home-footer, .real-sample-link")).toHaveCount(0); await expect(page.getByRole("button", { name: /simulación|Explorar con datos/ })).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 }); await openCategories(page); await expect(page.getByRole("heading", { name: "Dale un lugar a cada gasto." })).toBeVisible();
 });

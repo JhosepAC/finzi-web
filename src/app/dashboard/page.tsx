@@ -6,12 +6,12 @@ import { DashboardHome } from "@/modules/reporting/presentation/dashboard-home";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Inicio" };
-export default async function Dashboard({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
+export default async function Dashboard() {
   if (!(await readIdentity())?.verified) redirect("/login");
   const profile = await readProfile();
   if (!profile) redirect("/login");
   if (!profile.onboarding_completed_at) redirect("/onboarding");
   const accounts = await readOwnedAccounts();
   if (!accounts) redirect("/login");
-  return <DashboardHome key={profile.user_id} profile={profile} realAccounts={accounts} demo={(await searchParams).demo === "1"} />;
+  return <DashboardHome key={profile.user_id} profile={profile} realAccounts={accounts} now={new Date().toISOString()} />;
 }

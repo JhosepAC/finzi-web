@@ -34,6 +34,7 @@ async function write(request: NextRequest, updating: boolean) {
     const result = "id" in d
       ? await client.schema("api").rpc("update_account", { p_id: d.id, p_name: d.name, p_opening: d.openingBalance, p_archived: d.archived, p_expected_version: d.expectedVersion })
       : await client.schema("api").rpc("create_account", { p_request_id: d.requestId, p_name: d.name, p_type: d.type, p_currency: d.currency, p_opening: d.openingBalance });
+    if (result.error?.code === "55000") return reply(409, { ok: false, code: "OPENING_LOCKED", message: "Esta cuenta ya tiene historial. El saldo inicial se conserva; actualiza las cuentas antes de continuar." });
     if (result.error?.code === "40001") return reply(409, { ok: false, code: "CONFLICT", message: "La cuenta cambió o este intento ya se utilizó. Actualiza las cuentas antes de continuar." });
     if (result.error?.code === "P0002") return reply(404, { ok: false, message: "No se encontró la cuenta." });
     if (result.error?.code === "42501") return reply(403, { ok: false, message: "Completa tu perfil para registrar cuentas." });

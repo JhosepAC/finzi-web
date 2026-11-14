@@ -1,0 +1,15 @@
+import { describe, expect, it } from "vitest";
+import { movementQuerySchema, postMovementSchema, voidMovementSchema } from "../../src/modules/transactions/domain/movement";
+import { wallTimeToUtc, localDateTime, monthRange } from "../../src/shared/time";
+const input = { requestId: crypto.randomUUID(), kind: "income", accountId: crypto.randomUUID(), categoryId: crypto.randomUUID(), amount: "0,10", description: " Salario ", note: "", occurredAt: null };
+describe("movimientos y calendario financiero", () => {
+  it("transporta importes positivos exactos como cadenas", () => { expect(postMovementSchema.parse(input)).toMatchObject({ amount: "0.10", description: "Salario" }); expect(postMovementSchema.parse({ ...input, amount: "9999999999999999.99" }).amount).toBe("9999999999999999.99"); });
+  it.each(["0", "-1", "1.001", "1e3", "NaN", "Infinity", "10000000000000000", "1,000.20", "1.000,20"])("rechaza importe %s", (amount) => { expect(postMovementSchema.safeParse({ ...input, amount }).success).toBe(false); });
+  it.each([{ user_id: crypto.randomUUID() }, { currency: "USD" }, { kind: "transfer" }, { description: " " }, { note: "x".repeat(2001) }, { occurredAt: "2026-02-30" }, { accountId: "" }])("rechaza contrato manipulado: %j", (values) => { expect(postMovementSchema.safeParse({ ...input, ...values }).success).toBe(false); });
+  it("anulación exige motivo y versión; nunca modifica importe", () => { const command = { id: crypto.randomUUID(), expectedVersion: 1, reason: "Duplicado manual" }; expect(voidMovementSchema.parse(command)).toEqual(command); expect(voidMovementSchema.safeParse({ ...command, amount: "1" }).success).toBe(false); expect(voidMovementSchema.safeParse({ ...command, reason: " " }).success).toBe(false); });
+  it.each([{ from: "2026-02-30" }, { from: "2026-11-15", to: "2026-11-14" }, { cursorId: crypto.randomUUID() }, { limit: 51 }, { limit: 0 }, { currency: "EUR" }, { owner: "otro" }])("valida filtros y páginas: %j", (query) => { expect(movementQuerySchema.safeParse(query).success).toBe(false); });
+  it("resuelve Lima independientemente de zona del navegador", () => { expect(wallTimeToUtc("2026-11-14T10:30", "America/Lima")).toBe("2026-11-14T15:30:00.000Z"); expect(localDateTime("2026-11-14T02:00:00Z", "America/Lima")).toBe("2026-11-13T21:00"); });
+  it("rechaza huecos y ambigüedad DST sin mover el instante silenciosamente", () => { expect(() => wallTimeToUtc("2026-03-08T02:30", "America/New_York")).toThrow(/no existe/); expect(() => wallTimeToUtc("2026-11-01T01:30", "America/New_York")).toThrow(/dos veces/); expect(wallTimeToUtc("2026-03-08T03:30", "America/New_York")).toBe("2026-03-08T07:30:00.000Z"); });
+  it("admite offsets de media hora y rechaza días inexistentes", () => { expect(wallTimeToUtc("2026-11-14T10:30", "Asia/Kolkata")).toBe("2026-11-14T05:00:00.000Z"); expect(() => wallTimeToUtc("2026-02-30T10:30", "America/Lima")).toThrow(); });
+  it("mes en zona del perfil y año bisiesto", () => { expect(monthRange("2028-03-01T02:00:00Z", "America/Lima")).toEqual({ from: "2028-02-01", to: "2028-02-29" }); });
+});
