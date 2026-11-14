@@ -33,7 +33,7 @@ export function MovementTrace({ id, revision, timezone, locked, onOpen, onClose,
       {m.note && <p className="ledger-record-note">{m.note}</p>}
       {m.void_reason && <p><strong>{m.replaced_by_id ? "Motivo del reemplazo" : "Motivo de anulación"}:</strong> {m.void_reason}</p>}{m.replacement_reason && <p><strong>Motivo de esta corrección:</strong> {m.replacement_reason}</p>}
       <div className="ledger-trace-links">{m.replaces_id ? <button className="home-text-button" disabled={locked} onClick={() => onOpen(m.replaces_id!)}><ArrowLeft size={17} aria-hidden="true" />Ver registro anterior</button> : <span>Registro original</span>}{m.replaced_by_id && <button className="home-text-button" disabled={locked} onClick={() => onOpen(m.replaced_by_id!)}>Ver reemplazo<ArrowRight size={17} aria-hidden="true" /></button>}</div>
-      {m.status === "posted" && actions(m)}
+      {actions(m)}
       <details className="ledger-reference"><summary>Identificador y versión</summary><p>{m.id} · Versión {m.version}</p></details>
     </>}
   </section>;

@@ -1,6 +1,6 @@
 # Finzi
 
-Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos y resumen mensual separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
+Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos, seis períodos, comparación, evolución y distribución con acceso al historial, separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
 
 ## Ejecutar localmente
 
@@ -27,7 +27,7 @@ Con Supabase local iniciado, aplicar las migraciones pendientes:
 pnpm exec supabase migration up --local
 ```
 
-A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. No hay nuevas dependencias, servicios, claves o variables.
+A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. A-08 añade 20261114001000, RPC de reporting de solo lectura con instantánea coherente. No hay nuevas dependencias, servicios, claves o variables.
 
 ## Recorrido actual
 
@@ -43,7 +43,9 @@ Corregir permite cambiar tipo, cuentas, importe, categoría, descripción, nota 
 
 Límite inicial compartido: 10000 registros por usuario, incluyendo anulados y reemplazos. Al llegar al límite, una corrección nueva se rechaza sin anular el original; los reintentos ya confirmados siguen funcionando. Cuentas/categorías archivadas se conservan en la historia; para corregir hay que seleccionar referencias activas.
 
-Análisis completos, exportación personal y eliminación siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
+Inicio permite elegir día, semana (lunes–domingo), mes, trimestre, año y personalizado (hasta 3660 días, terminado hoy o antes). Compara con período anterior completo; rango personalizado con igual cantidad de días. Período en curso y base cero quedan señalados; no inventa porcentajes sin base. Saldo actual se etiqueta aparte de ingresos/gastos/flujo. Evolución muestra cierres diarios o mensuales con tabla exacta y sin saldos anteriores a aperturas. Distribución padre/hijos cuenta cada movimiento una vez. Los accesos desde métricas, categorías, cierres, cuentas y recientes conservan moneda/período al abrir su historial. Filtros/cursor/detalle sobreviven cambios de vista en memoria, sin URL o almacenamiento persistente de búsquedas. Duplicación explícita requiere revisar importe/fecha, usa clave nueva y conserva el original.
+
+Exportación personal, eliminación, perfil/seguridad completos y endurecimiento siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
 
 ## Comprobar
 
@@ -65,7 +67,7 @@ Para comprobar producción, detener desarrollo antes de build/start. Playwright 
 ## Documentación y estado
 
 - [ROADMAP](docs/product/ROADMAP.md) y [avance incremental](IMPLEMENTATION_PROGRESS.md).
-- [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
+- [Reporting real](docs/development/REAL_REPORTING.md), [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
 - [Índice documental](docs/README.md), [decisiones](docs/architecture/DECISIONS.md) y [sistema visual](DESIGN.md).
 
 Se conserva el `.gitignore` original, incluidas docs/, AGENTS.md y carpetas de agentes. Solo docs/product/ROADMAP.md está versionado explícitamente por petición del usuario; los demás documentos ignorados son locales. Nunca incluir `.env`, cachés, capturas o logs con información personal en commits.

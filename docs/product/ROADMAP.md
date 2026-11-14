@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-07 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-08 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -13,7 +13,7 @@ Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 5 | Categorías propias | Implementado — A-05, feat/personal-categories | Ingreso/gasto, dos niveles, personalización, plantillas propias opcionales, búsqueda y archivo efectivo; RLS, concurrencia y reintentos probados |
 | 6 | Ingresos y gastos reales | Implementado — A-06, feat/real-income-expenses | Formulario inline, historial paginado, filtros, partidas firmadas, anulación con motivo, RLS/idempotencia/atomicidad y apertura bloqueada con cualquier historia |
 | 7 | Transferencias y reemplazos trazables | Implementado — A-07, feat/transfers-and-replacements | Formulario inline con ambos saldos, anulación atómica, corrección con motivo/versión y cadena navegable fuera de filtros; transferencias excluidas del flujo |
-| 8 | Historial e Inicio sobre movimientos reales | Parcial | Saldos, resumen mensual y filtros reales de ingreso/gasto disponibles; series/comparaciones y demás períodos siguen pendientes |
+| 8 | Historial e Inicio sobre movimientos reales | Implementado — A-08, feat/history-and-real-overview | Seis períodos, comparación, cierres exactos con tabla, distribución padre/hijos y acceso al historial; filtros/cursor conservados y duplicación explícita |
 | 9 | Perfil y seguridad completos | Parcial | Preferencias y cierres disponibles; reautenticación y estados pendientes; dispositivos avanzados diferidos |
 | 10 | Exportación y eliminación | Pendiente | JSON/CSV reales, confirmación, reautenticación, retención y borrado acordados; sin exportación de muestra, retirada en A-06 |
 | 11 | Endurecimiento y piloto | Pendiente | HTTPS, correo, requisitos legales/edad, aislamiento en entorno final, cuotas, respaldo y restauración; sin SLA de planes gratuitos |
@@ -32,7 +32,7 @@ Ver [contrato y validación de cuentas](../development/ACCOUNTS.md). Desde A-06 
 
 ## Puertas de las próximas entregas
 
-1. Siguiente entrega: completar el paso 8, historial e Inicio sobre movimientos reales. Las transferencias y los reemplazos de A-07 ya están incluidos en saldos, recientes, filtros y detalle; quedan series, comparaciones y otros períodos, sin añadir productos financieros diferidos.
+1. Siguiente entrega: paso 9, completar perfil y seguridad según su contrato y autorización. El paso 8 ya concilia saldos, flujos, comparación, series, distribución e historial. No adelantar exportación/eliminación ni productos diferidos.
 2. Ledger: precisión, aislamiento A/B con roles efectivos, atomicidad, concurrencia y reintentos reales. Saldos reconstruibles y correcciones por reemplazo. Coordinar bloqueos de cuenta, categoría/ancestro y perfil con los comandos existentes; impedir aperturas editables con cualquier historia.
 3. MVP: métricas reconciliadas, exportación/eliminación, accesibilidad y recuperación comprobadas antes del piloto.
 4. Lanzamiento: resolver los pendientes N-01–N-06 del [registro de decisiones](../architecture/DECISIONS.md), sin comprometer costes o disponibilidad no garantizada.
@@ -73,3 +73,16 @@ Historial distingue Vigente, Anulado y Reemplazado, filtra transferencias/reempl
 Migraciones aditivas 20261114000800/00900 aplicadas solo al entorno local. No se añaden dependencias, costes, servicios, secretos o variables. Sin publicación, push o fusión a main. Siguiente puerta: completar paso 8; N-01–N-06 mantienen sus hitos de lanzamiento.
 
 Validación: 148 unitarias, 105 integración real y 43 E2E de producción aprobadas (296 total); revalidación final proporcional de 13 E2E de Movimientos/fase7 también aprobada. Dos capturas nuevas inspeccionadas por finish-reviewer fresco: escritorio de transferencia y móvil de corrección, disposición ship sin ajustes materiales. Anchos 320/390/768/1024/1440 y teclado comprobados funcionalmente; sin nuevas imágenes de producto. [Contrato](../development/TRANSFERS_REPLACEMENTS.md) y [evidencia](../../IMPLEMENTATION_PROGRESS.md).
+
+
+## Entrega A-08: Historial e Inicio sobre movimientos reales — paso 8
+
+Solicitud explícita del usuario, manteniendo las tres skills de diseño y ahorrando créditos. Extensión de Finzi sobre datos reales, sin nuevas dependencias, imágenes de producto o servicios. Rama dedicada feat/history-and-real-overview; no fusión automática.
+
+Inicio: moneda PEN/USD y cuenta (incluidas archivadas); día, semana, mes, trimestre, año y personalizado, con navegación entre períodos anteriores. Saldo actual separado de ingresos/gastos/flujo del período. Comparación con período anterior del mismo tipo; personalizado usa igual número de días locales anteriores. Base cero: «Sin base de comparación» y diferencia exacta. Período en curso indica comparación con anterior completo, sin atribuir ventajas financieras a signos/colores.
+
+Evolución por cierres diarios o mensuales reales, tabla exacta con acceso a sus movimientos y huecos previos a apertura sin valores inventados. Cierre de hoy hasta el instante de consulta; aperturas/transferencias afectan saldo, no flujos. Distribución de ingresos/gastos por padre incluye hijos una sola vez y ofrece desglose/acceso al ledger. Cuentas y recientes llevan a los registros de la misma moneda, cuenta y período. Historial conserva filtros, búsqueda, cursor y detalle en memoria al cambiar de vista; limpiar filtros vuelve a primera página sin borrar registros. Duplicación intencional abre formulario con clave nueva, exige revisar importe/fecha y no crea vínculo de reemplazo.
+
+Concreciones técnicas revisables: semana lunes–domingo y trimestres calendario; personalizado hasta 3660 días terminado hoy o antes; series diarias hasta 93 días y mensuales en intervalos mayores, máximo 122 puntos; comparación con períodos completos. La RPC read_overview es STABLE y solo lectura: todas las métricas provienen de la misma instantánea y corte, usa RLS y ejecutor restringido. Migración aditiva 20261114001000 aplicada localmente; no nuevas tablas. Los filtros conservados no se escriben a URL/localStorage. Sin base suficiente se indica un solo cierre; no se fabrican tendencias.
+
+Validación: 162 unitarias, 121 integración real (105 anteriores y 16 nuevas) y 49 E2E de producción aprobadas: 332 casos. TypeScript, ESLint y build correctos. Dos capturas inspeccionadas por finish-reviewer fresco, disposition ship, sin ajustes materiales; cinco anchos/teclado y fallos por pruebas funcionales. DESIGN.md preservado; gate genérico heredado de login sigue documentado sin aprobación ficticia. [Contrato](../development/REAL_REPORTING.md) y [registro](../../IMPLEMENTATION_PROGRESS.md).
