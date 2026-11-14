@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, CircleCheck, CircleAlert } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, CircleCheck, CircleAlert } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 import { authSchemas, getFieldErrors, type AuthAction, type AuthResult, type FieldErrors } from "../domain/auth";
 import { notifyAuthChange } from "./session-sync";
@@ -72,7 +72,7 @@ export function AuthForm({ kind, notice }: { kind: FormKind; notice?: string }) 
       {email && <div className="field"><label htmlFor="email">Correo electrónico</label><input id="email" name="email" type="email" autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} maxLength={254} required disabled={pending} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "email-error" : undefined} />{errors.email && <p className="field-error" id="email-error">{errors.email}</p>}</div>}
       {password && passwordField("password", kind === "reset-password" ? "Nueva contraseña" : "Contraseña")}
       {confirmation && passwordField("confirmPassword", "Confirmar contraseña")}
-      <button className="button button-primary" type="submit" disabled={pending}>{pending ? config.loading : config.action}{!pending && <ArrowRight size={18} aria-hidden="true" />}</button>
+      <button className="button button-primary" type="submit" disabled={pending}>{pending && <LoaderCircle className="loading-icon" size={18} aria-hidden="true" />}{pending ? config.loading : config.action}</button>
       <div className="feedback-slot" aria-live="polite" aria-atomic="true">{feedback && <div className={`feedback ${feedback.ok ? "feedback-success" : "feedback-error"}`}>{feedback.ok ? <CircleCheck size={19} aria-hidden="true" /> : <CircleAlert size={19} aria-hidden="true" />}<p>{feedback.message}</p></div>}</div>
     </form>
     <div className="form-bottom">

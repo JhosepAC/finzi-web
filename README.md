@@ -44,3 +44,7 @@ Playwright usa Edge instalado en Windows. En otro entorno se puede instalar su n
 No se ha desplegado la aplicación ni creado infraestructura cloud. Antes de abrir el registro público faltan configuración HTTPS/Supabase/correo, validaciones jurídicas y operativas indicadas en el informe. La gratuidad y la prohibición de activar costes siguen vigentes.
 
 El `.gitignore` conserva las exclusiones originales del usuario, incluidas `docs/`, `AGENTS.md` y las carpetas de agentes. Por ello esos documentos seguirán ignorados si se inicializa Git; conservarlos aquí no implica que vayan a publicarse automáticamente.
+
+## Interfaz AUTH
+
+Rediseño en `feat/auth-ui-redesign`, usando las referencias locales de login y el icono azul con f como logo. Manrope se sirve localmente; su licencia SIL OFL 1.1 está incluida en `src/app/fonts/OFL.txt`. El sistema actual se documenta en [DESIGN.md](DESIGN.md). Los cambios se revisan en esta rama antes de integrar a main.
