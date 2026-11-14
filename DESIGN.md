@@ -1,4 +1,4 @@
-# Finzi — interfaz AUTH
+# Finzi — sistema de interfaz
 
 Revisión: 14 de noviembre de 2026. Rediseño solicitado por el usuario con la skill frontend-design, referencias docs/references/login/login-1.jpg y login-2.jpg y el logo existente de la pestaña. Implementación en rama dedicada `feat/auth-ui-redesign`.
 
@@ -63,3 +63,15 @@ Se conserva la tipografía local y el azul aprobado. Para una tarea secuencial s
 El dashboard es una bienvenida privada con nombre, preferencias guardadas y ausencia explícita de cuentas/movimientos. No representa indicadores, ceros provisionales o acciones a pantallas inexistentes. Los únicos enlaces operativos son edición del perfil y gestión de sesión.
 
 Capturas de producción en .impeccable/review/onboarding-*.png y dashboard-empty-*.png; pruebas de escritorio, tablet y móvil desde 320 px. La numeración aquí representa el proceso real; no es decoración.
+
+## Inicio del dashboard — A-03
+
+Referencias dashboard/interface-1 a interface-5. Se toma estructura de sidebar y lectura de datos de 3/4, y claridad de 1, conservando la marca azul; no se copian bancos, tarjetas, retratos, premium o funciones IA de las imágenes. Plan de composición previo a código en IMPLEMENTATION_PROGRESS.md. Paleta #F4F7FC / #FFFFFF / #152343, con #1D4ED8 como superficie principal del saldo, #16765A ingresos y #B5473D gastos. Manrope local y escala de radios 9/10/16 px según control o panel.
+
+Sidebar de 222 px, barra superior con búsqueda real y perfil, saludo y aviso de muestra; saldo/ingresos/gastos en tres columnas; evolución y categorías; recientes y cuentas. Hasta 1000 px la navegación pasa a dialog nativo; debajo de 768 px se apilan los paneles y a 360 px los importes ganan toda la fila. Tipos secundarios 12–14 px, títulos de panel 15 px, saldo 24–38 px. El monograma Finzi continúa como logo y el avatar usa iniciales propias, sin fotografías externas.
+
+Los gráficos se derivan de cuentas/movimientos del escenario. Barras de ingresos/gastos por mes con botones accesibles por teclado; donut acompañado de leyenda textual y porcentajes ajustados para sumar 100. Las geometrías usan proporciones; los importes se calculan con bigint y no pasan por float. El saldo actual no cambia al filtrar el mes; se explica su corte y diferencia de ingresos/gastos.
+
+Modo de prueba opt-in mediante botón, URL o casilla final del onboarding. Banner explícito, salida y reinicio al recargar. Todos los enlaces/controles actuales funcionan: navegación entre vistas, búsqueda, filtros, datos ocultos, CSV, edición de apertura, movimiento simulado, perfil y seguridad. Dialogs nativos para formularios/navegación, Escape, foco visible y bloqueo del scroll del fondo. No hay efectos de entrada ni animaciones de gráficos.
+
+La vista sin muestra conserva estado vacío y no presenta importes de ejemplo como finanzas del usuario. Capturas locales home-final-{1440,1024,768,390,320}.png y home-preview.png; no se incluyen en Git ni se envían al sitio las referencias JPEG.

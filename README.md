@@ -1,6 +1,6 @@
 # Finzi · AUTH
 
-Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria; el dashboard muestra preferencias reales y un estado vacío. No incluye cuentas, movimientos o servicios de pago.
+Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria; el dashboard permite explorar una muestra financiera interactiva y conserva un estado sin cuentas fuera del modo de prueba. No incluye cuentas, movimientos o servicios de pago.
 
 ## Ejecutar localmente
 
@@ -56,3 +56,11 @@ Rediseño en `feat/auth-ui-redesign`, usando las referencias locales de login y 
 Después de confirmar el correo, `/onboarding` guía nombre, preferencias y revisión. Guarda en Supabase y abre `/dashboard`. Login posterior retoma la configuración pendiente o entra al inicio. `/onboarding?edit=1` permite editar; `/session` mantiene los cierres. No hay saldos o movimientos de ejemplo.
 
 Migración nueva: `supabase/migrations/20261114000100_profile_onboarding.sql`. Tras actualizar un entorno local existente, aplicar con `pnpm exec supabase migration up --local`; no hace falta resetear ni borrar usuarios. Debe aplicarse también antes de desplegar esta versión en otro entorno. La primera migración AUTH es un prerrequisito. Sin variables adicionales ni dependencias nuevas.
+
+## Inicio del dashboard y datos de prueba
+
+Rama `feat/dashboard-home`, basada en la entrega de onboarding. Tras entrar, pulsa **Explorar con datos de prueba** o abre `/dashboard?demo=1`. También puedes marcar esa opción al terminar el onboarding. Se requiere identidad verificada y perfil completo en todos los casos.
+
+La muestra muestra PEN/USD separados, saldo reconstruido, ingresos/gastos mensuales, evolución, categorías, cuentas y movimientos. Puedes cambiar período/moneda, buscar, filtrar, ocultar importes, descargar CSV de muestra, añadir ingresos/gastos de prueba y editar aperturas. La muestra usa fechas de junio al 14 de noviembre de 2026. Su banner permanece visible; **recargar la reinicia** y Salir de la muestra vuelve al estado sin cuentas. Los importes de apertura no cuentan como ingresos.
+
+Los datos de prueba viven en memoria del componente y no se guardan en Supabase, localStorage o el perfil financiero. No hay pagos, transferencias bancarias, anuncios, IA ni servicios nuevos. Las cuentas y movimientos reales siguen pendientes de su modelo persistente; no se incluye un saldo global en profiles. Detalles en [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) y [DESIGN.md](DESIGN.md).
