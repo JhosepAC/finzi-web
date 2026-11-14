@@ -25,7 +25,6 @@
 .real-info p { margin: 0; }
 .real-feedback { font-size: 13px; line-height: 1.8; color: #16765a; }
 .real-feedback:empty { display: none; }
-.real-sample-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #e4eaf4; padding-top: 12px; color: #63718a; font-size: 12px; }
 .real-form-date { margin: 0; padding: 16px; font-size: 12px; color: #53617a; background: #f4f7fc; border-radius: 10px; line-height: 1.8; }
 .real-form-date span { display: block; }
 .archive-option { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; cursor: pointer; }
@@ -38,7 +37,6 @@
  .real-balances, .real-account-grid { grid-template-columns: 1fr; }
  .real-balances article { padding: 22px; }
  .real-balances strong { font-size: 30px; }
- .real-sample-link { flex-direction: column; align-items: flex-start; gap: 0; }
  .real-data-label { font-size: 12px; }
 }
 

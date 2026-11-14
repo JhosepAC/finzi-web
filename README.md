@@ -1,6 +1,6 @@
 # Finzi
 
-Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria. Inicio permite guardar cuentas personales con saldos iniciales reales y explorar una muestra financiera separada. No incluye movimientos reales ni servicios de pago.
+Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria. Inicio permite guardar cuentas personales con saldos iniciales reales y explorar una muestra financiera separada. Incluye categorías propias de ingresos/gastos. No incluye movimientos reales ni servicios de pago.
 
 ## Ejecutar localmente
 
@@ -59,7 +59,7 @@ Migración nueva: `supabase/migrations/20261114000100_profile_onboarding.sql`. T
 
 ## Inicio del dashboard y datos de prueba
 
-Rama `feat/dashboard-home`, basada en la entrega de onboarding. Tras entrar, pulsa **Explorar con datos de prueba** o abre `/dashboard?demo=1`. También puedes marcar esa opción al terminar el onboarding. Se requiere identidad verificada y perfil completo en todos los casos.
+Rama `feat/dashboard-home`, basada en la entrega de onboarding. Tras entrar, pulsa **Abrir simulación** en el sidebar o abre `/dashboard?demo=1`. La entrada está solo en el sidebar y su menú móvil. Se requiere identidad verificada y perfil completo en todos los casos.
 
 La muestra muestra PEN/USD separados, saldo reconstruido, ingresos/gastos mensuales, evolución, categorías, cuentas y movimientos. Puedes cambiar período/moneda, buscar, filtrar, ocultar importes, descargar CSV de muestra, añadir ingresos/gastos de prueba y editar aperturas. La muestra usa fechas de junio al 14 de noviembre de 2026. Su banner permanece visible; **recargar la reinicia** y Salir de la muestra vuelve a tus cuentas reales (o al estado vacío si no creaste ninguna). Los importes de apertura no cuentan como ingresos.
 
@@ -71,4 +71,11 @@ Rama feat/accounts-and-opening-balances. En Inicio o Cuentas puedes registrar ef
 
 Aplicar las tres migraciones nuevas, en orden, con `pnpm exec supabase migration up --local` después de iniciar Supabase. No se requiere resetear ni borrar usuarios, añadir variables o instalar dependencias. Persistencia mediante RPC privadas, RLS, altas idempotentes por usuario, control de versión y auditoría mínima. Una respuesta perdida puede reintentarse sin duplicar cuentas. No se usan claves administrativas en la aplicación.
 
-Los importes actuales representan aperturas, no ingresos o gastos. Antes de implementar movimientos se deberá bloquear en SQL la edición de aperturas con historia. Ver [contrato de cuentas](docs/development/ACCOUNTS.md), [avance](IMPLEMENTATION_PROGRESS.md) y [ROADMAP](docs/product/ROADMAP.md). Validación actual: 111 unitarias, 37 de integración local y 26 E2E contra producción (174 en total), TypeScript, ESLint y build.
+Los importes actuales representan aperturas, no ingresos o gastos. Antes de implementar movimientos se deberá bloquear en SQL la edición de aperturas con historia. Ver [contrato de cuentas](docs/development/ACCOUNTS.md), [avance](IMPLEMENTATION_PROGRESS.md) y [ROADMAP](docs/product/ROADMAP.md). Validación actual: 129 unitarias, 57 de integración local y 32 E2E contra producción (218 en total), TypeScript, ESLint y build.
+
+
+## Categorías propias — A-05
+
+En el sidebar abre **Categorías** para organizar ingresos/gastos en dos niveles, buscar, personalizar nombre/descripción/color/icono y archivar/restaurar. Puedes añadir opcionalmente 10 categorías iniciales propias. El tipo y el padre quedan fijos al crear; los nombres son únicos entre hermanas del mismo tipo, incluidas las archivadas. Límite inicial: 200 por usuario. Archivo efectivo por padre sin perder el estado individual de las hijas.
+
+Aplicar la migración aditiva 20261114000500 con `pnpm exec supabase migration up --local`, sin reset. No se añaden dependencias o variables. Sin movimientos reales todavía. Abrir simulación aparece solo en el sidebar/menú móvil; el pie y el enlace dentro de pantallas se eliminaron. [ROADMAP](docs/product/ROADMAP.md), [avance](IMPLEMENTATION_PROGRESS.md) y [contrato local](docs/development/CATEGORIES.md).

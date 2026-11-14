@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDownLeft, ArrowUpRight, ArrowRight, BriefcaseBusiness, ChevronDown, Download, Eye, EyeOff, FlaskConical, Home, LayoutGrid, ListFilter, Menu, Plus, Search, Settings2, ShieldCheck, ShoppingBasket, TrainFront, Utensils, Wallet, X, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRight, BriefcaseBusiness, ChevronDown, Download, Eye, EyeOff, FlaskConical, Home, LayoutGrid, ListFilter, Menu, Plus, Search, Settings2, ShieldCheck, Tag, ShoppingBasket, TrainFront, Utensils, Wallet, X, type LucideIcon } from "lucide-react";
 import { FinziMark } from "@/modules/identity/presentation/auth-shell";
+import { CategoriesWorkspace } from "@/modules/classification";
 import { AccountsWorkspace, type Account } from "@/modules/accounts";
 import type { FinancialProfile } from "@/modules/identity/domain/profile";
 import { balance, CATEGORIES, createSample, decimal, money, newSampleMovement, parseMinor, SAMPLE_CUTOFF, SAMPLE_MONTHS, sampleCsv, summarize, type Currency, type DemoAccount, type DemoMovement } from "../domain/demo";
 
-type View = "home" | "movements" | "accounts";
+type View = "home" | "movements" | "accounts" | "categories";
 const colors = ["#1d4ed8", "#52a4d7", "#8395c4", "#e3a763", "#26365a", "#b2bfd8"];
 const icons: Record<string, LucideIcon> = { Vivienda: Home, Alimentación: ShoppingBasket, Transporte: TrainFront, Ocio: Utensils, Servicios: Settings2, Sueldo: BriefcaseBusiness };
 const monthName = (month: string, short = false) => new Intl.DateTimeFormat("es-PE", { month: short ? "short" : "long", timeZone: "UTC" }).format(new Date(month + "-01T12:00:00Z")).replace(".", "");
@@ -42,10 +43,12 @@ export function DashboardHome({ profile, demo, realAccounts }: { profile: Financ
 
   function go(next: View) {
     setView(next); setQuery(""); setKindFilter("all"); navDialog.current?.close();
+    if (next === "categories" && demo) startTransition(() => router.replace("/dashboard", { scroll: false }));
     requestAnimationFrame(() => heading.current?.focus());
   }
   function setDemo(enabled: boolean) {
     setSample(createSample()); setView("home"); setQuery(""); setNotice(""); setKindFilter("all");
+    navDialog.current?.close();
     startTransition(() => router.replace(enabled ? "/dashboard?demo=1" : "/dashboard", { scroll: false }));
   }
   function exportSample() {
@@ -65,9 +68,9 @@ export function DashboardHome({ profile, demo, realAccounts }: { profile: Financ
   function editAccount(account: DemoAccount) { setEditing(account); }
   const navigation = <>
     <nav className="home-nav" aria-label="Navegación principal">
-      {([["home", "Inicio", LayoutGrid], ["movements", "Movimientos", ArrowDownLeft], ["accounts", "Cuentas", Wallet]] as const).map(([key, label, Icon]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => go(key)}><Icon size={19} aria-hidden="true" />{label}{view === key && <span className="nav-dot" />}</button>)}
+      {([["home", "Inicio", LayoutGrid], ["movements", "Movimientos", ArrowDownLeft], ["accounts", "Cuentas", Wallet], ["categories", "Categorías", Tag]] as const).map(([key, label, Icon]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => go(key)}><Icon size={19} aria-hidden="true" />{label}{view === key && <span className="nav-dot" />}</button>)}
     </nav>
-    <div className="home-nav-secondary"><Link href="/onboarding?edit=1"><Settings2 size={19} aria-hidden="true" />Mi perfil</Link><Link href="/session"><ShieldCheck size={19} aria-hidden="true" />Sesión y seguridad</Link></div>
+    <div className="home-nav-secondary"><button type="button" disabled={changingMode} onClick={() => setDemo(true)}><FlaskConical size={19} aria-hidden="true" />Abrir simulación</button><Link href="/onboarding?edit=1"><Settings2 size={19} aria-hidden="true" />Mi perfil</Link><Link href="/session"><ShieldCheck size={19} aria-hidden="true" />Sesión y seguridad</Link></div>
   </>;
 
   function accountsPanel(full = false) {
@@ -93,13 +96,13 @@ export function DashboardHome({ profile, demo, realAccounts }: { profile: Financ
     <a className="skip-link" href="#home-main">Saltar al contenido</a>
     <aside className="home-sidebar"><Link href={demo ? "/dashboard?demo=1" : "/dashboard"} onClick={() => go("home")} className="wordmark" aria-label="Finzi, inicio"><FinziMark /><span>finzi</span></Link>{navigation}<div className="sidebar-foot"><span className="sidebar-illustration" aria-hidden="true"><Wallet size={25} /></span><p>Una moneda a la vez.<small>PEN y USD, siempre por separado.</small></p></div><span className="sidebar-free">Gratuita. Sin publicidad.</span></aside>
     <div className="home-body">
-      <header className="home-topbar"><button type="button" className="home-icon-button mobile-nav-trigger" onClick={() => navDialog.current?.showModal()} aria-label="Abrir navegación"><Menu size={21} /></button><span className="home-breadcrumb">Mi espacio<span aria-hidden="true">/</span><strong>{view === "home" ? "Inicio" : view === "movements" ? "Movimientos" : "Cuentas"}</strong></span>
-        {demo && <label className="home-search"><Search size={18} aria-hidden="true" /><span className="sr-only">Buscar movimientos</span><input type="search" placeholder="Buscar movimientos" value={query} onChange={(e) => { setQuery(e.target.value); if (e.target.value) setView("movements"); }} /></label>}
+      <header className="home-topbar"><button type="button" className="home-icon-button mobile-nav-trigger" onClick={() => navDialog.current?.showModal()} aria-label="Abrir navegación"><Menu size={21} /></button><span className="home-breadcrumb">Mi espacio<span aria-hidden="true">/</span><strong>{view === "home" ? "Inicio" : view === "movements" ? "Movimientos" : view === "categories" ? "Categorías" : "Cuentas"}</strong></span>
+        {demo && view !== "categories" && <label className="home-search"><Search size={18} aria-hidden="true" /><span className="sr-only">Buscar movimientos</span><input type="search" placeholder="Buscar movimientos" value={query} onChange={(e) => { setQuery(e.target.value); if (e.target.value) setView("movements"); }} /></label>}
         <details className="home-profile"><summary><span className="home-avatar" aria-hidden="true">{profile.display_name?.split(/\s+/).map((part) => Array.from(part)[0] ?? "").slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{profile.display_name}</span><ChevronDown size={15} aria-hidden="true" /><span className="sr-only">Abrir menú de perfil</span></summary><div className="profile-popover"><Link href="/onboarding?edit=1">Editar mi perfil</Link><Link href="/session">Gestionar mi sesión</Link></div></details>
       </header>
       <main className="home-main" id="home-main">
-        <div className="home-title-row"><div><h1 ref={heading} tabIndex={-1}>{view === "home" ? `Hola, ${profile.display_name}.` : view === "movements" ? "Tus movimientos." : "Tus cuentas."}</h1><p>{view === "home" ? "Un vistazo a tu dinero, con todo en su lugar." : view === "movements" ? "Encuentra los detalles detrás de cada importe." : "Cada cuenta tiene su propio punto de partida."}</p></div>{demo && <button className="home-primary-button" onClick={() => movementDialog.current?.showModal()}><Plus size={18} aria-hidden="true" />Añadir movimiento de prueba</button>}</div>
-        {demo ? <>
+        <div className="home-title-row"><div><h1 ref={heading} tabIndex={-1}>{view === "home" ? `Hola, ${profile.display_name}.` : view === "movements" ? "Tus movimientos." : view === "categories" ? "Tus categorías." : "Tus cuentas."}</h1><p>{view === "home" ? "Un vistazo a tu dinero, con todo en su lugar." : view === "movements" ? "Encuentra los detalles detrás de cada importe." : view === "categories" ? "Un lugar para cada gasto y cada ingreso." : "Cada cuenta tiene su propio punto de partida."}</p></div>{demo && view !== "categories" && <button className="home-primary-button" onClick={() => movementDialog.current?.showModal()}><Plus size={18} aria-hidden="true" />Añadir movimiento de prueba</button>}</div>
+        {view === "categories" ? <CategoriesWorkspace /> : demo ? <>
           <div className="demo-banner"><span className="demo-badge"><FlaskConical size={16} aria-hidden="true" />Datos de prueba</span><p>Esta muestra no representa tus finanzas. Los cambios se reinician al recargar.</p><button disabled={changingMode} onClick={() => setDemo(false)}>Salir de la muestra<ArrowRight size={15} aria-hidden="true" /></button></div>
           <div className="home-controls"><div className="currency-switch" role="group" aria-label="Moneda del dashboard">{(["PEN", "USD"] as const).map((code) => <button key={code} aria-pressed={currency === code} onClick={() => setCurrency(code)}>{code === "PEN" ? "S/" : "US$"}<span>{code}</span></button>)}</div><label className="period-select"><span>Período</span><select value={month} onChange={(e) => setMonth(e.target.value)}>{[...SAMPLE_MONTHS].reverse().map((value) => <option key={value} value={value}>{monthName(value)} 2026</option>)}</select><ChevronDown size={16} aria-hidden="true" /></label><button className="home-icon-button visibility-button" onClick={() => setHidden(!hidden)} aria-label={hidden ? "Mostrar importes" : "Ocultar importes"}>{hidden ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
           {view === "home" ? <>
@@ -110,9 +113,8 @@ export function DashboardHome({ profile, demo, realAccounts }: { profile: Financ
             <section className="home-panel category-panel" aria-labelledby="categories-title"><div className="panel-heading"><h2 id="categories-title">¿En qué se va?</h2><span className="chart-range">{monthName(month)}</span></div><div className="category-body"><div className="donut-chart"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="46" fill="none" stroke="#eef1f7" strokeWidth="13" />{summary.categories.map((category, index) => <circle key={category.name} cx="60" cy="60" r="46" pathLength="100" fill="none" stroke={colors[index % colors.length]} strokeWidth="13" strokeDasharray={`${percentage(category.amount, summary.expense)} ${100 - percentage(category.amount, summary.expense)}`} strokeDashoffset={-percentage(summary.categories.slice(0, index).reduce((sum, c) => sum + c.amount, 0n), summary.expense)} transform="rotate(-90 60 60)" />)}</svg><div className="donut-center"><span>Gastos del mes</span><strong>{display(summary.expense)}</strong></div></div><ul className="category-legend">{summary.categories.map((category, index) => <li key={category.name}><span className="category-dot" style={{ background: colors[index % colors.length] }} /><span>{category.name}</span><strong>{hidden ? "•••" : `${category.share}%`}</strong></li>)}{!summary.categories.length && <li>Sin gastos en este período.</li>}</ul></div></section></div>
             <div className="details-grid">{movementPanel()}{accountsPanel()}</div>
           </> : view === "movements" ? movementPanel(true) : accountsPanel(true)}
-        </> : <AccountsWorkspace preferredCurrency={profile.preferred_currency ?? "PEN"} initialAccounts={realAccounts} timezone={profile.timezone ?? "UTC"} view={view} onViewAccounts={() => go("accounts")} onExplore={() => setDemo(true)} />}
+        </> : <AccountsWorkspace preferredCurrency={profile.preferred_currency ?? "PEN"} initialAccounts={realAccounts} timezone={profile.timezone ?? "UTC"} view={view} onViewAccounts={() => go("accounts")} />}
         <div className="home-status" role="status" aria-live="polite">{notice}</div>
-        <footer className="home-footer"><span>{demo ? "Muestra de junio a noviembre de 2026. No se guarda en tus cuentas." : "Datos reales. Aperturas separadas de ingresos."}</span><span>{demo ? `${currency} · Sin conversión automática` : "PEN y USD · Sin conversión automática"}</span></footer>
       </main>
     </div>
     <dialog ref={navDialog} className="home-nav-dialog" aria-label="Navegación principal"><div className="dialog-heading"><span className="wordmark"><FinziMark /><span>finzi</span></span><button className="home-icon-button" onClick={() => navDialog.current?.close()} aria-label="Cerrar navegación"><X size={21} /></button></div>{navigation}</dialog>

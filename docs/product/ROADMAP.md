@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-04 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-05 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -10,7 +10,7 @@ Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 2 | Onboarding financiero | Completado, f86fea4 | Nombre, PEN/USD y zona horaria persistidos; revisión y edición con control de versión |
 | 3 | Inicio del dashboard | Completado, 5c8b74f | Muestra explícita e interactiva en memoria, separada de los datos reales |
 | 4 | Cuentas y saldos iniciales | Implementado — A-04, feat/accounts-and-opening-balances | Alta, listado, edición, archivo/restauración, aperturas exactas y totales por moneda; RPC, RLS, reintentos y concurrencia probados localmente |
-| 5 | Categorías propias | Siguiente entrega | Ingreso/gasto, jerarquía y archivo; evitar ciclos, aislar usuarios y definir efectos de cambios antes de construir |
+| 5 | Categorías propias | Implementado — A-05, feat/personal-categories | Ingreso/gasto, dos niveles, personalización, plantillas propias opcionales, búsqueda y archivo efectivo; RLS, concurrencia y reintentos probados |
 | 6 | Ingresos y gastos reales | Pendiente | Partidas firmadas, fechas/zona, atomicidad, idempotencia y auditoría; bloquear edición de aperturas con historia antes de habilitar escrituras |
 | 7 | Transferencias y correcciones | Pendiente | Misma moneda, partidas atómicas, reemplazos trazables; transferencias nunca son ingreso/gasto |
 | 8 | Historial e Inicio sobre movimientos reales | Parcial | Aperturas reales disponibles; métricas/períodos y filtros se reconciliarán con el ledger de los pasos 6–7 |
@@ -32,11 +32,20 @@ Ver [contrato y validación de cuentas](../development/ACCOUNTS.md). La apertura
 
 ## Puertas de las próximas entregas
 
-1. Categorías: concretar tipo, jerarquía, unicidad y archivo antes de migrar; sin catálogos o límites nuevos presentados como decisiones aprobadas del usuario.
-2. Ledger: precisión, aislamiento A/B con roles efectivos, atomicidad, concurrencia y reintentos reales. Saldos reconstruibles y correcciones por reemplazo.
+1. Siguiente entrega: ingresos y gastos reales. Concretar fecha/zona, publicación, selección de cuentas/categorías activas, partidas y correcciones antes de migrar. No anticipar transferencias o ampliar el MVP.
+2. Ledger: precisión, aislamiento A/B con roles efectivos, atomicidad, concurrencia y reintentos reales. Saldos reconstruibles y correcciones por reemplazo. Coordinar bloqueos de cuenta, categoría/ancestro y perfil con los comandos existentes; impedir aperturas editables con cualquier historia.
 3. MVP: métricas reconciliadas, exportación/eliminación, accesibilidad y recuperación comprobadas antes del piloto.
 4. Lanzamiento: resolver los pendientes N-01–N-06 del [registro de decisiones](../architecture/DECISIONS.md), sin comprometer costes o disponibilidad no garantizada.
 
 ## Fuera del MVP
 
 Presupuestos y metas, recurrencias/archivos/reglas/avisos, crédito, FX, bancos, móvil e IA requieren especificación y autorización posteriores. Figurar aquí no autoriza su desarrollo. Finzi seguirá gratuita, sin publicidad, premium, suscripciones ni monetización. Si un recurso gratuito resulta insuficiente, se limita capacidad o se presenta otra opción gratuita; no se activa pago automáticamente.
+
+
+## Entrega A-05: categorías propias y simulación
+
+Categorías de ingreso/gasto persistidas por usuario, con un nivel de subcategorías. Se puede personalizar nombre, descripción, color e icono, buscar y archivar/restaurar. Se ofrecen 6 categorías iniciales de gasto y 4 de ingreso como copia propia opcional; los reintentos no duplican ni reemplazan personalizaciones.
+
+Concreciones técnicas revisables: 200 categorías por usuario incluyendo archivadas; nombre único entre hermanas del mismo tipo, insensible a mayúsculas y conservando acentos; tipo/padre inmutables desde creación. El archivo del padre vuelve inactivas las hijas sin cambiar su estado individual; restaurar el padre no restaura una hija archivada por separado. No hay eliminación destructiva ni movimientos reales en esta entrega.
+
+Se retiraron home-footer y real-sample-link y la opción de muestra del onboarding. Abrir simulación vive únicamente en el sidebar y su menú móvil. El aviso y la salida de la muestra se conservan para identificar los datos sintéticos. Categorías siempre trabaja con datos propios reales. Ver [contrato](../development/CATEGORIES.md) y [registro](../../IMPLEMENTATION_PROGRESS.md). Sin nuevas dependencias o costes.

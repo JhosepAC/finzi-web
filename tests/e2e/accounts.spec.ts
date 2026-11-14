@@ -75,7 +75,7 @@ test("conflicto entre pestañas conserva el borrador y la muestra no reemplaza c
   await edit.getByRole("button", { name: "Guardar cambios" }).click(); await expect(edit.getByText("La cuenta cambió o este intento ya se utilizó. Actualiza las cuentas antes de continuar.")).toBeVisible();
   await expect(edit.getByLabel("Nombre de la cuenta")).toHaveValue("Mi borrador"); await expect(edit.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
   await edit.getByRole("button", { name: "Descartar el borrador y actualizar cuentas" }).click(); await expect(edit).not.toBeVisible(); await expect(page.getByRole("heading", { name: "Otra pestaña", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Explorar con datos de prueba" }).click(); await expect(page).toHaveURL(/demo=1/); await expect(page.locator(".balance-figure")).toHaveText("S/ 20,220.00");
+  await page.getByRole("button", { name: "Abrir simulación" }).click(); await expect(page).toHaveURL(/demo=1/); await expect(page.locator(".balance-figure")).toHaveText("S/ 20,220.00");
   await page.getByRole("button", { name: "Salir de la muestra" }).click(); await expect(page).toHaveURL(/\/dashboard$/); await expect(page.locator(".real-balances")).toContainText("S/ 500.00");
 });
 test("sesión terminada no guarda apertura y conserva campos del formulario", async ({ page, context }) => {

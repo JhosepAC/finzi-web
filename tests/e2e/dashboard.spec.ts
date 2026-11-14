@@ -10,15 +10,16 @@ async function enter(page: Page, preview = true) {
   await page.getByRole("button", { name: "Crear cuenta", exact: true }).click(); await expect(page).toHaveURL(/\/verify-email$/);
   await page.goto(await findMailLink(email, "signup")); await page.getByRole("button", { name: "Confirmar correo", exact: true }).click(); await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByLabel("Tu nombre", { exact: true }).fill("Andrea"); await page.getByRole("button", { name: "Continuar", exact: true }).click(); await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  if (preview) await page.getByRole("checkbox", { name: /Explorar con datos de prueba/ }).check();
-  await page.getByRole("button", { name: "Guardar y continuar" }).click(); await expect(page).toHaveURL(preview ? /\/dashboard\?demo=1$/ : /\/dashboard$/);
+  await expect(page.getByRole("checkbox", { name: /Explorar con datos de prueba/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Guardar y continuar" }).click(); await expect(page).toHaveURL(/\/dashboard$/);
+  if (preview) { await page.locator(".home-sidebar").getByRole("button", { name: "Abrir simulación" }).click(); await expect(page).toHaveURL(/demo=1/); }
 }
 test("modo de prueba explícito, períodos y monedas sin mezclas, estado real sin muestra", async ({ page, context }) => {
   await page.goto("/dashboard?demo=1"); await expect(page).toHaveURL(/\/login$/);
   await enter(page, false);
   const before = (await (await context.request.get("/api/v1/profile")).json()).profile;
   await expect(page.getByText("S/ 20,220.00", { exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Explorar con datos de prueba" }).click();
+  await page.getByRole("button", { name: "Abrir simulación" }).click();
   await expect(page.getByText("Datos de prueba", { exact: true }).first()).toBeVisible();
   await expect(page.locator(".balance-figure")).toHaveText("S/ 20,220.00");
   await page.getByRole("combobox", { name: "Período" }).selectOption("2026-10");

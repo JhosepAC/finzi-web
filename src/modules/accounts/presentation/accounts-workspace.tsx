@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Archive, ArrowRight, Building2, Check, CircleAlert, FlaskConical, LoaderCircle, Pencil, Plus, RefreshCw, Wallet, X } from "lucide-react";
+import { Archive, ArrowRight, Building2, Check, CircleAlert, LoaderCircle, Pencil, Plus, RefreshCw, Wallet, X } from "lucide-react";
 import { accountTypes, createAccountSchema, updateAccountSchema, type Account } from "../domain/account";
 import { decimalMoney, formatMoney, type Currency } from "@/shared/money";
 import { getFieldErrors, type FieldErrors } from "@/modules/identity/domain/auth";
 import "./accounts.css";
 
 type Draft = { requestId: string; account: Account | null };
-export function AccountsWorkspace({ initialAccounts, timezone, preferredCurrency, view, onViewAccounts, onExplore }: { preferredCurrency: Currency; initialAccounts: Account[]; timezone: string; view: "home" | "movements" | "accounts"; onViewAccounts: () => void; onExplore: () => void }) {
+export function AccountsWorkspace({ initialAccounts, timezone, preferredCurrency, view, onViewAccounts }: { preferredCurrency: Currency; initialAccounts: Account[]; timezone: string; view: "home" | "movements" | "accounts"; onViewAccounts: () => void }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [archived, setArchived] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -45,7 +45,6 @@ export function AccountsWorkspace({ initialAccounts, timezone, preferredCurrency
       {accounts.length > 0 && <div className="real-info"><CircleAlert size={18} aria-hidden="true" /><p>El saldo registrado incluye las aperturas, también de cuentas archivadas. Las aperturas no son ingresos y PEN/USD se muestran por separado. Aún no hay movimientos reales en esta versión.</p></div>}
     </>}
     <div className={`real-feedback ${failed ? "failed" : ""}`} role="status" aria-live="polite">{feedback}</div>
-    <div className="real-sample-link"><span>¿Quieres explorar gráficos y movimientos?</span><button className="home-text-button" onClick={onExplore}><FlaskConical size={16} aria-hidden="true" />Explorar con datos de prueba</button></div>
     <dialog ref={dialog} className="sample-dialog real-account-dialog" aria-labelledby="real-account-title" onCancel={(event) => { if (busy.current) event.preventDefault(); }} onClose={() => setDraft(null)}>{draft && <AccountForm key={draft.requestId} draft={draft} timezone={timezone} defaultCurrency={preferredCurrency} onBusy={(value) => { busy.current = value; }} existingAccounts={accounts} onSave={saved} onClose={() => dialog.current?.close()} onReload={async () => { dialog.current?.close(); await refresh(); }} />}</dialog>
   </div>;
 }

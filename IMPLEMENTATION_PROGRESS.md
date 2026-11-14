@@ -10,7 +10,7 @@ Registro incremental. Actualización: 14 de noviembre de 2026. Cada entrega sigu
 | 2 | Onboarding del perfil financiero | Implementada en feat/financial-profile-onboarding | Nombre, PEN/USD, zona horaria e idioma español persistidos por usuario; revisar antes de guardar; reintentos y aislamiento probados |
 | 3 | Inicio del dashboard | Interfaz y muestra opt-in implementadas (A-03) | Entrada privada, modo de prueba identificado, cálculos exactos, filtros y formularios simulados; sin datos ficticios en cuentas reales |
 | 4 | Primera cuenta y listado de cuentas | Implementada — A-04 | Tipo personal, moneda, apertura exacta, RLS, edición/archivo; no integración bancaria |
-| 5 | Categorías | Pendiente | Ingreso/gasto y jerarquía propia, archivo y aislamiento |
+| 5 | Categorías | Implementada — A-05 | Ingreso/gasto y jerarquía propia, archivo y aislamiento |
 | 6 | Ingreso y gasto | Pendiente | Dinero exacto, fecha/zona, publicación atómica e idempotencia |
 | 7 | Transferencias y correcciones | Pendiente | Una moneda, partidas firmadas, reemplazos y rollback/concurrencia |
 | 8 | Historial y dashboard financiero | Pendiente de datos/reglas reales | Filtros, períodos y métricas reconciliadas por moneda; vacío distinto de error |
@@ -108,3 +108,17 @@ Evidencia A-04:
 - Tres migraciones aditivas aplicadas localmente sin reset. La tercera separa requestId por usuario del UUID de cuenta generado por servidor y rechaza numeric no finitos.
 - Corregida la navegación después de editar perfil para cargar su versión actual, validada en E2E de conflicto del onboarding.
 - Sin nuevas dependencias, servicios, variables, cloud, costes, push o integración automática a main. Documentación de cuentas local en docs/development/ACCOUNTS.md; ROADMAP versionado explícitamente.
+
+
+## A-05 — Categorías propias y entrada de simulación en sidebar
+
+Solicitud explícita: eliminar home-footer y real-sample-link; Abrir simulación solo en sidebar, también en navegación móvil; retirar opción de onboarding. Mantener identificación/salida dentro de la simulación.
+
+Diseño previo: azul #1D4ED8, fondo #F4F7FC, superficie #FFFFFF, tinta #152343, secundario #53617A; Manrope local. Se comparó grid de tarjetas con lista jerárquica: se elige lista con padres e hijas alineados, pestañas Gastos/Ingresos, búsqueda, filtro de archivo y acción Nueva categoría. Colores/iconos comunican identificación, no métricas financieras. Móvil mantiene acciones por fila, dialog y campos apilados. Sin nuevas dependencias.
+
+Alcance: categorías propias reales y plantillas opcionales por usuario, ingreso/gasto y dos niveles, nombre 1–80, descripción hasta 300, colores/iconos permitidos, archivo/restauración, unicidad de nombre insensible a mayúsculas entre hermanas (incluye archivadas). Tipo/padre inmutables como decisión conservadora; archivo efectivo por padre sin alterar estados individuales. Límite técnico inicial de 200 por usuario incluyendo archivadas. Perfil bloqueado por dueño para serializar comandos; alta idempotente, control de versión y auditoría mínima. Antes del ledger coordinar sus bloqueos de categoría/ancestro. Sin movimientos reales o costes.
+
+
+Resultado A-05: categorías propias implementadas con migración aditiva aplicada localmente. Sin servicios, variables o dependencias nuevas. Se retiraron las clases pedidas, sus estilos y la entrada de simulación del onboarding; Abrir simulación solo en sidebar/menú móvil. Categorías sale de la muestra antes de operar datos reales.
+
+Validación: 129 unitarias, 57 integración y 32 E2E (218 en total). Se probaron creación/personalización, respuesta perdida y reintento, jerarquía y nombres, archivo del padre/individual, restauración, conflictos, sesión expirada, lectura fallida, aislamiento A/B, rol efectivo, cuota concurrente y rollback completo de inicialización. Capturas de lista/dialog a 320/390/768/1440 px. Revisión visual ajustó contraste de hijas y estado sin categorías activas. TypeScript, ESLint y build de producción correctos. Siguiente entrega: ingresos y gastos reales, con las puertas SQL de cuentas/categorías documentadas. Sin push, fusión de main o despliegue.

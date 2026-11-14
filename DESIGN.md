@@ -84,3 +84,10 @@ Se conserva el marco de Inicio. Toolbar con estado de guardado, actualizar y añ
 El estado vacío ofrece crear la primera cuenta. Dialog nativo con nombre, tipo, moneda, saldo y explicación del timestamp del servidor. Al editar se mantienen moneda/tipo visibles e inmutables. Labels de 16 px en inputs, errores anunciados y primer campo inválido enfocado. Se conservan campos ante fallo; un conflicto exige recargar de forma explícita. Al guardar, el foco pasa al título de la cuenta canónica. Durante la petición se bloquea el cierre accidental con timeout de 15 s.
 
 Grid de cuentas de tres, dos y una columna; acciones se apilan en móvil. Capturas real-accounts-{1440,768,390,320}.png en la evidencia local ignorada. La muestra conserva su aviso y nunca sustituye cuentas reales. No se muestran ingresos/gastos como ceros provisionales: una nota explica que todavía no existen movimientos reales.
+
+
+## Categorías propias — A-05
+
+Lista jerárquica en lugar de tarjetas repetidas; padre alineado al contenido, hijas indentadas con flecha y la misma tinta #152343. Filtros Gastos/Ingresos, búsqueda por nombre/descripción y archivo efectivo. Iconos locales sobre 6 colores suaves con contraste en texto, sin depender solo de color. Formulario con previsualización, selectores de icono/color y texto plano. Estado vacío distinto de lectura fallida. Datos reales persistidos por usuario; las categorías iniciales son taxonomía propia opcional, no una simulación de movimientos.
+
+Se eliminan home-footer, real-sample-link y la casilla de simulación del onboarding por petición del usuario. Abrir simulación solo en sidebar o su menú móvil; aviso/salida dentro de la muestra se conservan. No añadir entradas de simulación en el contenido de nuevas interfaces. Capturas categories-* y category-form-* revisadas a 320/390/768/1440 px.
