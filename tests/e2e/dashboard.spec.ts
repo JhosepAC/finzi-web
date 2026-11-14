@@ -30,7 +30,7 @@ test("modo de prueba explícito, períodos y monedas sin mezclas, estado real si
   await expect(page.locator(".home-main")).not.toContainText("US$ 2,650.00");
   await page.getByRole("button", { name: "Mostrar importes" }).click();
   await page.getByRole("button", { name: "Salir de la muestra" }).click(); await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { name: "Tu espacio está listo para empezar." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Empieza por tu primera cuenta." })).toBeVisible();
   const after = (await (await context.request.get("/api/v1/profile")).json()).profile;
   expect(after).toEqual(before);
 });

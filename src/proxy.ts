@@ -45,4 +45,4 @@ export async function proxy(request: NextRequest) {
   try { await client.auth.getUser(); } catch { /* Pages and endpoints independently fail closed. */ }
   return response;
 }
-export const config = { matcher: ["/", "/login", "/register", "/forgot-password", "/verify-email", "/auth/confirm", "/session", "/reset-password", "/api/v1/auth/:path*", "/api/v1/profile", "/onboarding", "/dashboard"] };
+export const config = { matcher: ["/", "/login", "/register", "/forgot-password", "/verify-email", "/auth/confirm", "/session", "/reset-password", "/api/v1/auth/:path*", "/api/v1/profile", "/api/v1/accounts", "/onboarding", "/dashboard"] };

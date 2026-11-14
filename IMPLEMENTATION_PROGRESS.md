@@ -9,7 +9,7 @@ Registro incremental. Actualización: 14 de noviembre de 2026. Cada entrega sigu
 | 1 | AUTH y rediseño | Integrada en main (345dea9) | Registro, correo, recuperación, sesión y cierres reales; diseño responsive probado |
 | 2 | Onboarding del perfil financiero | Implementada en feat/financial-profile-onboarding | Nombre, PEN/USD, zona horaria e idioma español persistidos por usuario; revisar antes de guardar; reintentos y aislamiento probados |
 | 3 | Inicio del dashboard | Interfaz y muestra opt-in implementadas (A-03) | Entrada privada, modo de prueba identificado, cálculos exactos, filtros y formularios simulados; sin datos ficticios en cuentas reales |
-| 4 | Primera cuenta y listado de cuentas | Pendiente | Tipo personal, moneda, apertura exacta, RLS, edición/archivo; no integración bancaria |
+| 4 | Primera cuenta y listado de cuentas | Implementada — A-04 | Tipo personal, moneda, apertura exacta, RLS, edición/archivo; no integración bancaria |
 | 5 | Categorías | Pendiente | Ingreso/gasto y jerarquía propia, archivo y aislamiento |
 | 6 | Ingreso y gasto | Pendiente | Dinero exacto, fecha/zona, publicación atómica e idempotencia |
 | 7 | Transferencias y correcciones | Pendiente | Una moneda, partidas firmadas, reemplazos y rollback/concurrencia |
@@ -18,7 +18,7 @@ Registro incremental. Actualización: 14 de noviembre de 2026. Cada entrega sigu
 | 10 | Exportación y eliminación | Pendiente | JSON/CSV, reautenticación, retención y proceso de borrado acordados |
 | 11 | Endurecimiento y publicación | Pendiente | SMTP/HTTPS, privacidad/edad, backups/restore, cuotas gratuitas; sin SLA inventado |
 
-Los pendientes definen secuencia, no implementación automática de todo el producto. Presupuestos, metas, crédito, FX e IA permanecen fuera del MVP. La creación de la primera cuenta será una entrega posterior: el onboarding actual no solicita saldo, ingresos, documentos o datos bancarios.
+Los pendientes definen secuencia, no implementación automática de todo el producto. Presupuestos, metas, crédito, FX e IA permanecen fuera del MVP. La primera cuenta se crea desde Inicio/Cuentas; el onboarding actual no solicita saldo, ingresos, documentos o datos bancarios.
 
 ## Entrega A-02: perfil y bienvenida
 
@@ -45,7 +45,7 @@ Validación: UI + servidor + RPC; identidad verificada, dueño derivado del requ
 - [x] E2E del alta completa, edición, error y protección de rutas.
 - [x] TypeScript, ESLint, build y revisión visual móvil/tablet/escritorio.
 
-Los cambios de docs/ siguen ignorados por la configuración del usuario. Este archivo en raíz registra la secuencia dentro de Git.
+La exclusión general de docs/ se conserva. Desde A-04 se versiona explícitamente docs/product/ROADMAP.md por petición del usuario; este registro en raíz conserva el detalle de entregas.
 
 ## Resultado de validación de esta entrega
 
@@ -88,3 +88,23 @@ Evidencia A-03:
 - Los tests verifican que ni los saldos/movimientos simulados ni el cambio de moneda de la muestra escriben en API/perfil.
 - Perfil real y muestra separados; recargar descarta cambios simulados, salir devuelve el estado sin cuentas.
 - Formularios de muestra sin envío de red incluso en su comportamiento nativo; onboarding usa POST como fallback para no incluir campos en la URL.
+
+## A-04 — Cuentas y saldos de apertura reales
+
+Siguiente paso autorizado por el usuario. Rama feat/accounts-and-opening-balances basada en 5c8b74f. ROADMAP.md actualizado antes de implementar. Crear/listar cuenta propia, editar nombre/apertura, archivar/restaurar, separar PEN/USD y mostrar saldos reales en Inicio. Apertura con timestamp del servidor, nunca ingreso. Operaciones RPC privadas con RLS, idempotencia de alta, versiones y auditoría mínima. Máximo inicial: 100 cuentas por usuario incluyendo archivadas.
+
+Diseño: se mantiene frontend-design, azul/Manrope y navegación Finzi. La interfaz Cuentas tendrá estado vacío accionable, formulario nativo en dialog y tarjetas con saldo, moneda, tipo y fecha real. No se añaden botones bancarios ni datos de ejemplo en la vista real. El saldo de cada moneda incluye archivadas; el estado vacío de ingresos/gastos explica que aún no hay movimientos reales.
+
+Estado: implementado y validado localmente. Categorías es la siguiente entrega; el ledger permanece pendiente. Cualquier etapa que introduzca movimientos deberá bloquear la edición de apertura con historia dentro de la misma frontera SQL.
+
+
+Evidencia A-04:
+
+- 111 pruebas unitarias pasadas (25 nuevas de cuentas/dinero).
+- 37 pruebas de integración pasadas contra Supabase/PostgreSQL local (16 nuevas de cuentas): usuarios A/B/anónimo, roles efectivos, inmutabilidad, auditoría, cuota concurrente y reintentos por usuario.
+- 26 E2E pasadas contra el build de producción (4 nuevas): alta real, respuesta perdida tras commit y reintento sin duplicados, PEN/USD, recarga, archivo/restauración, conflicto entre pestañas y sesión expirada.
+- Total: 174 pruebas automatizadas. TypeScript, ESLint y build de producción correctos.
+- Capturas de cuentas reales a 320/390/768/1440 px, sin overflow horizontal. Dialog y foco al confirmar guardado; formulario conserva errores/borrador.
+- Tres migraciones aditivas aplicadas localmente sin reset. La tercera separa requestId por usuario del UUID de cuenta generado por servidor y rechaza numeric no finitos.
+- Corregida la navegación después de editar perfil para cargar su versión actual, validada en E2E de conflicto del onboarding.
+- Sin nuevas dependencias, servicios, variables, cloud, costes, push o integración automática a main. Documentación de cuentas local en docs/development/ACCOUNTS.md; ROADMAP versionado explícitamente.

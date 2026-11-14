@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Check, CircleAlert, Globe2, LoaderCircle, LockKeyhole } from "lucide-react";
 import { FinziMark } from "./auth-shell";
@@ -10,7 +9,6 @@ import { getFieldErrors, type FieldErrors } from "../domain/auth";
 
 const steps = ["Tu nombre", "Tus preferencias", "Revisa tu perfil"];
 export function Onboarding({ initial, zones, editing }: { initial: FinancialProfile; zones: string[]; editing: boolean }) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [displayName, setName] = useState(initial.display_name ?? "");
   const [currency, setCurrency] = useState(initial.preferred_currency ?? "PEN");
@@ -43,7 +41,7 @@ export function Onboarding({ initial, zones, editing }: { initial: FinancialProf
     try {
       const response = await fetch("/api/v1/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input), cache: "no-store" });
       const data = await response.json();
-      if (response.ok && data.ok) { router.replace(preview ? "/dashboard?demo=1" : "/dashboard"); router.refresh(); return; }
+      if (response.ok && data.ok) { window.location.replace(preview ? "/dashboard?demo=1" : "/dashboard"); return; }
       setMessage(data.message ?? "No pudimos guardar el perfil. Puedes reintentarlo.");
       setFailure(response.status === 401 ? "session" : response.status === 409 ? "conflict" : "retry");
       if (data.fieldErrors) { setErrors(data.fieldErrors); setStep(data.fieldErrors.displayName ? 0 : 1); }

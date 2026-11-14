@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDownLeft, ArrowUpRight, ArrowRight, BriefcaseBusiness, Check, ChevronDown, Download, Eye, EyeOff, FlaskConical, Home, LayoutGrid, ListFilter, Menu, Plus, Search, Settings2, ShieldCheck, ShoppingBasket, TrainFront, Utensils, Wallet, X, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRight, BriefcaseBusiness, ChevronDown, Download, Eye, EyeOff, FlaskConical, Home, LayoutGrid, ListFilter, Menu, Plus, Search, Settings2, ShieldCheck, ShoppingBasket, TrainFront, Utensils, Wallet, X, type LucideIcon } from "lucide-react";
 import { FinziMark } from "@/modules/identity/presentation/auth-shell";
+import { AccountsWorkspace, type Account } from "@/modules/accounts";
 import type { FinancialProfile } from "@/modules/identity/domain/profile";
 import { balance, CATEGORIES, createSample, decimal, money, newSampleMovement, parseMinor, SAMPLE_CUTOFF, SAMPLE_MONTHS, sampleCsv, summarize, type Currency, type DemoAccount, type DemoMovement } from "../domain/demo";
 
@@ -15,7 +16,7 @@ const monthName = (month: string, short = false) => new Intl.DateTimeFormat("es-
 const dateName = (date: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(date + "T12:00:00Z"));
 const percentage = (amount: bigint, total: bigint) => total === 0n ? 0 : Number(amount * 10000n / total) / 100;
 
-export function DashboardHome({ profile, demo }: { profile: FinancialProfile; demo: boolean }) {
+export function DashboardHome({ profile, demo, realAccounts }: { profile: FinancialProfile; demo: boolean; realAccounts: Account[] }) {
   const router = useRouter();
   const [sample, setSample] = useState(createSample);
   const [currency, setCurrency] = useState<Currency>(profile.preferred_currency ?? "PEN");
@@ -109,9 +110,9 @@ export function DashboardHome({ profile, demo }: { profile: FinancialProfile; de
             <section className="home-panel category-panel" aria-labelledby="categories-title"><div className="panel-heading"><h2 id="categories-title">¿En qué se va?</h2><span className="chart-range">{monthName(month)}</span></div><div className="category-body"><div className="donut-chart"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="46" fill="none" stroke="#eef1f7" strokeWidth="13" />{summary.categories.map((category, index) => <circle key={category.name} cx="60" cy="60" r="46" pathLength="100" fill="none" stroke={colors[index % colors.length]} strokeWidth="13" strokeDasharray={`${percentage(category.amount, summary.expense)} ${100 - percentage(category.amount, summary.expense)}`} strokeDashoffset={-percentage(summary.categories.slice(0, index).reduce((sum, c) => sum + c.amount, 0n), summary.expense)} transform="rotate(-90 60 60)" />)}</svg><div className="donut-center"><span>Gastos del mes</span><strong>{display(summary.expense)}</strong></div></div><ul className="category-legend">{summary.categories.map((category, index) => <li key={category.name}><span className="category-dot" style={{ background: colors[index % colors.length] }} /><span>{category.name}</span><strong>{hidden ? "•••" : `${category.share}%`}</strong></li>)}{!summary.categories.length && <li>Sin gastos en este período.</li>}</ul></div></section></div>
             <div className="details-grid">{movementPanel()}{accountsPanel()}</div>
           </> : view === "movements" ? movementPanel(true) : accountsPanel(true)}
-        </> : <section className="home-real-empty"><span className="empty-brand" aria-hidden="true"><Wallet size={44} strokeWidth={1.2} /></span><span className="profile-ready"><Check size={15} aria-hidden="true" />Perfil configurado</span><h2>Tu espacio está listo para empezar.</h2><p>Aún no tienes cuentas ni movimientos registrados. Puedes explorar el Inicio con una muestra interactiva antes de incorporar tus datos.</p><button className="home-primary-button" disabled={changingMode} onClick={() => setDemo(true)}><FlaskConical size={18} aria-hidden="true" />Explorar con datos de prueba</button><Link className="home-text-button" href="/onboarding?edit=1">Revisar mi perfil<ArrowRight size={15} aria-hidden="true" /></Link><small>El registro de cuentas reales estará disponible en una próxima actualización.</small></section>}
+        </> : <AccountsWorkspace preferredCurrency={profile.preferred_currency ?? "PEN"} initialAccounts={realAccounts} timezone={profile.timezone ?? "UTC"} view={view} onViewAccounts={() => go("accounts")} onExplore={() => setDemo(true)} />}
         <div className="home-status" role="status" aria-live="polite">{notice}</div>
-        <footer className="home-footer"><span>{demo ? "Muestra de junio a noviembre de 2026. No se guarda en tus cuentas." : "Tu perfil está guardado. Los datos de prueba son opcionales."}</span><span>{currency} · Sin conversión automática</span></footer>
+        <footer className="home-footer"><span>{demo ? "Muestra de junio a noviembre de 2026. No se guarda en tus cuentas." : "Datos reales. Aperturas separadas de ingresos."}</span><span>{demo ? `${currency} · Sin conversión automática` : "PEN y USD · Sin conversión automática"}</span></footer>
       </main>
     </div>
     <dialog ref={navDialog} className="home-nav-dialog" aria-label="Navegación principal"><div className="dialog-heading"><span className="wordmark"><FinziMark /><span>finzi</span></span><button className="home-icon-button" onClick={() => navDialog.current?.close()} aria-label="Cerrar navegación"><X size={21} /></button></div>{navigation}</dialog>

@@ -75,3 +75,12 @@ Los gráficos se derivan de cuentas/movimientos del escenario. Barras de ingreso
 Modo de prueba opt-in mediante botón, URL o casilla final del onboarding. Banner explícito, salida y reinicio al recargar. Todos los enlaces/controles actuales funcionan: navegación entre vistas, búsqueda, filtros, datos ocultos, CSV, edición de apertura, movimiento simulado, perfil y seguridad. Dialogs nativos para formularios/navegación, Escape, foco visible y bloqueo del scroll del fondo. No hay efectos de entrada ni animaciones de gráficos.
 
 La vista sin muestra conserva estado vacío y no presenta importes de ejemplo como finanzas del usuario. Capturas locales home-final-{1440,1024,768,390,320}.png y home-preview.png; no se incluyen en Git ni se envían al sitio las referencias JPEG.
+
+
+## Cuentas y aperturas reales — A-04
+
+Se conserva el marco de Inicio. Toolbar con estado de guardado, actualizar y añadir cuenta; totales PEN/USD independientes (la moneda preferida encabeza la composición); listado de cuentas con nombre, tipo, saldo, apertura y archivo. La superficie azul sigue reservada al saldo principal. Archivadas permanecen en los totales; el filtro solo afecta el listado y su texto lo explica.
+
+El estado vacío ofrece crear la primera cuenta. Dialog nativo con nombre, tipo, moneda, saldo y explicación del timestamp del servidor. Al editar se mantienen moneda/tipo visibles e inmutables. Labels de 16 px en inputs, errores anunciados y primer campo inválido enfocado. Se conservan campos ante fallo; un conflicto exige recargar de forma explícita. Al guardar, el foco pasa al título de la cuenta canónica. Durante la petición se bloquea el cierre accidental con timeout de 15 s.
+
+Grid de cuentas de tres, dos y una columna; acciones se apilan en móvil. Capturas real-accounts-{1440,768,390,320}.png en la evidencia local ignorada. La muestra conserva su aviso y nunca sustituye cuentas reales. No se muestran ingresos/gastos como ceros provisionales: una nota explica que todavía no existen movimientos reales.

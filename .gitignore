@@ -41,3 +41,6 @@ Thumbs.db
 
 # IDEA
 .idea/
+
+# Local code index (may contain source and paths)
+.codegraph/

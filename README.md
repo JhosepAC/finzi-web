@@ -1,6 +1,6 @@
-# Finzi · AUTH
+# Finzi
 
-Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria; el dashboard permite explorar una muestra financiera interactiva y conserva un estado sin cuentas fuera del modo de prueba. No incluye cuentas, movimientos o servicios de pago.
+Autenticación y onboarding real en español con Next.js y Supabase. Identity incluye registro, confirmación por correo, acceso, recuperación, sesión protegida y cierre local/global. El perfil inicial añade nombre, PEN/USD y zona horaria. Inicio permite guardar cuentas personales con saldos iniciales reales y explorar una muestra financiera separada. No incluye movimientos reales ni servicios de pago.
 
 ## Ejecutar localmente
 
@@ -43,7 +43,7 @@ Playwright usa Edge instalado en Windows. En otro entorno se puede instalar su n
 
 No se ha desplegado la aplicación ni creado infraestructura cloud. Antes de abrir el registro público faltan configuración HTTPS/Supabase/correo, validaciones jurídicas y operativas indicadas en el informe. La gratuidad y la prohibición de activar costes siguen vigentes.
 
-El `.gitignore` conserva las exclusiones originales del usuario, incluidas `docs/`, `AGENTS.md` y las carpetas de agentes. Por ello esos documentos seguirán ignorados si se inicializa Git; conservarlos aquí no implica que vayan a publicarse automáticamente.
+El `.gitignore` conserva las exclusiones originales del usuario, incluidas `docs/`, `AGENTS.md` y las carpetas de agentes. Se versiona explícitamente docs/product/ROADMAP.md por petición del usuario; los demás documentos ignorados permanecen locales y no se publican automáticamente.
 
 ## Interfaz AUTH
 
@@ -51,9 +51,9 @@ Rediseño en `feat/auth-ui-redesign`, usando las referencias locales de login y 
 
 ## Avance por interfaces
 
-[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) registra la secuencia, alcance y aceptación de cada entrega. AUTH está integrado en main; onboarding se desarrolla en `feat/financial-profile-onboarding`.
+[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) registra la secuencia, alcance y aceptación de cada entrega. AUTH está integrado en main; las entregas posteriores de onboarding, Inicio y cuentas se encadenan en ramas dedicadas. El avance vigente está en [ROADMAP](docs/product/ROADMAP.md).
 
-Después de confirmar el correo, `/onboarding` guía nombre, preferencias y revisión. Guarda en Supabase y abre `/dashboard`. Login posterior retoma la configuración pendiente o entra al inicio. `/onboarding?edit=1` permite editar; `/session` mantiene los cierres. No hay saldos o movimientos de ejemplo.
+Después de confirmar el correo, `/onboarding` guía nombre, preferencias y revisión. Guarda en Supabase y abre `/dashboard`. Login posterior retoma la configuración pendiente o entra al inicio. `/onboarding?edit=1` permite editar; `/session` mantiene los cierres. Las cuentas reales se crean desde Inicio; la muestra financiera requiere activar su modo de prueba.
 
 Migración nueva: `supabase/migrations/20261114000100_profile_onboarding.sql`. Tras actualizar un entorno local existente, aplicar con `pnpm exec supabase migration up --local`; no hace falta resetear ni borrar usuarios. Debe aplicarse también antes de desplegar esta versión en otro entorno. La primera migración AUTH es un prerrequisito. Sin variables adicionales ni dependencias nuevas.
 
@@ -61,6 +61,14 @@ Migración nueva: `supabase/migrations/20261114000100_profile_onboarding.sql`. T
 
 Rama `feat/dashboard-home`, basada en la entrega de onboarding. Tras entrar, pulsa **Explorar con datos de prueba** o abre `/dashboard?demo=1`. También puedes marcar esa opción al terminar el onboarding. Se requiere identidad verificada y perfil completo en todos los casos.
 
-La muestra muestra PEN/USD separados, saldo reconstruido, ingresos/gastos mensuales, evolución, categorías, cuentas y movimientos. Puedes cambiar período/moneda, buscar, filtrar, ocultar importes, descargar CSV de muestra, añadir ingresos/gastos de prueba y editar aperturas. La muestra usa fechas de junio al 14 de noviembre de 2026. Su banner permanece visible; **recargar la reinicia** y Salir de la muestra vuelve al estado sin cuentas. Los importes de apertura no cuentan como ingresos.
+La muestra muestra PEN/USD separados, saldo reconstruido, ingresos/gastos mensuales, evolución, categorías, cuentas y movimientos. Puedes cambiar período/moneda, buscar, filtrar, ocultar importes, descargar CSV de muestra, añadir ingresos/gastos de prueba y editar aperturas. La muestra usa fechas de junio al 14 de noviembre de 2026. Su banner permanece visible; **recargar la reinicia** y Salir de la muestra vuelve a tus cuentas reales (o al estado vacío si no creaste ninguna). Los importes de apertura no cuentan como ingresos.
 
-Los datos de prueba viven en memoria del componente y no se guardan en Supabase, localStorage o el perfil financiero. No hay pagos, transferencias bancarias, anuncios, IA ni servicios nuevos. Las cuentas y movimientos reales siguen pendientes de su modelo persistente; no se incluye un saldo global en profiles. Detalles en [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) y [DESIGN.md](DESIGN.md).
+Los datos de prueba viven en memoria del componente y no se guardan en Supabase, localStorage o el perfil financiero. No hay pagos, transferencias bancarias, anuncios, IA ni servicios nuevos. Las cuentas y aperturas reales están implementadas por separado; los movimientos reales siguen pendientes. No se incluye un saldo global en profiles. Detalles en [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) y [DESIGN.md](DESIGN.md).
+
+## Cuentas personales y saldos iniciales — A-04
+
+Rama feat/accounts-and-opening-balances. En Inicio o Cuentas puedes registrar efectivo, cuenta bancaria, ahorros u otra cuenta personal. Elige PEN/USD y un saldo inicial, incluido cero o negativo; la fecha de apertura se asigna al guardar. Puedes editar nombre/apertura y archivar/restaurar. La moneda, el tipo y la fecha se conservan. Los totales incluyen archivadas y nunca mezclan monedas. Límite técnico inicial: 100 cuentas por usuario.
+
+Aplicar las tres migraciones nuevas, en orden, con `pnpm exec supabase migration up --local` después de iniciar Supabase. No se requiere resetear ni borrar usuarios, añadir variables o instalar dependencias. Persistencia mediante RPC privadas, RLS, altas idempotentes por usuario, control de versión y auditoría mínima. Una respuesta perdida puede reintentarse sin duplicar cuentas. No se usan claves administrativas en la aplicación.
+
+Los importes actuales representan aperturas, no ingresos o gastos. Antes de implementar movimientos se deberá bloquear en SQL la edición de aperturas con historia. Ver [contrato de cuentas](docs/development/ACCOUNTS.md), [avance](IMPLEMENTATION_PROGRESS.md) y [ROADMAP](docs/product/ROADMAP.md). Validación actual: 111 unitarias, 37 de integración local y 26 E2E contra producción (174 en total), TypeScript, ESLint y build.

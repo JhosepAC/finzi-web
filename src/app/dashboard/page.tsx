@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { readIdentity } from "@/modules/identity/infrastructure/session";
 import { readProfile } from "@/modules/identity/infrastructure/profile";
+import { readOwnedAccounts } from "@/modules/accounts/server";
 import { DashboardHome } from "@/modules/reporting/presentation/dashboard-home";
 
 export const dynamic = "force-dynamic";
@@ -10,5 +11,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const profile = await readProfile();
   if (!profile) redirect("/login");
   if (!profile.onboarding_completed_at) redirect("/onboarding");
-  return <DashboardHome key={profile.user_id} profile={profile} demo={(await searchParams).demo === "1"} />;
+  const accounts = await readOwnedAccounts();
+  if (!accounts) redirect("/login");
+  return <DashboardHome key={profile.user_id} profile={profile} realAccounts={accounts} demo={(await searchParams).demo === "1"} />;
 }
