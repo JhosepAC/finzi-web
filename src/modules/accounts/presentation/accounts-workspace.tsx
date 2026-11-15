@@ -18,7 +18,7 @@ export function AccountsWorkspace({ initialAccounts, timezone, preferredCurrency
   const [deleting, setDeleting] = useState<Account | null>(null);
   const [deletePending, setDeletePending] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
+  const [, setRefreshing] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [failed, setFailed] = useState(false);
   const busy = useRef(false);
