@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+import { financialSession, localOrigin, navigate } from "../helpers/financial";
+
+test("elimina categoría usada conservando movimiento, saldo y bloqueo de restauración", async ({ page, context }) => {
+  const data = (await financialSession(page, context))!;
+  const headers = { Origin: localOrigin };
+  const created = await context.request.post("/api/v1/movements", { headers, data: { requestId: crypto.randomUUID(), kind: "expense", accountId: data.accounts[0].id, categoryId: data.expense.id, amount: "20", description: "Compra conservada", note: "", occurredAt: null } });
+  expect(created.status()).toBe(200);
+  await navigate(page, "Categorías");
+  await page.getByRole("button", { name: `Eliminar categoría ${data.expense.name}`, exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Eliminar categoría", exact: true });
+  await expect(dialog).toContainText("Los movimientos asociados conservarán su categoría");
+  await dialog.getByRole("button", { name: "Eliminar categoría", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByRole("heading", { name: data.expense.name, exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Nueva categoría", exact: true }).click();
+  const createDialog = page.getByRole("dialog", { name: "Nueva categoría", exact: true });
+  await createDialog.getByLabel("Nombre de la categoría").fill(data.expense.name);
+  await createDialog.getByRole("button", { name: "Crear categoría", exact: true }).click();
+  await expect(createDialog).not.toBeVisible();
+  const current = (await (await context.request.get("/api/v1/categories")).json()).categories.find((category: { name: string }) => category.name === data.expense.name);
+  expect(current.id).not.toBe(data.expense.id);
+  const history = await (await context.request.get("/api/v1/movements")).json();
+  expect(history.movements[0]).toMatchObject({ category_id: data.expense.id, category_name: data.expense.name, status: "posted" });
+  expect(history.expense_minor).toBe("2000");
+  expect((await (await context.request.get("/api/v1/accounts")).json()).accounts[0].balance_minor).toBe("8000");
+  const restore = await context.request.patch("/api/v1/categories", { headers, data: { id: data.expense.id, name: data.expense.name, description: data.expense.description, color: data.expense.color, icon: data.expense.icon, imagePath: null, archived: false, expectedVersion: 2 } });
+  expect(restore.status()).toBe(404);
+  await page.reload(); await navigate(page, "Categorías");
+  await page.getByRole("checkbox", { name: "Mostrar archivadas" }).check();
+  await expect(page.getByRole("heading", { name: data.expense.name, exact: true })).toHaveCount(1);
+});
