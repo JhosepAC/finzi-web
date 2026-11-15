@@ -35,7 +35,7 @@
 .ledger-history-heading h2 { font-size: 17px; margin: 0; letter-spacing: -.02em; }
 .ledger-history-heading > span { color: #53617a; font-size: 13px; }
 .ledger-filters { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 18px 16px; padding: 24px 26px; }
-.ledger-filters select { font-size: 14px; }
+.ledger-filters .field select { min-height: 46px; font-size: 14px; padding-block: 10px; }
 .ledger-more-filters { grid-column: 1 / -1; }
 .ledger-filter-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 12px; }
 .ledger-filter-extra small { font-size: 12px; color: #53617a; }

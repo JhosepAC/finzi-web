@@ -23,13 +23,18 @@
 .real-info { display: flex; align-items: flex-start; gap: 12px; padding: 20px; border-radius: 10px; background: #edf3ff; font-size: 12px; line-height: 1.8; color: #53617a; }
 .real-info svg { flex-shrink: 0; margin-top: 3px; }
 .real-info p { margin: 0; }
-.real-feedback { font-size: 13px; line-height: 1.8; color: #16765a; }
-.real-feedback:empty { display: none; }
 .real-form-date { margin: 0; padding: 16px; font-size: 12px; color: #53617a; background: #f4f7fc; border-radius: 10px; line-height: 1.8; }
 .real-form-date span { display: block; }
 .archive-option { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; cursor: pointer; }
 .archive-option > span > svg { vertical-align: middle; margin-right: 6px; }
 .archive-option small { display: block; font-size: 12px; color: #63718a; margin-top: 8px; line-height: 1.8; }
+.real-account-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.account-delete-trigger { width: 40px; min-height: 40px; color: #b91c1c; border-color: #f0cccc; }
+.account-delete-trigger:hover { color: #991b1b; background: #fdecec; border-color: #f3c3c3; }
+.account-delete-dialog { width: min(480px, calc(100% - 32px)); }
+.delete-account-name { margin: 18px 0 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.account-delete-dialog .finzi-form-actions { margin-top: 26px; }
+.account-delete-dialog .feedback-slot { margin-top: 14px; }
 @media (max-width: 1200px) { .real-account-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 767px) {
  .real-toolbar { gap: 12px; }
@@ -40,4 +45,4 @@
  .real-data-label { font-size: 12px; }
 }
 
-.real-feedback.failed { color: #b91c1c; }
+

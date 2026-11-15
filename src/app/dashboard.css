@@ -6,8 +6,8 @@
 .home-sidebar .wordmark { font-size: 28px; }
 .home-nav { display: grid; gap: 6px; }
 .home-nav button, .home-nav-secondary :is(a, button) { display: flex; align-items: center; gap: 13px; min-height: 48px; padding: 12px 15px; border: 0; border-radius: 10px; color: #5a6680; background: transparent; font-size: 14px; font-weight: 550; text-align: left; text-decoration: none; }
+.home-nav button[aria-current="page"] { background: #f0f4fc; color: #1d4ed8; }
 .home-nav button:hover, .home-nav-secondary :is(a, button):hover { background: #f0f4fc; color: #1d4ed8; }
-.nav-dot { width: 5px; height: 5px; border-radius: 50%; background: #1d4ed8; margin-left: auto; }
 .home-nav-secondary { display: grid; gap: 6px; border-top: 1px solid #edf0f5; margin-top: 30px; padding-top: 23px; }
 .home-body { min-width: 0; }
 .home-topbar { min-height: 88px; padding: 18px 36px; display: flex; gap: 24px; align-items: center; background: #fff; border-bottom: 1px solid #e7ecf4; }
@@ -38,7 +38,7 @@
 .account-symbol { width: 36px; height: 36px; display: grid; place-items: center; background: #edf3ff; color: #1d4ed8; border-radius: 10px; flex-shrink: 0; }
 .finzi-dialog { width: min(540px, calc(100% - 32px)); max-height: calc(100svh - 32px); border: 1px solid #dce4f3; border-radius: 20px; padding: 28px; color: #152343; box-shadow: 0 20px 80px #15234330; }
 .finzi-dialog::backdrop, .home-nav-dialog::backdrop { background: #101c3c70; }
-.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px }
 .dialog-heading h2 { margin: 6px 0 0; font-size: 23px; letter-spacing: -.035em; }
 .dialog-description { color: #63718a; font-size: 14px; line-height: 1.8; margin: 14px 0 24px; }
 .finzi-form { display: grid; gap: 20px; }

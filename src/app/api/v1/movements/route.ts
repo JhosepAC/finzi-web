@@ -62,7 +62,7 @@ async function write(request: NextRequest, mode: "create" | "void" | "replace") 
     if (result.error?.code === "40001") return reply(409, { ok: false, code: "CONFLICT", message: "Este intento ya confirmó otros datos o el movimiento cambió. Actualiza antes de continuar." });
     if (result.error?.code === "P0002") return reply(404, { ok: false, message: "No se encontró el movimiento, la cuenta o la categoría." });
     if (result.error?.code === "42501") return reply(403, { ok: false, message: "Completa tu perfil para registrar movimientos." });
-    if (result.error?.code === "54000") return reply(409, { ok: false, message: "Alcanzaste el límite inicial de 10000 movimientos, incluidos los anulados." });
+    if (result.error?.code === "54000") return reply(409, { ok: false, message: "Alcanzaste el límite inicial de 10000 movimientos, incluidos los archivados." });
     if (result.error?.code === "22008") return reply(422, { ok: false, message: "La fecha debe haber ocurrido y no ser anterior a la apertura de las cuentas involucradas.", fieldErrors: { occurredAt: "Elige una fecha ya ocurrida, posterior o igual a la apertura." } });
     if (result.error?.code === "22003") return reply(422, { ok: false, message: "Este importe deja el saldo fuera del rango admitido. Revisa el movimiento." });
     if (result.error?.code === "23514" || result.error?.code === "23503") return reply(422, { ok: false, message: "Revisa el importe y que las cuentas estén activas, sean distintas y tengan la misma moneda; en ingresos/gastos revisa también la categoría y su padre." });

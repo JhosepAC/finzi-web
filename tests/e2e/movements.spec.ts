@@ -45,16 +45,16 @@ test("confirmación perdida permite reintentar exactamente el mismo registro", a
   const pageData = await (await context.request.get("/api/v1/movements")).json(); expect(pageData.total_count).toBe(1); expect(pageData.expense_minor).toBe("10");
   expect((await (await context.request.get("/api/v1/accounts")).json()).accounts.find((a: { id: string }) => a.id === data.accounts[0].id).balance_minor).toBe("9990");
 });
-test("validación, fecha futura, saldo negativo y anulación sin perder historial", async ({ page, context }) => {
+test("validación, fecha futura, saldo negativo y archivado sin perder historial", async ({ page, context }) => {
   const data = (await financialSession(page, context))!; await navigate(page, "Movimientos");
   const form = await entry(page, "expense", data.expense.id, "0", "Gasto mayor al saldo"); await form.getByRole("button", { name: "Guardar gasto", exact: true }).click(); await expect(form.getByLabel("Importe en PEN")).toBeFocused();
   await form.getByLabel("Importe en PEN").fill("150"); await expect(form.locator(".ledger-preview.warning")).toContainText("−S/ 50.00");
   await form.getByRole("checkbox", { name: "Ocurrió ahora" }).uncheck(); await form.getByLabel("Fecha y hora del movimiento").fill("2099-01-01T10:00"); await form.getByRole("button", { name: "Guardar gasto", exact: true }).click(); await expect(form.getByText(/La fecha debe haber ocurrido/)).toBeVisible(); await expect(form.getByLabel("Fecha y hora del movimiento")).toBeFocused(); await page.evaluate(() => window.scrollTo(0, 0)); await page.screenshot({ path: ".impeccable/review/ledger-date-error.png", fullPage: true }); await expect(form.getByLabel("Descripción", { exact: true })).toHaveValue("Gasto mayor al saldo");
   await form.getByRole("checkbox", { name: "Ocurrió ahora" }).check(); await form.getByRole("button", { name: "Guardar gasto", exact: true }).click(); await expect(form).toHaveCount(0);
-  const record = page.locator(".ledger-record").filter({ hasText: "Gasto mayor al saldo" }); await record.locator("summary").click(); await record.getByRole("button", { name: "Anular movimiento", exact: true }).click(); await record.getByRole("button", { name: "Confirmar anulación" }).click(); await expect(record.getByLabel("Motivo de anulación")).toBeFocused();
-  await record.getByLabel("Motivo de anulación").fill("Se registró por error"); await page.evaluate(() => window.scrollTo(0, 0)); await page.screenshot({ path: ".impeccable/review/ledger-void-form.png", fullPage: true }); await record.getByRole("button", { name: "Confirmar anulación" }).click(); await expect(record).toContainText("Anulado"); await expect(page.locator(".ledger-totals")).toContainText("S/ 0.00");
+  const record = page.locator(".ledger-record").filter({ hasText: "Gasto mayor al saldo" }); await record.locator("summary").click(); await record.getByRole("button", { name: "Archivar movimiento", exact: true }).click(); await record.getByRole("button", { name: "Confirmar archivado" }).click(); await expect(record.getByLabel("Motivo de archivado")).toBeFocused();
+  await record.getByLabel("Motivo de archivado").fill("Se registró por error"); await page.evaluate(() => window.scrollTo(0, 0)); await page.screenshot({ path: ".impeccable/review/ledger-void-form.png", fullPage: true }); await record.getByRole("button", { name: "Confirmar archivado" }).click(); await expect(record).toContainText("Archivado"); await expect(page.locator(".ledger-totals")).toContainText("S/ 0.00");
   const account = (await (await context.request.get("/api/v1/accounts")).json()).accounts.find((a: { id: string }) => a.id === data.accounts[0].id); expect(account).toMatchObject({ balance_minor: "10000", can_edit_opening: false });
-  await page.reload(); await navigate(page, "Movimientos"); await expect(page.locator(".ledger-record")).toContainText("Anulado");
+  await page.reload(); await navigate(page, "Movimientos"); await expect(page.locator(".ledger-record")).toContainText("Archivado");
 });
 test("páginas y filtros mantienen agregados completos y no mezclan PEN/USD", async ({ page, context }) => {
   const data = (await financialSession(page, context))!;

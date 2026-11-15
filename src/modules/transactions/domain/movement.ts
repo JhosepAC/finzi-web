@@ -9,14 +9,14 @@ export const postMovementSchema = z.object({
 }).strict();
 export const postTransferSchema = postMovementSchema.omit({ kind: true, categoryId: true }).extend({ kind: z.literal("transfer"), destinationId: z.uuid("Elige una cuenta de destino.") }).strict().refine((d) => d.accountId !== d.destinationId, { message: "El destino debe ser otra cuenta.", path: ["destinationId"] });
 export const createMovementSchema = z.discriminatedUnion("kind", [postMovementSchema, postTransferSchema]);
-const replacementFields = { id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de la corrección.").max(300, "Usa como máximo 300 caracteres.") };
+const replacementFields = { id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de la edición.").max(300, "Usa como máximo 300 caracteres.") };
 export const replaceMovementSchema = z.discriminatedUnion("kind", [
   postMovementSchema.extend(replacementFields).strict(),
   postTransferSchema.safeExtend(replacementFields).strict(),
 ]);
 export const movementDetailQuerySchema = z.object({ id: z.uuid() }).strict();
 export type MovementKind = "income" | "expense" | "transfer";
-export const voidMovementSchema = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de anulación.").max(300, "Usa como máximo 300 caracteres.") }).strict();
+export const voidMovementSchema = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de archivado.").max(300, "Usa como máximo 300 caracteres.") }).strict();
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => { const parsed = new Date(`${value}T00:00:00Z`); return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value; });
 export const movementQuerySchema = z.object({
   currency: z.enum(["PEN", "USD"]).default("PEN"), kind: z.enum(["income", "expense", "transfer"]).optional(),

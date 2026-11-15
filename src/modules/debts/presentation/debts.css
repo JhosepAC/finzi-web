@@ -8,6 +8,34 @@
 .debt-toolbar { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .debt-currency { display: flex; flex-direction: column; gap: 8px; margin-right: auto; font-size: 13px; }
 .debt-workspace :is(input,select,textarea) { min-width: 0; max-width: 100%; border: 1px solid #8490a7; border-radius: 9px; background: #fcfdff; color: #152343; padding: 12px; font-size: 16px; min-height: 48px; }
+.debt-workspace select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2353617a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(21, 35, 67, 0.04);
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+.debt-workspace select:hover:not(:disabled) {
+  border-color: #53617a;
+  background-color: #ffffff;
+}
+.debt-workspace select:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+  border-color: #1d4ed8;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px #edf3ff;
+}
+.debt-workspace select option {
+  background-color: #ffffff;
+  color: #152343;
+  padding: 10px 14px;
+}
 .debt-workspace input::placeholder, .debt-workspace textarea::placeholder { color: #637089; opacity: 1; }
 .debt-workspace textarea { resize: vertical; }
 .debt-summary { display: grid; grid-template-columns: 1fr 1.3fr; background: #fff; border: 1px solid #dce4f1; border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
