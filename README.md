@@ -86,3 +86,10 @@ Deudas en el dashboard: registro/edición inline, acreedor, icono, categoría y 
 Eliminar deuda la oculta y conserva gastos/historia exportable; desvincular conserva el gasto; anular gasto lo revierte. JSON y eliminación de cuenta incluyen deudas/pagos/eventos. Límites gratuitos iniciales: 200 deudas/2000 pagos por usuario incluida historia, además del límite de movimientos. Sin intereses, desembolsos automáticos, servicios nuevos o costes. Autorización específica A-11; no completa el paso11 de endurecimiento/piloto. [Contrato local](docs/development/DEBTS.md) y [avance versionado](IMPLEMENTATION_PROGRESS.md).
 
 Para aislar buzones de pruebas locales puede definirse FINZI_TEST_MAILPIT_URL (solo loopback); las pruebas nuevas de Deudas admiten FINZI_TEST_DB_CONTAINER con nombre validado. El worker operacional conserva su alcance original; no se redirige silenciosamente a otro proyecto. La validación de A-11 documenta una migración externa incompatible en el Supabase compartido y usa un entorno local separado, sin revertir datos ajenos.
+
+
+## A-12 — Estadísticas
+
+Vista Estadísticas con cinco indicadores y cuatro gráficos interactivos: ingresos/gastos, distribución, balance acumulado del período y ahorro por intervalo. Seis períodos automáticos, PEN/USD separados, comparación de igual duración local y categorías con incrementos/reducciones/desglose; controles por teclado/táctil, tabla exacta y acceso al historial contextual. Ahorro confirmado=max(ingresos−gastos,0); tasa=ahorro/ingresos o No calculable sin ingresos. El balance conserva déficit; estos indicadores no son saldos de cuentas ni dinero reservado. No se suman los ahorros de intervalos para ocultar déficits.
+
+Solo movimientos vigentes: sin aperturas/transferencias, anulaciones/reemplazados o duplicación de gastos por deudas. API privada/RLS y una instantánea de lectura; no tablas, librerías o servicios nuevos. Cambios rápidos de filtros cancelan consultas; datos de otra moneda/período nunca se presentan bajo la selección actual. [Contrato local](docs/development/STATISTICS.md) y [ROADMAP versionado](docs/product/ROADMAP.md).

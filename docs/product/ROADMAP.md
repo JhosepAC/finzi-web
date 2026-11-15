@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-11 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-12 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -17,6 +17,7 @@ Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 9 | Perfil y seguridad completos | Implementado — A-09, feat/profile-and-security | Perfil directo, preferencias con aviso/auditoría/conflictos; estado, reautenticación de un uso y contraseña; cierres local/global. Dispositivos avanzados diferidos |
 | 10 | Exportación y eliminación | Implementado localmente — A-10 | JSON/CSV privados, bloqueo inmediato, proceso reintentable, manifiesto cifrado externo y seguimiento sin identidad; retención pública pendiente antes del lanzamiento |
 | A-11 | Deudas — extensión autorizada | Implementado localmente, feat/debt-management | CRUD, resumen y disponible PEN/USD; vencimientos y filtros; pagos como gasto nuevo o existente, sin duplicación; correcciones/anulaciones sincronizadas, RLS y portabilidad |
+| A-12 | Estadísticas — extensión autorizada | Implementado localmente, feat/financial-statistics | Cinco indicadores, cuatro gráficos interactivos, seis períodos, comparación/categorías y tabla exacta; solo ledger real, ahorro positivo confirmado |
 | 11 | Endurecimiento y piloto | Pendiente | HTTPS, correo, requisitos legales/edad, aislamiento en entorno final, cuotas, respaldo y restauración; sin SLA de planes gratuitos |
 
 El avance por etapa requiere una entrega revisable en rama dedicada, pruebas proporcionales y actualización de este archivo. main permanece estable; no se fusiona ni se publica automáticamente por completar una interfaz. [Registro detallado](../../IMPLEMENTATION_PROGRESS.md).
@@ -114,3 +115,14 @@ Solicitud y confirmación explícitas autorizan esta extensión antes diferida: 
 El paso11 de endurecimiento/piloto, pendientes N-01–N-06 y límites legales/respaldos A-10 siguen vigentes. Rama dedicada desde 8a720b7; sin integración a main, costes, publicación o paquetes nuevos. docs/context.md intacto.
 
 Validación A-11:212 unitarias/160 integración aprobadas y64 escenarios E2E comprobados entre corrida y repeticiones; seis nuevos de Deudas y17 SQL repetidos en stack aislado por incompatibilidad ajena posterior en Supabase compartido. Build/TypeScript/ESLint correctos. Review inicial fix y verdict pass ship limitado al enlace accesible corregido; tres imágenes inspeccionadas contando verificación. [Detalle y límites](../../IMPLEMENTATION_PROGRESS.md).
+
+
+## A-12 — Estadísticas con datos reales
+
+Solicitud expresa y definición de ahorro confirmada: excedente positivo; balance firmado y tasa no calculable sin ingresos. Indicadores, gráficos ingreso/gasto, distribución, balance acumulado y ahorro por intervalo, con comparación/categorías, filtros globales automáticos, datos exactos y acceso al ledger. Solo posted income/expense; PEN/USD separados, aperturas/transferencias/anulaciones/reemplazados excluidos. Ahorro no equivale a reserva y menor gasto de categoría no demuestra ahorro causal. [Contrato](../development/STATISTICS.md).
+
+Comparación consecutiva de igual duración local visible;3/6meses incluyen actual+2/5previos, personalizado hasta3660d, series hasta122puntos. Sin nuevas tablas/dependencias/servicios/costes; paso11 y pendientes N-01–N-06 no cambian. Migración aditiva20261115150000 aplicada sin revertir versión ajena del Supabase compartido. Rama dedicada, sin integración a main o publicación automática. docs/context.md intacto.
+
+Validación:228 unitarias,22 integración reales nuevas y5 E2E nuevos aprobados;31 E2E de regresión aprobados. Build/TypeScript/ESLint correctos. Review inicial fix puntual de nota móvil, corregida fuera del scroll con verificación DOM; se registra dictamen final en [avance](../../IMPLEMENTATION_PROGRESS.md). Sin afirmar regresión completa de suites operacionales sobre entorno compartido incompatible.
+
+Revisión cerrada: ship limitado al ajuste de notas, resuelto por DOM sin nuevas vistas de imagen; dos imágenes inspeccionadas en total. E2E afectado repetido y aprobado. [Evidencia](../../IMPLEMENTATION_PROGRESS.md).
