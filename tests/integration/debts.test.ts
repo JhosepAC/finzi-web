@@ -97,7 +97,7 @@ describe("A-11 deudas y pagos con ledger real y RLS", () => {
     const user = await x.c.auth.getUser(); await x.c.auth.signInWithPassword({ email: user.data.user!.email!, password: "una frase de prueba para movimientos 64" });
     const proof = await x.c.schema("api").rpc("issue_reauth_proof", { p_purpose: "export_data" }); expect(proof.error).toBeNull();
     const result = await x.c.schema("api").rpc("export_personal_data", { p_proof: proof.data.token, p_format: "json" }); expect(result.error).toBeNull();
-    expect(result.data.debts).toHaveLength(1); expect(result.data.debts[0]).toMatchObject({ id, paid_minor: "2000", payments: [expect.objectContaining({ active: true })] }); expect(result.data.debts[0].deleted_at).not.toBeNull();
+    expect(result.data.categories.every((c: Record<string, unknown>) => Object.hasOwn(c, "image_path"))).toBe(true); expect(result.data.debts).toHaveLength(1); expect(result.data.debts[0]).toMatchObject({ id, paid_minor: "2000", payments: [expect.objectContaining({ active: true })] }); expect(result.data.debts[0].deleted_at).not.toBeNull();
     expect(result.data.debt_events).toHaveLength(3); expect(JSON.stringify(result.data.debts)).not.toMatch(/request_hash|request_id|password|token/);
   });
 });

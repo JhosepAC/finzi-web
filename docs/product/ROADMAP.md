@@ -126,3 +126,6 @@ Comparación consecutiva de igual duración local visible;3/6meses incluyen actu
 Validación:228 unitarias,22 integración reales nuevas y5 E2E nuevos aprobados;31 E2E de regresión aprobados. Build/TypeScript/ESLint correctos. Review inicial fix puntual de nota móvil, corregida fuera del scroll con verificación DOM; se registra dictamen final en [avance](../../IMPLEMENTATION_PROGRESS.md). Sin afirmar regresión completa de suites operacionales sobre entorno compartido incompatible.
 
 Revisión cerrada: ship limitado al ajuste de notas, resuelto por DOM sin nuevas vistas de imagen; dos imágenes inspeccionadas en total. E2E afectado repetido y aprobado. [Evidencia](../../IMPLEMENTATION_PROGRESS.md).
+
+
+Integración solicitada15/11/2026: Estadísticas y Categorías avanzadas (b25fb35) fusionadas en main. Categorías incorpora eliminación protegida, catálogo de iconos e imágenes privadas; migración20261115160000 conserva exportación conjunta de categorías/imágenes y deudas. No publicación ni costes nuevos.
