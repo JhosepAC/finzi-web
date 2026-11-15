@@ -15,7 +15,7 @@ async function enter(page: Page) {
 }
 async function navigate(page: Page, label: string) {
   const mobile = (page.viewportSize()?.width ?? 1280) <= 1000;
-  const active = page.locator(".home-breadcrumb strong").filter({ hasText: label });
+  const active = page.locator(".home-topbar h1").filter({ hasText: label });
   for (let attempt = 0; attempt < 20; attempt++) {
     if (await active.isVisible()) return;
     if (mobile) {
