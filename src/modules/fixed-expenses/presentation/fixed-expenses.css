@@ -56,5 +56,3 @@
 
 .fixed-workspace :focus-visible { outline: 2px solid var(--action); outline-offset: 3px; }
 @media(max-width:767px) { .fixed-filters > label:first-child { grid-column: 1 / -1; } }
-
-

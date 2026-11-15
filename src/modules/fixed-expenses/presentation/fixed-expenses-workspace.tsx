@@ -64,5 +64,3 @@ export function FixedExpensesWorkspace({ preferredCurrency, timezone, onChanged,
     </>}</dialog>
   </div>;
 }
-
-

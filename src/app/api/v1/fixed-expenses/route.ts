@@ -47,5 +47,3 @@ export async function POST(request: NextRequest) {
     return reply(200, { ok: true, id: result.data.id });
   } catch { return reply(503, { ok: false, message: "No pudimos confirmar el guardado. Conserva el formulario y reintenta la misma operación." }); }
 }
-
-

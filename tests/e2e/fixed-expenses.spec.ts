@@ -61,5 +61,3 @@ test("filtros automáticos, vencidos, vínculo existente y reintento incierto si
   expect((await (await context.request.get("/api/v1/accounts")).json()).accounts[0].balance_minor).toBe("9000");
   expect((await (await context.request.get("/api/v1/fixed-expenses")).json()).payments).toHaveLength(1);
 });
-
-

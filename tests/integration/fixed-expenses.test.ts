@@ -113,4 +113,3 @@ describe("gastos fijos reales", () => {
     expect(JSON.stringify(result.data.fixed_expenses)).not.toMatch(/request_hash|request_id/); expect(result.data.debts).toBeDefined(); expect(result.data.categories).toBeDefined();
   });
 });
-
