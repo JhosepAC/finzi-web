@@ -22,10 +22,10 @@ function denied(uid: string, statement: string, code: string) {
   let message = ""; try { sql(uid, statement); } catch (error) { message = String((error as { stderr: string }).stderr); }
   expect(message).toContain(code);
 }
-const base = { p_request_id: crypto.randomUUID(), p_parent_id: null, p_kind: "expense", p_name: "Casa", p_description: "Personal", p_color: "blue", p_icon: "home" };
+const base = { p_request_id: crypto.randomUUID(), p_parent_id: null, p_kind: "expense", p_name: "Casa", p_description: "Personal", p_color: "blue", p_icon: "home", p_image_path: null };
 const create = (c: SupabaseClient, overrides = {}) => c.schema("api").rpc("create_category", { ...base, ...overrides });
 const read = (c: SupabaseClient) => c.schema("api").rpc("read_categories");
-const update = (c: SupabaseClient, id: string, version: number, overrides = {}) => c.schema("api").rpc("update_category", { p_id: id, p_expected_version: version, p_name: "Casa", p_description: "Personal", p_color: "blue", p_icon: "home", p_archived: false, ...overrides });
+const update = (c: SupabaseClient, id: string, version: number, overrides = {}) => c.schema("api").rpc("update_category", { p_id: id, p_expected_version: version, p_name: "Casa", p_description: "Personal", p_color: "blue", p_icon: "home", p_image_path: null, p_archived: false, ...overrides });
 describe("categorías: RPC, RLS, árbol y concurrencia reales", () => {
   let a: SupabaseClient, b: SupabaseClient, uid: string, uidB: string, root: string, child: string;
   beforeAll(async () => { const aa = await signup(), bb = await signup(); a = aa.c; uid = aa.uid; b = bb.c; uidB = bb.uid; });
@@ -81,7 +81,8 @@ describe("categorías: RPC, RLS, árbol y concurrencia reales", () => {
     denied(uid, `update finance.categories set parent_id='${child}',version=version+1 where id='${root}'`, "23514");
     denied(uidB, `insert into finance.category_events(user_id,category_id,action,version) values('${uidB}','${root}','updated',99)`, "23503");
     denied(uid, "update finance.category_events set action='updated'", "42501");
-    denied(uid, "delete from finance.categories", "42501");
+    expect(sql(uidB, `delete from finance.categories where id='${root}'`)).toContain("DELETE 0");
+    denied(uid, "delete from finance.category_events", "42501");
   });
   it("plantillas concurrentes son propias e idempotentes y no recrean una renombrada", async () => {
     const cc = await signup(); const results = await Promise.all([cc.c.schema("api").rpc("initialize_categories"), cc.c.schema("api").rpc("initialize_categories")]);
@@ -123,5 +124,83 @@ describe("categorías: RPC, RLS, árbol y concurrencia reales", () => {
     expect((await client().schema("api").rpc("read_categories")).error?.code).toBe("42501");
     const incomplete = await signup(false); expect((await create(incomplete.c)).error?.code).toBe("42501"); expect((await incomplete.c.schema("api").rpc("initialize_categories")).error?.code).toBe("42501");
     expect((await a.schema("finance").from("categories").select()).error).not.toBeNull();
+  });
+});
+async function member() {
+  const c = client(), email = `categories-${crypto.randomUUID()}@example.test`, password = "una frase de prueba para categorías 64";
+  expect((await c.auth.signUp({ email, password })).error).toBeNull();
+  const link = new URL(await findMailLink(email, "signup"));
+  const verified = await c.auth.verifyOtp({ token_hash: new URLSearchParams(link.hash.slice(1)).get("token_hash")!, type: "signup" });
+  expect(verified.error).toBeNull(); await c.schema("api").rpc("ensure_profile");
+  expect((await c.schema("api").rpc("configure_profile", { p_display_name: "Prueba gestión", p_currency: "PEN", p_timezone: "America/Lima", p_expected_version: 0 })).error).toBeNull();
+  return { c, uid: verified.data.user!.id, email, password };
+}
+async function cash(c: SupabaseClient) {
+  const account = await c.schema("api").rpc("create_account", { p_request_id: crypto.randomUUID(), p_name: "Efectivo", p_type: "cash", p_currency: "PEN", p_opening: "100" });
+  expect(account.error).toBeNull(); return account.data.id as string;
+}
+const remove = (c: SupabaseClient, id: string, version: number) => c.schema("api").rpc("delete_category", { p_id: id, p_expected_version: version });
+const imageOf = (data: { categories: { id: string; image_path: string | null; movement_count: number; version: number }[] }, id: string) => data.categories.find((row) => row.id === id)!;
+describe("gestión de categorías: borrado definitivo, imágenes y almacenamiento", () => {
+  it("elimina solo categorías sin subcategorías ni movimientos, incluidos los anulados", async () => {
+    const x = await member(), account = await cash(x.c);
+    const used = await create(x.c, { p_name: "Ocio" }); expect(used.error).toBeNull();
+    const usedId = used.data.categories[0].id;
+    const posted = await x.c.schema("api").rpc("post_movement", { p_request_id: crypto.randomUUID(), p_kind: "expense", p_account_id: account, p_category_id: usedId, p_amount: "10", p_description: "Cine", p_note: "", p_occurred_at: null });
+    expect(posted.error).toBeNull();
+    expect(imageOf((await read(x.c)).data, usedId).movement_count).toBe(1);
+    expect((await remove(x.c, usedId, 1)).error?.code).toBe("23503");
+    expect((await x.c.schema("api").rpc("void_movement", { p_id: posted.data.id, p_expected_version: 1, p_reason: "Prueba" })).error).toBeNull();
+    expect(imageOf((await read(x.c)).data, usedId).movement_count).toBe(1);
+    expect((await remove(x.c, usedId, 1)).error?.code).toBe("23503");
+    expect((await remove(x.c, crypto.randomUUID(), 1)).error?.code).toBe("P0002");
+    expect((await remove(x.c, usedId, 9)).error?.code).toBe("40001");
+    const parent = await create(x.c, { p_request_id: crypto.randomUUID(), p_name: "Hogar" }); expect(parent.error).toBeNull();
+    const parentId = parent.data.categories.find((row: { name: string }) => row.name === "Hogar").id;
+    const child = await create(x.c, { p_request_id: crypto.randomUUID(), p_parent_id: parentId, p_name: "Luz" }); expect(child.error).toBeNull();
+    const childId = child.data.categories.find((row: { parent_id: string }) => row.parent_id === parentId).id;
+    expect((await remove(x.c, parentId, 1)).error?.code).toBe("2BP01");
+    expect((await remove(x.c, childId, 1)).error).toBeNull();
+    expect((await read(x.c)).data.categories.some((row: { id: string }) => row.id === childId)).toBe(false);
+    expect((await remove(x.c, parentId, 1)).error).toBeNull();
+    expect((await read(x.c)).data.categories).toHaveLength(1);
+    const other = await member();
+    expect((await remove(other.c, usedId, 1)).error?.code).toBe("P0002");
+  });
+  it("acepta únicamente rutas de imagen emitidas para el propio dueño", async () => {
+    const x = await member(), path = `${x.uid}/${crypto.randomUUID()}.webp`;
+    const created = await create(x.c, { p_name: "Con imagen", p_image_path: path }); expect(created.error).toBeNull();
+    const id = created.data.categories[0].id;
+    expect(imageOf(created.data, id).image_path).toBe(path);
+    expect((await create(x.c, { p_request_id: crypto.randomUUID(), p_name: "Ajena", p_image_path: `${crypto.randomUUID()}/${crypto.randomUUID()}.webp` })).error?.code).toBe("23514");
+    expect((await create(x.c, { p_request_id: crypto.randomUUID(), p_name: "Png", p_image_path: `${x.uid}/${crypto.randomUUID()}.png` })).error?.code).toBe("23514");
+    const cleared = await update(x.c, id, 1, { p_name: "Con imagen", p_image_path: null }); expect(cleared.error).toBeNull();
+    expect(imageOf(cleared.data, id).image_path).toBeNull();
+    denied(x.uid, `update finance.categories set image_path='${crypto.randomUUID()}/${crypto.randomUUID()}.webp',version=version+1 where id='${id}'`, "23514");
+  });
+  it("exporta la ruta de imagen sin exponer archivos ni credenciales", async () => {
+    const x = await member(), path = `${x.uid}/${crypto.randomUUID()}.webp`;
+    const created = await create(x.c, { p_name: "Exportable", p_image_path: path }); expect(created.error).toBeNull();
+    const id = created.data.categories[0].id;
+    expect((await x.c.auth.signInWithPassword({ email: x.email, password: x.password })).error).toBeNull();
+    const proof = await x.c.schema("api").rpc("issue_reauth_proof", { p_purpose: "export_data" }); expect(proof.error).toBeNull();
+    const exported = await x.c.schema("api").rpc("export_personal_data", { p_proof: proof.data.token, p_format: "json" });
+    expect(exported.error).toBeNull(); expect(imageOf(exported.data, id).image_path).toBe(path);
+    expect(JSON.stringify(exported.data)).not.toMatch(/token_hash|password|create_request_id|image_url|signed/i);
+  });
+  it("bucket privado, rutas por dueño y límites de tipo y tamaño", async () => {
+    const a = await member(), b = await member(), bucket = () => a.c.storage.from("category-images");
+    const webp = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==", "base64");
+    const own = `${a.uid}/${crypto.randomUUID()}.webp`;
+    expect((await bucket().upload(own, new Blob([webp], { type: "image/webp" }), { contentType: "image/webp" })).error).toBeNull();
+    expect((await bucket().download(own)).error).toBeNull();
+    expect((await b.c.storage.from("category-images").download(own)).error).not.toBeNull();
+    expect((await client().storage.from("category-images").download(own)).error).not.toBeNull();
+    const foreign = `${b.uid}/${crypto.randomUUID()}.webp`;
+    expect((await bucket().upload(foreign, new Blob([webp], { type: "image/webp" }), { contentType: "image/webp" })).error).not.toBeNull();
+    expect((await bucket().upload(`${a.uid}/${crypto.randomUUID()}.png`, new Blob([webp], { type: "image/png" }), { contentType: "image/png" })).error).not.toBeNull();
+    expect((await bucket().upload(`${a.uid}/${crypto.randomUUID()}.webp`, new Blob([new Uint8Array(1048577)], { type: "image/webp" }), { contentType: "image/webp" })).error).not.toBeNull();
+    expect((await bucket().remove([own])).error).toBeNull();
+    expect((await bucket().download(own)).error).not.toBeNull();
   });
 });

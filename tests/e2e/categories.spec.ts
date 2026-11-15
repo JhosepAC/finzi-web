@@ -2,19 +2,38 @@ import { expect, test, type Page } from "@playwright/test";
 import { findMailLink } from "../helpers/mail";
 process.loadEnvFile(".env.local");
 if (!process.env.SUPABASE_URL || !["127.0.0.1", "localhost"].includes(new URL(process.env.SUPABASE_URL).hostname)) throw new Error("Solo Supabase local.");
-const origin = "http://127.0.0.1:3000";
+const appPort = process.env.PLAYWRIGHT_PORT ?? "3000";
+const origin = process.env.PLAYWRIGHT_ORIGIN ?? `http://127.0.0.1:${appPort}`;
 async function enter(page: Page) {
   const email = `categories-ui-${crypto.randomUUID()}@example.test`, password = "una frase de prueba para categorías 64";
   await page.goto("/register"); await page.getByLabel("Correo electrónico", { exact: true }).fill(email); await page.getByLabel("Contraseña", { exact: true }).fill(password); await page.getByLabel("Confirmar contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Crear cuenta", exact: true }).click(); await expect(page).toHaveURL(/\/verify-email$/);
-  await page.goto(await findMailLink(email, "signup")); await page.getByRole("button", { name: "Confirmar correo", exact: true }).click(); await expect(page).toHaveURL(/\/onboarding$/);
+  await page.goto((await findMailLink(email, "signup")).replace("127.0.0.1:3000", `127.0.0.1:${appPort}`)); await page.getByRole("button", { name: "Confirmar correo", exact: true }).click(); await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByLabel("Tu nombre", { exact: true }).fill("Andrea"); await page.getByRole("button", { name: "Continuar", exact: true }).click(); await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await expect(page.getByText("Explorar con datos de prueba")).toHaveCount(0);
   await page.getByRole("button", { name: "Guardar y continuar" }).click(); await expect(page).toHaveURL(/\/dashboard$/);
 }
+async function navigate(page: Page, label: string) {
+  const mobile = (page.viewportSize()?.width ?? 1280) <= 1000;
+  const active = page.locator(".home-breadcrumb strong").filter({ hasText: label });
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (await active.isVisible()) return;
+    if (mobile) {
+      const dialog = page.getByRole("dialog", { name: "Navegación principal" });
+      if (!(await dialog.isVisible())) {
+        await page.locator(".mobile-nav-trigger").click();
+        await page.waitForTimeout(150);
+      }
+      if (await dialog.isVisible()) await dialog.getByRole("button", { name: label, exact: true }).click();
+    } else {
+      await page.locator(".home-sidebar").getByRole("button", { name: label, exact: true }).click();
+    }
+    await page.waitForTimeout(250);
+  }
+  await expect(active).toBeVisible();
+}
 async function openCategories(page: Page) {
-  if (await page.getByRole("button", { name: "Abrir navegación", exact: true }).isVisible()) await page.getByRole("button", { name: "Abrir navegación", exact: true }).click();
-  await page.getByRole("navigation", { name: "Navegación principal" }).filter({ visible: true }).getByRole("button", { name: "Categorías", exact: true }).click();
+  await navigate(page, "Categorías");
   await expect(page.getByRole("heading", { name: "Tus categorías." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Nueva categoría", exact: true })).toBeEnabled();
 }
@@ -28,16 +47,17 @@ test("categorías API: sesión, CSRF, tamaño, campos ajenos y estructura inmuta
   expect((await request.post("/api/v1/categories", { headers: { Origin: "https://otro.example" }, data: { action: "initialize" } })).status()).toBe(403);
   expect((await request.post("/api/v1/categories", { headers: { Origin: origin }, data: { text: "x".repeat(5000) } })).status()).toBe(413);
   await enter(page);
-  const data = { requestId: crypto.randomUUID(), parentId: null, kind: "expense", name: "Casa", description: "", color: "blue", icon: "home" };
+  const data = { requestId: crypto.randomUUID(), parentId: null, kind: "expense", name: "Casa", description: "", color: "blue", icon: "home", imagePath: null };
   expect((await context.request.post("/api/v1/categories", { headers: { Origin: origin }, data: { ...data, user_id: crypto.randomUUID() } })).status()).toBe(422);
-  expect((await context.request.patch("/api/v1/categories", { headers: { Origin: origin }, data: { id: crypto.randomUUID(), name: "Casa", description: "", color: "blue", icon: "home", archived: false, expectedVersion: 1, kind: "income" } })).status()).toBe(422);
+  expect((await context.request.patch("/api/v1/categories", { headers: { Origin: origin }, data: { id: crypto.randomUUID(), name: "Casa", description: "", color: "blue", icon: "home", imagePath: null, archived: false, expectedVersion: 1, kind: "income" } })).status()).toBe(422);
   const response = await context.request.get("/api/v1/categories"); expect(response.headers()["cache-control"]).toContain("no-store"); expect(response.headers()["content-security-policy"]).toContain("nonce-");
 });
 test("categorías propias: reintento incierto, personalización, hijas, búsqueda y persistencia", async ({ page, context }) => {
   await enter(page); await openCategories(page);
   await page.getByRole("button", { name: "Nueva categoría", exact: true }).click(); const dialog = page.getByRole("dialog", { name: "Nueva categoría", exact: true });
   await dialog.getByRole("button", { name: "Crear categoría", exact: true }).click(); await expect(dialog.getByLabel("Nombre de la categoría")).toBeFocused();
-  await dialog.getByLabel("Nombre de la categoría").fill("Vivienda"); await dialog.getByLabel("Descripción").fill("Gastos de la casa"); await dialog.getByLabel("Color", { exact: true }).selectOption("purple"); await dialog.getByLabel("Icono", { exact: true }).selectOption("home");
+  await dialog.getByLabel("Nombre de la categoría").fill("Vivienda"); await dialog.getByLabel("Descripción").fill("Gastos de la casa"); await dialog.getByRole("radio", { name: "Morado", exact: true }).check(); await dialog.getByRole("radio", { name: "Casa", exact: true }).check();
+  await dialog.getByLabel("Buscar icono").fill("Casa"); await expect(dialog.getByRole("radio", { name: "Casa", exact: true })).toBeChecked(); await expect(dialog.getByRole("radio", { name: "Etiqueta", exact: true })).toHaveCount(0); await dialog.getByLabel("Buscar icono").fill("");
   let first = true; const keys: string[] = [];
   await page.route("**/api/v1/categories", async (route) => {
     if (route.request().method() === "POST") { keys.push(route.request().postDataJSON().requestId); if (first) { first = false; expect((await route.fetch()).status()).toBe(200); await route.fulfill({ status: 503, json: { ok: false, message: "Confirmación interrumpida. Reintenta." } }); return; } }
@@ -77,15 +97,47 @@ test("plantillas propias no duplican ni reemplazan ediciones; carga fallida es r
   const data = await (await context.request.get("/api/v1/categories")).json(); expect(data.categories).toHaveLength(10); expect(data.categories.some((c: { name: string }) => c.name === "Comidas")).toBe(true);
   await page.getByRole("button", { name: "Ingresos", exact: false }).filter({ hasText: "Ingresos" }).click(); await expect(page.getByRole("heading", { name: "Salario", exact: true })).toBeVisible();
 });
-async function openCategoriesWithoutLoading(page: Page) { await page.locator(".home-sidebar").getByRole("button", { name: "Categorías", exact: true }).click(); }
+async function openCategoriesWithoutLoading(page: Page) { await navigate(page, "Categorías"); }
 test("conflicto y sesión expirada conservan el borrador de categoría", async ({ page, context }) => {
   await enter(page); await openCategories(page); await create(page, "Casa");
   const original = (await (await context.request.get("/api/v1/categories")).json()).categories[0];
   await page.getByRole("button", { name: "Editar categoría Casa", exact: true }).click(); const dialog = page.getByRole("dialog"); await dialog.getByLabel("Nombre de la categoría").fill("Mi borrador");
-  expect((await context.request.patch("/api/v1/categories", { headers: { Origin: origin }, data: { id: original.id, name: "Otra pestaña", description: "", color: "blue", icon: "tag", archived: false, expectedVersion: original.version } })).status()).toBe(200);
+  expect((await context.request.patch("/api/v1/categories", { headers: { Origin: origin }, data: { id: original.id, name: "Otra pestaña", description: "", color: "blue", icon: "tag", imagePath: null, archived: false, expectedVersion: original.version } })).status()).toBe(200);
   await dialog.getByRole("button", { name: "Guardar cambios" }).click(); await expect(dialog.getByText(/Las categorías cambiaron/)).toBeVisible(); await expect(dialog.getByLabel("Nombre de la categoría")).toHaveValue("Mi borrador"); await expect(dialog.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
   await dialog.getByRole("button", { name: "Descartar el borrador y actualizar categorías" }).click(); await expect(dialog).not.toBeVisible(); await expect(page.getByRole("heading", { name: "Otra pestaña", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar categoría Otra pestaña" }).click(); await dialog.getByLabel("Nombre de la categoría").fill("Sin sesión"); await context.clearCookies(); await dialog.getByRole("button", { name: "Guardar cambios" }).click(); await expect(dialog.getByText(/Tu sesión terminó/)).toBeVisible(); await expect(dialog.getByLabel("Nombre de la categoría")).toHaveValue("Sin sesión");
+});
+const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+test("elimina categorías sin uso con confirmación y ofrece archivar si tienen subcategorías", async ({ page }) => {
+  await enter(page); await openCategories(page); await create(page, "Temporal");
+  await page.getByRole("button", { name: "Eliminar categoría Temporal", exact: true }).click();
+  let dialog = page.getByRole("dialog", { name: "Eliminar categoría", exact: true });
+  await expect(dialog.getByText("Se eliminará de forma definitiva. Esta acción no se puede deshacer.", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Eliminar categoría", exact: true }).click();
+  await expect(dialog).not.toBeVisible(); await expect(page.getByRole("heading", { name: "Temporal", exact: true })).toHaveCount(0); await expect(page.getByText("Categoría eliminada.", { exact: true })).toBeVisible();
+  await create(page, "Hogar"); await page.getByRole("button", { name: "Añadir subcategoría a Hogar" }).click();
+  dialog = page.getByRole("dialog", { name: "Nueva categoría", exact: true }); await dialog.getByLabel("Nombre de la categoría").fill("Luz"); await dialog.getByRole("button", { name: "Crear categoría", exact: true }).click(); await expect(dialog).not.toBeVisible();
+  await page.getByRole("button", { name: "Eliminar categoría Hogar", exact: true }).click(); dialog = page.getByRole("dialog", { name: "Eliminar categoría", exact: true });
+  await expect(dialog.getByText(/Tiene 1 subcategoría/)).toBeVisible(); await dialog.getByRole("button", { name: "Archivar categoría", exact: true }).click();
+  await expect(dialog).not.toBeVisible(); await expect(page.getByText("Categoría archivada.", { exact: true })).toBeVisible();
+  await page.getByRole("checkbox", { name: "Mostrar archivadas" }).uncheck(); await expect(page.getByRole("heading", { name: "Luz", exact: true })).toHaveCount(0);
+});
+test("sube, previsualiza y quita una imagen de categoría con acceso privado", async ({ page, context, request }) => {
+  await enter(page); await openCategories(page);
+  await page.getByRole("button", { name: "Nueva categoría", exact: true }).click(); const dialog = page.getByRole("dialog", { name: "Nueva categoría", exact: true });
+  await dialog.getByLabel("Nombre de la categoría").fill("Con imagen");
+  await dialog.locator('input[type="file"]').setInputFiles({ name: "casa.png", mimeType: "image/png", buffer: png });
+  await expect(dialog.getByRole("button", { name: "Reemplazar imagen", exact: true })).toBeVisible(); await expect(dialog.getByRole("img", { name: "Imagen de la categoría" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Crear categoría", exact: true }).click(); await expect(dialog).not.toBeVisible();
+  const created = (await (await context.request.get("/api/v1/categories")).json()).categories.find((category: { name: string }) => category.name === "Con imagen");
+  expect(created.image_path).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/);
+  await expect(page.locator(".category-row", { hasText: "Con imagen" }).locator("img")).toBeVisible();
+  const route = `/api/v1/categories/image?path=${encodeURIComponent(created.image_path)}`;
+  const served = await context.request.get(route); expect(served.status()).toBe(200); expect(served.headers()["content-type"]).toContain("image/webp"); expect(served.headers()["cache-control"]).toContain("private");
+  expect((await request.get(route)).status()).toBe(401);
+  await page.getByRole("button", { name: "Editar categoría Con imagen", exact: true }).click();
+  const edit = page.getByRole("dialog", { name: "Editar categoría", exact: true }); await edit.getByRole("button", { name: "Quitar", exact: true }).click(); await edit.getByRole("button", { name: "Guardar cambios" }).click(); await expect(edit).not.toBeVisible();
+  expect((await (await context.request.get("/api/v1/categories")).json()).categories.find((category: { name: string }) => category.name === "Con imagen").image_path).toBeNull();
 });
 test("categorías reales accesibles en menú móvil sin simulación", async ({ page }) => {
   await enter(page); await expect(page.locator(".home-footer, .real-sample-link")).toHaveCount(0); await expect(page.getByRole("button", { name: /simulación|Explorar con datos/ })).toHaveCount(0);
