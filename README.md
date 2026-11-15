@@ -49,7 +49,7 @@ Mi perfil abre /profile: formulario directo de nombre, moneda preferida y zona, 
 
 /security muestra estado de acceso y permite cambiar contraseña confirmando primero la actual. El servidor emite autorización de cinco minutos, un solo uso, ligada a usuario/sesión/finalidad; secreto solo en cookie HttpOnly y hash privado en BD. Refresh no equivale a volver a verificar contraseña. Tras cambiar se solicita cierre global y nuevo inicio; un resultado incierto no se repite automáticamente. Cierres local/global explican vigencia residual de access tokens. /session conserva acceso compatible de AUTH. No hay administración avanzada de dispositivos, MFA o cambio de correo en este alcance. La autorización adicional protege rutas Finzi; no sustituye políticas del proveedor Auth directo, que deben verificarse antes de publicación.
 
-Exportación personal, eliminación y endurecimiento siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
+Exportación y eliminación locales están implementadas en /data y seguimiento en /deletion; requieren reautenticación específica y comprobante guardado. Ejecutar `pnpm deletion:worker --watch` para procesar solicitudes. Manifiestos cifrados y clave viven fuera del proyecto; antes de restaurar usar `pnpm deletion:worker --restore-manifests` con tráfico aislado. Respaldos/retención pública siguen pendientes y no se promete borrado instantáneo de copias. Ver [contrato](docs/development/DATA_PORTABILITY.md). El endurecimiento y piloto siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
 
 ## Comprobar
 

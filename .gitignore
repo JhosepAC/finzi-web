@@ -44,3 +44,8 @@ Thumbs.db
 
 # Local code index (may contain source and paths)
 .codegraph/
+
+# Private portability downloads and deletion receipts
+finzi-datos-*.json
+finzi-movimientos-*.csv
+finzi-comprobante-*.json

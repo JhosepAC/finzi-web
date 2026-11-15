@@ -72,3 +72,45 @@
 .settings-conflict dl { display: grid; gap: 12px; margin: 16px 0 0; }
 .settings-conflict dt { font-size: 12px; color: #53617a; }
 .settings-conflict dd { margin: 4px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+
+.data-workspace { display: grid; gap: 24px; }
+.data-workspace form { display: grid; gap: 20px; }
+.data-workspace form > .button,.data-workspace > section > .button { width: fit-content; }
+.data-reauth form { grid-template-columns: 1fr 1fr auto; align-items: end; }
+.data-reauth form > button { width: auto; min-height: 48px; }
+.data-csv-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; }
+.data-delete .settings-section-heading > svg { color: #b91c1c; }
+.data-consequences { margin: 0 0 20px; padding-left: 20px; color: #53617a; font-size: 14px; line-height: 1.9; max-width: 75ch; }
+.data-consequences li + li { margin-top: 10px; }
+.data-delete .data-danger-button { background: #b91c1c; border-color: #b91c1c; color: white; }
+.data-delete .data-danger-button:hover { background: #991b1b; }
+.data-delete form { margin-top: 24px; }
+.data-delete > a.text-link { display: inline-block; margin-top: 20px; font-size: 13px; }
+.data-receipt { display: grid; gap: 12px; padding: 20px; background: #f4f7fc; border-radius: 10px; margin-top: 20px; }
+.data-receipt p { margin: 0; font-size: 14px; line-height: 1.8; }
+.data-receipt small { font-size: 12px; color: #53617a; }
+.data-receipt .button { width: fit-content; }
+.data-reuse-receipt { margin-top: 20px; }
+.data-reuse-receipt summary { cursor: pointer; min-height: 44px; align-content: center; font-size: 13px; color: #1d4ed8; }
+.data-reuse-receipt label { display: block; font-size: 13px; margin-block: 16px 8px; }
+.data-reuse-receipt input { max-width: 100%; }
+.deletion-tracking { min-height: 100vh; max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+.deletion-tracking > .wordmark { margin-bottom: 32px; display: inline-flex; }
+.deletion-tracking h1 { font-size: 25px; letter-spacing: -.03em; margin: 0 0 12px; }
+.deletion-tracking h2 { font-size: 19px; letter-spacing: -.02em; }
+.deletion-tracking form { display: grid; gap: 18px; margin-block: 24px; }
+.deletion-tracking input[type="file"] { max-width: 100%; font-size: 14px; }
+.deletion-tracking .text-link { margin-top: 24px; display: inline-block; }
+.deletion-progress { padding-block: 18px; border-block: 1px solid #e4eaf4; }
+.deletion-progress dl { display: flex; flex-wrap: wrap; gap: 20px 32px; }
+.deletion-progress dt { font-size: 12px; color: #53617a; }
+.deletion-progress dd { font-size: 14px; margin: 6px 0 0; }
+.deletion-progress p { color: #53617a; font-size: 14px; line-height: 1.9; max-width: 70ch; }
+@media(max-width: 1100px) { .data-reauth form { grid-template-columns: 1fr 1fr; } .data-reauth form > .button { grid-column: 1 / -1; } }
+@media(max-width: 767px) {
+ .data-reauth form,.data-csv-filters { grid-template-columns: 1fr; }
+ .data-workspace form > .button,.data-workspace > section > .button,.data-receipt .button { width: 100%; }
+ .deletion-tracking { padding: 24px 16px 48px; }
+ .deletion-tracking h1 { font-size: 23px; }
+ .deletion-progress dl { flex-direction: column; gap: 16px; }
+}

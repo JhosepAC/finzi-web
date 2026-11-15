@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-09 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-10 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -15,7 +15,7 @@ Actualizado: 14 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 7 | Transferencias y reemplazos trazables | Implementado — A-07, feat/transfers-and-replacements | Formulario inline con ambos saldos, anulación atómica, corrección con motivo/versión y cadena navegable fuera de filtros; transferencias excluidas del flujo |
 | 8 | Historial e Inicio sobre movimientos reales | Implementado — A-08, feat/history-and-real-overview | Seis períodos, comparación, cierres exactos con tabla, distribución padre/hijos y acceso al historial; filtros/cursor conservados y duplicación explícita |
 | 9 | Perfil y seguridad completos | Implementado — A-09, feat/profile-and-security | Perfil directo, preferencias con aviso/auditoría/conflictos; estado, reautenticación de un uso y contraseña; cierres local/global. Dispositivos avanzados diferidos |
-| 10 | Exportación y eliminación | Pendiente | JSON/CSV reales, confirmación, reautenticación, retención y borrado acordados; sin exportación de muestra, retirada en A-06 |
+| 10 | Exportación y eliminación | Implementado localmente — A-10 | JSON/CSV privados, bloqueo inmediato, proceso reintentable, manifiesto cifrado externo y seguimiento sin identidad; retención pública pendiente antes del lanzamiento |
 | 11 | Endurecimiento y piloto | Pendiente | HTTPS, correo, requisitos legales/edad, aislamiento en entorno final, cuotas, respaldo y restauración; sin SLA de planes gratuitos |
 
 El avance por etapa requiere una entrega revisable en rama dedicada, pruebas proporcionales y actualización de este archivo. main permanece estable; no se fusiona ni se publica automáticamente por completar una interfaz. [Registro detallado](../../IMPLEMENTATION_PROGRESS.md).
@@ -99,3 +99,8 @@ Cierres local/global disponibles; global con confirmación explícita, errores r
 Migración aditiva local 20261114001100, tablas privadas/FORCE RLS y ejecutor restringido. Sin dependencias/servicios, nuevos correos, costes o publicación. Comprobante protege API Finzi, no redefine permisos de Supabase Auth directo: su política/configuración debe validarse en entorno final; no se promete revocación instantánea ni protección comercial de contraseñas filtradas. N-01–N-06 y endurecimiento de paso11 siguen pendientes.
 
 Validación: 178 unitarias, 134 integración real (121 previas y 13 nuevas), 56 E2E de producción aprobadas (368 casos). Últimos ajustes de estado, cuota, servicio de aplicación y formularios POST: siete E2E afectados repetidos y aprobados. TypeScript, ESLint y build correctos. Dos capturas inspeccionadas, disposition ship sin ajustes materiales; resto por DOM/teclado/pruebas. [Contrato y límites](../development/PROFILE_SECURITY.md) y [evidencia](../../IMPLEMENTATION_PROGRESS.md).
+
+
+## A-10 — Exportación y eliminación
+
+Autorización expresa del usuario. Implementación local en feat/data-export-and-deletion. [Contrato y límites](../development/DATA_PORTABILITY.md). Sin costes o servicios/dependencias nuevos. La aprobación de esta entrega no aprueba plazos legales o caducidad de respaldos: N-04/N-05 siguen bloqueando lanzamiento. Siguiente entrega11: endurecimiento/piloto y cierre de pendientes.197 unitarias y143 integración aprobadas, dos E2E nuevos aprobados; regresión: 56/58 pasaron en corrida completa; categoría pasó al repetir. El otro fallo fue colisión de artefactos por ejecución concurrente de Playwright; repetición aislada aprobada. Total: 197 unitarias +143 integración +58 escenarios E2E comprobados =398.

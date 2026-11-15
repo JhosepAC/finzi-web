@@ -20,7 +20,8 @@
     "supabase:start": "node scripts/supabase-local.mjs start",
     "supabase:stop": "node scripts/supabase-local.mjs stop",
     "supabase:reset": "node scripts/supabase-local.mjs db reset --local",
-    "supabase:env": "node scripts/local-env.mjs"
+    "supabase:env": "node scripts/local-env.mjs",
+    "deletion:worker": "node scripts/deletion-worker.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
