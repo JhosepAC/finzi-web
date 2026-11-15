@@ -78,8 +78,8 @@ button:disabled { cursor: wait; }
 .secondary-link { font-size: 12px; font-weight: 500; }
 .back-link { font-size: 13px; margin-top: 16px; }
 .auth-footer { text-align: center; padding: 22px; color: var(--muted); font-size: 12px; }
-.skip-link { position: fixed; top: 12px; left: 24px; background: #fff; color: var(--action); padding: 12px 20px; border-radius: 8px; z-index: 20; transform: translateY(-200%); }
-.skip-link:focus { transform: translateY(0); }
+.skip-link { position: fixed; top: 12px; left: 24px; background: #fff; color: var(--action); padding: 12px 20px; border-radius: 8px; z-index: 20; transform: translateY(-200%); clip-path: inset(50%); }
+.skip-link:focus { transform: translateY(0); clip-path: none; }
 .status-symbol { color: var(--action); margin-bottom: 24px; }
 .status-symbol-error { color: var(--error); }
 .auth-task > .feedback-slot:not(:empty) { margin-top: 20px; }

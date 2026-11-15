@@ -1,6 +1,6 @@
 # Roadmap de Finzi
 
-Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-10 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
+Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D-01–D-10 aprobadas. Las autorizaciones A-01–A-11 permiten las entregas indicadas; no autorizan costes, publicación ni implementación automática de todo el producto.
 
 ## Avance por interfaces y funcionalidades
 
@@ -16,6 +16,7 @@ Actualizado: 15 de noviembre de 2026. Desarrollo individual, presupuesto cero. D
 | 8 | Historial e Inicio sobre movimientos reales | Implementado — A-08, feat/history-and-real-overview | Seis períodos, comparación, cierres exactos con tabla, distribución padre/hijos y acceso al historial; filtros/cursor conservados y duplicación explícita |
 | 9 | Perfil y seguridad completos | Implementado — A-09, feat/profile-and-security | Perfil directo, preferencias con aviso/auditoría/conflictos; estado, reautenticación de un uso y contraseña; cierres local/global. Dispositivos avanzados diferidos |
 | 10 | Exportación y eliminación | Implementado localmente — A-10 | JSON/CSV privados, bloqueo inmediato, proceso reintentable, manifiesto cifrado externo y seguimiento sin identidad; retención pública pendiente antes del lanzamiento |
+| A-11 | Deudas — extensión autorizada | Implementado localmente, feat/debt-management | CRUD, resumen y disponible PEN/USD; vencimientos y filtros; pagos como gasto nuevo o existente, sin duplicación; correcciones/anulaciones sincronizadas, RLS y portabilidad |
 | 11 | Endurecimiento y piloto | Pendiente | HTTPS, correo, requisitos legales/edad, aislamiento en entorno final, cuotas, respaldo y restauración; sin SLA de planes gratuitos |
 
 El avance por etapa requiere una entrega revisable en rama dedicada, pruebas proporcionales y actualización de este archivo. main permanece estable; no se fusiona ni se publica automáticamente por completar una interfaz. [Registro detallado](../../IMPLEMENTATION_PROGRESS.md).
@@ -104,3 +105,12 @@ Validación: 178 unitarias, 134 integración real (121 previas y 13 nuevas), 56 
 ## A-10 — Exportación y eliminación
 
 Autorización expresa del usuario. Implementación local en feat/data-export-and-deletion. [Contrato y límites](../development/DATA_PORTABILITY.md). Sin costes o servicios/dependencias nuevos. La aprobación de esta entrega no aprueba plazos legales o caducidad de respaldos: N-04/N-05 siguen bloqueando lanzamiento. Siguiente entrega11: endurecimiento/piloto y cierre de pendientes.197 unitarias y143 integración aprobadas, dos E2E nuevos aprobados; regresión: 56/58 pasaron en corrida completa; categoría pasó al repetir. El otro fallo fue colisión de artefactos por ejecución concurrente de Playwright; repetición aislada aprobada. Total: 197 unitarias +143 integración +58 escenarios E2E comprobados =398.
+
+
+## A-11 — Deudas sobre movimientos reales
+
+Solicitud y confirmación explícitas autorizan esta extensión antes diferida: gasto nuevo o existente y estados calculados, sin intereses/desembolsos automáticos. [Contrato](../development/DEBTS.md). Crear/eliminar compromiso no mueve dinero; eliminación lógica conserva historia exportable, desvincular conserva gasto y anularlo revierte saldo. Disponible solo de cuentas activas de la misma moneda, sin reservas ni conversiones. CRUD inline, vencimientos locales, filtros por estado/fecha/categoría/importe y resumen no alterado por filtros de lista. Límites iniciales revisables 200 deudas/2000 pagos incluida historia; no cambia monetización o gratuidad.
+
+El paso11 de endurecimiento/piloto, pendientes N-01–N-06 y límites legales/respaldos A-10 siguen vigentes. Rama dedicada desde 8a720b7; sin integración a main, costes, publicación o paquetes nuevos. docs/context.md intacto.
+
+Validación A-11:212 unitarias/160 integración aprobadas y64 escenarios E2E comprobados entre corrida y repeticiones; seis nuevos de Deudas y17 SQL repetidos en stack aislado por incompatibilidad ajena posterior en Supabase compartido. Build/TypeScript/ESLint correctos. Review inicial fix y verdict pass ship limitado al enlace accesible corregido; tres imágenes inspeccionadas contando verificación. [Detalle y límites](../../IMPLEMENTATION_PROGRESS.md).

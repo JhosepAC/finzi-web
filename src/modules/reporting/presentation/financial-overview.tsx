@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Plus, RefreshCw, Wallet } from "lucide-react";
 import type { Account } from "@/modules/accounts";
 import type { MovementFilters } from "@/modules/transactions";
@@ -10,7 +10,10 @@ import { dateLabel, periodLabels, periodRange, shiftDay, todayInZone, type Perio
 import { BalanceEvolution, CategoryDistribution } from "./overview-charts";
 import "./overview.css";
 
+const subscribeHydration = () => () => {};
+
 export function FinancialOverview({ accounts, timezone, now, revision, selection, onSelection, onRegister, onAccounts, onCreateAccount, onMovements }: { accounts: Account[]; timezone: string; now: string; revision: number; selection: OverviewSelection; onSelection: (selection: OverviewSelection) => void; onRegister: (kind: "income" | "expense") => void; onAccounts: () => void; onCreateAccount: () => void; onMovements: (filters?: Partial<MovementFilters>, id?: string) => void }) {
+  const interactive = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const [report, setReport] = useState<Overview | null>(null), [settled, setSettled] = useState(""), [loadedUrl, setLoadedUrl] = useState(""), [error, setError] = useState(""), [retry, setRetry] = useState(0);
   const [draft, setDraft] = useState(selection), [validation, setValidation] = useState("");
   const [distributionKind, setDistributionKind] = useState<"income" | "expense">("expense");
@@ -40,7 +43,7 @@ export function FinancialOverview({ accounts, timezone, now, revision, selection
     const next = { ...selection, anchor }; onSelection(next); setDraft(next);
   }
   const drill = (extra: Partial<MovementFilters> = {}, id?: string) => { if (visible) onMovements({ currency: visible.currency_code, period: "custom", from: visible.from, to: visible.to, accountId: selection.accountId, kind: "", categoryId: "", query: "", status: "posted", ...extra },id); };
-  if (!accounts.length) return <section className="home-real-empty"><span className="empty-brand" aria-hidden="true"><Wallet size={32} /></span><h2>Empieza por tu primera cuenta.</h2><p>Registra el efectivo o la cuenta bancaria con la que comienzas. Después podrás añadir tus ingresos y gastos.</p><button className="home-primary-button" onClick={onCreateAccount}><Plus size={18} aria-hidden="true" />Crear mi primera cuenta</button><small>No pediremos números de cuenta ni documentos bancarios.</small></section>;
+  if (!accounts.length) return <section className="home-real-empty"><span className="empty-brand" aria-hidden="true"><Wallet size={32} /></span><h2>Empieza por tu primera cuenta.</h2><p>Registra el efectivo o la cuenta bancaria con la que comienzas. Después podrás añadir tus ingresos y gastos.</p><button className="home-primary-button" disabled={!interactive} onClick={onCreateAccount}><Plus size={18} aria-hidden="true" />Crear mi primera cuenta</button><small>No pediremos números de cuenta ni documentos bancarios.</small></section>;
   const compare = (value: bigint, previous: bigint) => { const c = comparison(value,previous); return <span className="overview-comparison">{c.percent ?? "Sin base de comparación"}<small>Diferencia: {c.difference > 0n ? "+" : ""}{formatMoney(c.difference,selection.currency)}</small></span>; };
   return <div className="financial-overview"><div className="overview-toolbar"><form className="overview-filters" onSubmit={apply} noValidate><label htmlFor="overview-currency">Moneda del resumen<select id="overview-currency" value={draft.currency} onChange={(e) => { const next = { ...draft,currency: e.target.value as OverviewSelection["currency"],accountId: "" }; setDraft(next); onSelection(next); }}><option value="PEN">Soles · PEN</option><option value="USD">Dólares · USD</option></select></label><label htmlFor="overview-period">Período del resumen<select id="overview-period" value={draft.period} onChange={(e) => setDraft({ ...draft,period: e.target.value as Period,anchor: today })}>{Object.entries(periodLabels).map(([key,label]) => <option value={key} key={key}>{label}</option>)}</select></label><label htmlFor="overview-account">Cuenta del resumen<select id="overview-account" value={draft.accountId} onChange={(e) => setDraft({ ...draft,accountId: e.target.value })}><option value="">Todas las cuentas</option>{accounts.filter((a) => a.currency_code === draft.currency).map((a) => <option key={a.id} value={a.id}>{a.name}{a.status === "archived" ? " (archivada)" : ""}</option>)}</select></label>{draft.period === "custom" && <><label htmlFor="overview-from">Desde<input id="overview-from" type="date" value={draft.from} max={today} min="1900-01-01" onChange={(e) => setDraft({ ...draft,from: e.target.value })} /></label><label htmlFor="overview-to">Hasta<input id="overview-to" type="date" value={draft.to} max={today} min="1900-01-01" onChange={(e) => setDraft({ ...draft,to: e.target.value })} /></label></>}<button className="button button-secondary" type="submit">Aplicar período</button></form><button className="home-primary-button" disabled={!accounts.some((a) => a.status === "active")} onClick={() => onRegister("expense")}><Plus size={18} aria-hidden="true" />Registrar movimiento</button></div>
     {validation && <p className="overview-error" role="alert">{validation}</p>}

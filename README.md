@@ -77,3 +77,12 @@ Para comprobar producción, detener desarrollo antes de build/start. Playwright 
 Se conserva el `.gitignore` original, incluidas docs/, AGENTS.md y carpetas de agentes. Solo docs/product/ROADMAP.md está versionado explícitamente por petición del usuario; los demás documentos ignorados son locales. Nunca incluir `.env`, cachés, capturas o logs con información personal en commits.
 
 No hay despliegue ni infraestructura cloud contratada. Antes del registro público siguen pendientes HTTPS/correo, requisitos jurídicos/edad, capacidad gratuita, retención, respaldo y recuperación. Finzi continúa sin monetización, publicidad o servicios de pago. Manrope se sirve localmente con licencia SIL OFL en src/app/fonts/OFL.txt; el logo es el icono azul con f existente.
+
+
+## A-11 — Deudas
+
+Deudas en el dashboard: registro/edición inline, acreedor, icono, categoría y vencimiento opcionales, PEN/USD separados; estados derivados y resumen original/pagado/pendiente. Filtros y tarjetas con disponibilidad real de cuentas activas. Pago parcial/final crea un gasto o vincula uno existente sin descontarlo otra vez; selector paginado, fecha/nota e historial con acceso al ledger. Reemplazos/anulaciones recalculan pendiente; SQL impide sobrepago, moneda/tipo distintos y doble asociación, con RLS/idempotencia/atomicidad reales.
+
+Eliminar deuda la oculta y conserva gastos/historia exportable; desvincular conserva el gasto; anular gasto lo revierte. JSON y eliminación de cuenta incluyen deudas/pagos/eventos. Límites gratuitos iniciales: 200 deudas/2000 pagos por usuario incluida historia, además del límite de movimientos. Sin intereses, desembolsos automáticos, servicios nuevos o costes. Autorización específica A-11; no completa el paso11 de endurecimiento/piloto. [Contrato local](docs/development/DEBTS.md) y [avance versionado](IMPLEMENTATION_PROGRESS.md).
+
+Para aislar buzones de pruebas locales puede definirse FINZI_TEST_MAILPIT_URL (solo loopback); las pruebas nuevas de Deudas admiten FINZI_TEST_DB_CONTAINER con nombre validado. El worker operacional conserva su alcance original; no se redirige silenciosamente a otro proyecto. La validación de A-11 documenta una migración externa incompatible en el Supabase compartido y usa un entorno local separado, sin revertir datos ajenos.
