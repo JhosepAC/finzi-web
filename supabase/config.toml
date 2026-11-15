@@ -30,7 +30,8 @@ enabled = true
 port = 17324
 
 [storage]
-enabled = false
+enabled = true
+file_size_limit = "1MiB"
 
 [storage.s3_protocol]
 enabled = false
