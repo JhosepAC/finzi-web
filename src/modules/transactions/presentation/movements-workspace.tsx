@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Pencil, Copy, ChevronDown, ChevronLeft, ChevronRight, Plus, Archive, Trash2, Search, Wallet, SlidersHorizontal, RotateCcw, CalendarDays } from "lucide-react";
 import type { Account } from "@/modules/accounts";
+import { CategorySymbol } from "@/modules/classification";
 import { catalogSchema, type Category } from "@/modules/classification/domain/category";
 import { formatMoney, type Currency } from "@/shared/money";
 import { periodRange, todayInZone, periodLabels, type Period } from "@/shared/period";
@@ -50,6 +51,8 @@ export function MovementsWorkspace({ accounts, preferredCurrency, timezone, now,
   const historyTitle = useRef<HTMLHeadingElement>(null);
   const entryDialog = useRef<HTMLDialogElement>(null);
   const removalDialog = useRef<HTMLDialogElement>(null);
+  const traceDialog = useRef<HTMLDialogElement>(null);
+  const traceOpener = useRef<HTMLElement | null>(null);
   const entryOpener = useRef<HTMLElement | null>(null);
   const removalOpener = useRef<HTMLElement | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,6 +61,10 @@ export function MovementsWorkspace({ accounts, preferredCurrency, timezone, now,
     if (open && entryDialog.current?.querySelector(".ledger-entry") && !entryDialog.current.open) entryDialog.current.showModal();
   }, [open, categories, accounts, entryKind]);
   useEffect(() => { if (removal && !removalDialog.current?.open) removalDialog.current?.showModal(); }, [removal]);
+  useEffect(() => {
+    if (traceId && !open && !removal) { if (!traceDialog.current?.open) traceDialog.current?.showModal(); }
+    else traceDialog.current?.close();
+  }, [traceId, open, removal]);
   useEffect(() => { onStateChange?.({ filters,draftFilters,cursor,previous,traceId }); },[filters,draftFilters,cursor,previous,traceId,onStateChange]);
   const onDirty = useCallback((value: boolean, saving: boolean) => { setDirty(value); setPending(saving); }, []);
   useEffect(() => {
@@ -106,6 +113,14 @@ export function MovementsWorkspace({ accounts, preferredCurrency, timezone, now,
   function closeEntry() {
     entryDialog.current?.close(); setOpen(false); setReplacing(null); setDuplicating(null); setDirty(false); setPending(false);
     requestAnimationFrame(() => { if (entryOpener.current?.isConnected) entryOpener.current.focus({ preventScroll: true }); });
+  }
+  function showTrace(id: string) {
+    traceOpener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setTraceId(id);
+  }
+  function closeTrace() {
+    traceDialog.current?.close(); setTraceId(null);
+    requestAnimationFrame(() => { (traceOpener.current?.isConnected ? traceOpener.current : historyTitle.current)?.focus({ preventScroll: true }); });
   }
   function closeRemoval() {
     removalDialog.current?.close(); setRemoval(null); setDirty(false); setPending(false);
@@ -178,19 +193,21 @@ export function MovementsWorkspace({ accounts, preferredCurrency, timezone, now,
       {filterError && <p className="ledger-filter-error" role="alert">{filterError}</p>}
       {extraFilterCount > 0 && <p className="ledger-active-filters">{draftFilters.categoryId && <span>Categoría: {categories?.find((c) => c.id === draftFilters.categoryId)?.name ?? "seleccionada"}</span>}{draftFilters.status !== "all" && <span>Estado: {draftFilters.status === "posted" ? "Vigentes" : draftFilters.status === "replaced" ? "Reemplazados" : "Archivados y reemplazados"}</span>}</p>}
     </section>
-    {traceId && <MovementTrace id={traceId} revision={revision} timezone={timezone} locked={open || Boolean(removal) || pending} onOpen={setTraceId} onClose={() => setTraceId(null)} actions={actions} />}
+    <dialog ref={traceDialog} className="finzi-dialog ledger-trace-dialog" aria-labelledby="trace-title" onCancel={(event) => { event.preventDefault(); if (!pending && !preparing) closeTrace(); }}>
+      {traceId && <MovementTrace id={traceId} revision={revision} timezone={timezone} locked={open || Boolean(removal) || pending || preparing} onOpen={setTraceId} onClose={closeTrace} actions={actions} />}
+    </dialog>
     <section className="home-panel ledger-history" aria-labelledby="ledger-history-title" aria-busy={loading}>
       <div className="ledger-history-heading"><h2 ref={historyTitle} tabIndex={-1} id="ledger-history-title">Historial de movimientos</h2><span role="status">{loading ? "Actualizando…" : visible ? `${visible.total_count} ${visible.total_count === 1 ? "registro" : "registros"}` : ""}</span></div>
       {error && !loading && <div className="ledger-error" role="alert">{error}{visible && " Se muestran los últimos datos cargados para estos filtros."}<button className="home-text-button" onClick={() => setRevision((value) => value + 1)}>Reintentar consulta</button></div>}
       {visible && visible.movements.length > 0 && <div className="ledger-column-headings" aria-hidden="true"><span>Movimiento</span><span>Cuenta</span><span>Fecha</span><span>Importe</span><span /></div>}
       {loading && !visible ? <div className="ledger-skeleton" aria-label="Cargando movimientos"><div /><div /><div /></div> : visible?.movements.length ? <div className="ledger-rows">{visible.movements.map((movement) => <details className={`ledger-record ${movement.status}`} key={movement.id}>
-        <summary><span className={`ledger-kind-icon ${movement.kind}`} aria-hidden="true">{movement.kind === "transfer" ? <ArrowLeftRight size={20} /> : movement.kind === "income" ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}</span>
+        <summary><span className={`ledger-kind-icon ${movement.kind}`} aria-hidden="true">{movement.kind === "transfer" ? <ArrowLeftRight size={20} /> : movement.kind === "income" ? <ArrowDownLeft size={20} /> : <CategorySymbol category={categories?.find((category) => category.id === movement.category_id)} />}</span>
           <span className="ledger-record-name"><strong>{movement.description}</strong><small>{movement.kind === "transfer" ? `Hacia ${movement.destination_name}` : `${movement.parent_name ? `${movement.parent_name} / ` : ""}${movement.category_name}`}</small><small className="ledger-mobile-account">{movement.account_name}</small></span>
           <span className="ledger-record-account"><span className="sr-only">{movement.kind === "transfer" ? "Desde " : "Cuenta "}</span><span>{movement.account_name}</span></span>
           <time dateTime={movement.occurred_at}>{date(movement.occurred_at)}<small>{time(movement.occurred_at)}</small></time>
           <span className="ledger-record-amount"><strong className={movement.kind}>{movement.kind === "transfer" ? "" : movement.kind === "income" ? "+" : "−"}{formatMoney(BigInt(movement.amount_minor), movement.currency_code)}</strong><small>{movement.replaced_by_id ? "Reemplazado" : movement.status === "void" ? "Archivado" : movement.kind === "transfer" ? "Transferencia" : movement.kind === "income" ? "Ingreso" : "Gasto"}</small></span><ChevronDown size={16} className="ledger-chevron" aria-hidden="true" />
         </summary>
-        <div className="ledger-record-detail">{movement.note && <p className="ledger-record-note">{movement.note}</p>}{movement.status === "void" && <p><strong>{movement.replaced_by_id ? "Motivo de la edición:" : "Motivo de archivado:"}</strong> {movement.void_reason}</p>}{actions(movement)}{movement.replaces_id && <p>Este registro reemplaza uno anterior. Motivo: {movement.replacement_reason}</p>}{movement.kind === "transfer" && <p>Sale de {movement.account_name} y entra a {movement.destination_name}. No se cuenta como ingreso ni gasto.</p>}<button className="home-text-button" disabled={preparing || open || Boolean(removal)} onClick={() => { setTraceId(movement.id); requestAnimationFrame(() => document.getElementById("trace-title")?.scrollIntoView({ behavior: "instant", block: "start" })); }}>Ver trazabilidad</button></div>
+        <div className="ledger-record-detail">{movement.note && <p className="ledger-record-note">{movement.note}</p>}{movement.status === "void" && <p><strong>{movement.replaced_by_id ? "Motivo de la edición:" : "Motivo de archivado:"}</strong> {movement.void_reason}</p>}{actions(movement)}{movement.replaces_id && <p>Este registro reemplaza uno anterior. Motivo: {movement.replacement_reason}</p>}{movement.kind === "transfer" && <p>Sale de {movement.account_name} y entra a {movement.destination_name}. No se cuenta como ingreso ni gasto.</p>}<button className="home-text-button" disabled={preparing || open || Boolean(removal)} onClick={() => showTrace(movement.id)}>Ver trazabilidad</button></div>
       </details>)}</div> : !error && !loading && <div className="ledger-empty"><h3>{filters.period === "all" && !filters.query && !filters.kind && !filters.accountId && !filters.categoryId && filters.status === "all" ? `Aún no has registrado movimientos en ${filters.currency}.` : "No hay movimientos con estos filtros."}</h3><p>Registra un ingreso, gasto o transferencia, o limpia los filtros para consultar tu historial.</p></div>}
       {visible && <div className="ledger-pagination"><button className="home-text-button" disabled={loading || Boolean(removal) || !previous.length} onClick={() => { setCursor(previous[previous.length - 1]); setPrevious((all) => all.slice(0, -1)); }}><ChevronLeft size={17} aria-hidden="true" />Anterior</button><span>Página {previous.length + 1}</span><button className="home-text-button" disabled={loading || Boolean(removal) || !visible.has_more} onClick={() => { setPrevious((all) => [...all, cursor]); setCursor(visible.next_cursor); }}>Siguiente<ChevronRight size={17} aria-hidden="true" /></button></div>}
     </section>
