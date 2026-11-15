@@ -129,3 +129,6 @@ Revisión cerrada: ship limitado al ajuste de notas, resuelto por DOM sin nuevas
 
 
 Integración solicitada15/11/2026: Estadísticas y Categorías avanzadas (b25fb35) fusionadas en main. Categorías incorpora eliminación protegida, catálogo de iconos e imágenes privadas; migración20261115160000 conserva exportación conjunta de categorías/imágenes y deudas. No publicación ni costes nuevos.
+
+## A-13 — Gastos Fijos (15/11/2026)
+Extensión solicitada y ejecutada localmente: compromisos periódicos, vencimientos derivados, pagos nuevos/vinculados y resumen mensual por moneda. [Contrato y validación](../development/FIXED_EXPENSES.md). No completa ni autoriza despliegue; pendientes de lanzamiento conservados.
