@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { createHash, randomBytes } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
+import { createBot } from "../../telegram-bot/bot";
 import { findMailLink } from "../helpers/mail";
 const url = process.env.SUPABASE_URL!, key = process.env.SUPABASE_PUBLISHABLE_KEY!;
 if (!url || !["127.0.0.1", "localhost"].includes(new URL(url).hostname)) throw new Error("Local Supabase only");
@@ -165,5 +166,90 @@ describe("Telegram phase 2: real delegated roles, persistence and web regression
   denied(catalog(ac)); denied(draft(ac,"2"));
   expect(sql(`select count(*) from telegram_private.drafts where user_id='${a.uid}' and (state not in ('cancelled','expired') or source_text is not null);`,"supabase_admin")).toBe("0");
   expect((await a.c.schema("api").rpc("telegram_revoke_link",{p_id:ac.linkId})).data).toBe(true);
+ });
+});
+
+
+describe("Telegram phase 4: versioned conversations without financial publication",()=>{
+ let a:User,b:User,ac:Context,bc:Context,category:string;
+ const command=(c:Context,value:Record<string,unknown>)=>`select telegram_private.draft_command(${ctx({...c,scope:"draft:write"})},${quote(JSON.stringify(value))}::jsonb);`;
+ const callbacks=(c:Context,d:{id:string;version:number},rows:{hash:string;field:string;value:string}[])=>`select telegram_private.register_callbacks(${ctx({...c,scope:"draft:write"})},'${d.id}',${d.version},${quote(JSON.stringify(rows))}::jsonb);`;
+ function payload(){const received=new Date().toISOString();return {kind:"expense",amount:"25.00",currency:"PEN",accountId:a.account,categoryId:category,description:"Synthetic lunch",occurredAt:received,receivedAt:received,timezone:"America/Lima",note:"",warnings:[]};}
+ function start(update:string,patch={}){const p={...payload(),...patch};return {action:"start",updateId:update,text:"Synthetic expense",payload:p};}
+ beforeAll(async()=>{a=await setup();b=await setup();ac=await bind(a,"88001"+Math.floor(Math.random()*1000000));bc=await bind(b,"89001"+Math.floor(Math.random()*1000000));const cats=await a.c.schema("api").rpc("initialize_categories");expect(cats.error).toBeNull();category=cats.data.categories.find((c:{kind:string})=>c.kind==="expense").id;});
+ it("loads only authorized profile/catalogs and prepares a complete pending preview once",()=>{
+  const result=JSON.parse(sql(`select telegram_private.conversation_catalog(${ctx(ac)});`));expect(result.timezone).toBe("America/Lima");expect(result.accounts.map((v:{id:string})=>v.id)).toEqual([a.account]);
+  const op=start("4001"),d=JSON.parse(sql(command(ac,op)));expect(d.state).toBe("pending");expect(d.awaiting).toBeNull();expect(JSON.parse(sql(command(ac,op)))).toEqual(d);
+  expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+ });
+ it("rejects JSON money numbers, unknown currencies, future/opening dates and foreign references",()=>{
+  const bad=[{amount:25},{amount:"NaN"},{amount:"1.234"},{currency:"EUR"},{accountId:b.account},{kind:"income"}];
+  for(let i=0;i<bad.length;i++)denied(command(ac,start(String(4100+i),bad[i])),"23514");
+  denied(command(ac,start("4110",{occurredAt:new Date(Date.now()+86400000).toISOString()})),"22008");
+  denied(command(ac,start("4111",{occurredAt:"2000-01-01T12:00:00Z"})),"22008");
+  denied(`select telegram_private.validate_payload('{}',null);`);
+ });
+ it("stores missing fields, amends under expected version and never extends expiry or receipt date",()=>{
+  const op=start("4200",{amount:null}),d=JSON.parse(sql(command(ac,op)));expect(d.state).toBe("needs_input");expect(d.awaiting).toBe("amount");
+  const next={action:"amend",id:d.id,version:d.version,updateId:"4201",payload:{...d.payload,amount:"30.10"}};
+  const updated=JSON.parse(sql(command(ac,next)));expect(updated.state).toBe("pending");expect(updated.version).toBe(d.version+1);expect(updated.expiresAt).toBe(d.expiresAt);expect(updated.payload.receivedAt).toBe(d.payload.receivedAt);
+  expect(JSON.parse(sql(command(ac,next)))).toEqual(updated);
+  denied(command(ac,{...next,updateId:"4202"}),"40001");
+  denied(command(ac,{...next,version:undefined,updateId:"4203"}),"40001");
+  denied(command(ac,{...next,version:updated.version,updateId:"4204",payload:{...updated.payload,receivedAt:"2000-01-01T00:00:00Z"}}),"23514");
+ });
+ it("binds callback hashes to owner/link/version and invalidates previous keyboards",()=>{
+  const d=JSON.parse(sql(command(ac,start("4300")))),token=secret();sql(callbacks(ac,d,[{hash:hash(token),field:"currency",value:"USD"}]));
+  denied(command(bc,{action:"choice",tokenHash:hash(token),updateId:"4301"}),"P0002");
+  denied(command(ac,{action:"choice",tokenHash:hash(secret()),updateId:"4301"}),"P0002");
+  const op={action:"choice",tokenHash:hash(token),updateId:"4302"},changed=JSON.parse(sql(command(ac,op)));expect(changed.payload.currency).toBe("USD");expect(changed.payload.accountId).toBeNull();expect(changed.awaiting).toBe("accountId");
+  expect(JSON.parse(sql(command(ac,op)))).toEqual(changed);
+  denied(command(ac,{...op,updateId:"4303"}),"P0002");
+  denied(callbacks(ac,d,[{hash:hash(secret()),field:"cancel",value:"cancel"}]),"40001");
+ });
+ it("replays the canonical update after restart and never reinterprets a completed amendment",()=>{
+  const op=start("4350"),d=JSON.parse(sql(command(ac,op)));
+  expect(JSON.parse(sql(command(ac,{action:"replay",updateId:"4350"})))).toEqual(d);
+  const amended=JSON.parse(sql(command(ac,{action:"amend",id:d.id,version:d.version,updateId:"4351",payload:{...d.payload,description:"Corrected"}})));
+  expect(JSON.parse(sql(command(ac,{action:"replay",updateId:"4350"})))).toEqual(amended);
+ });
+ it("selecting an account opened after the proposed date asks for a valid date without extending receipt time",async()=>{
+  const account=await a.c.schema("api").rpc("create_account",{p_request_id:crypto.randomUUID(),p_name:"New account",p_type:"cash",p_currency:"PEN",p_opening:"0"});expect(account.error).toBeNull();
+  const d=JSON.parse(sql(command(ac,start("4360",{accountId:null,occurredAt:new Date(Date.now()-600000).toISOString()})))),token=secret();
+  sql(callbacks(ac,d,[{hash:hash(token),field:"accountId",value:account.data.id}]));
+  const selected=JSON.parse(sql(command(ac,{action:"choice",tokenHash:hash(token),updateId:"4361"})));expect(selected.awaiting).toBe("occurredAt");expect(selected.payload.occurredAt).toBeNull();expect(selected.payload.receivedAt).toBe(d.payload.receivedAt);
+  const fixed=JSON.parse(sql(command(ac,{action:"amend",id:d.id,version:selected.version,updateId:"4362",payload:{...selected.payload,occurredAt:d.payload.receivedAt}})));expect(fixed.state).toBe("pending");
+ });
+ it("cancel is idempotent, scrubs private payload and old buttons cannot revive it",()=>{
+  const d=JSON.parse(sql(command(ac,start("4400")))),token=secret();sql(callbacks(ac,d,[{hash:hash(token),field:"cancel",value:"cancel"}]));
+  const op={action:"choice",tokenHash:hash(token),updateId:"4401"},cancelled=JSON.parse(sql(command(ac,op)));expect(cancelled.state).toBe("cancelled");expect(cancelled.payload).toEqual({});expect(JSON.parse(sql(command(ac,op)))).toEqual(cancelled);
+  expect(sql(`select source_text is null from telegram_private.drafts where id='${d.id}';`,"supabase_admin")).toBe("t");
+  denied(command(ac,{...op,updateId:"4402"}),"P0002");
+ });
+ it("dispatches a real grammY message, correction and cancellation through private SQL without publishing",async()=>{
+  const u=await setup(),context=await bind(u,"86001"+Math.floor(Math.random()*1000000));expect((await u.c.schema("api").rpc("initialize_categories")).error).toBeNull();
+  const user={id:Number(context.telegramUserId),is_bot:false,first_name:"Synthetic"},chat={id:user.id,type:"private" as const,first_name:"Synthetic"};
+  const info={id:9001,is_bot:true as const,first_name:"Finzi test",username:"finzi_test_bot",can_join_groups:false,can_read_all_group_messages:false,supports_inline_queries:false,can_connect_to_business:false,has_main_web_app:false,has_topics_enabled:false,allows_users_to_create_topics:false,can_manage_bots:false,supports_join_request_queries:false};
+  const port={claim:async()=>{},context:async()=>({...context}),catalog:async(c:Record<string,string>)=>JSON.parse(sql(`select telegram_private.conversation_catalog(${ctx({...context,...c,scope:"catalog:read"})});`)),command:async(c:Record<string,string>,cmd:Record<string,unknown>)=>{try{const result=sql(command({...context,...c},cmd));return result?JSON.parse(result):null;}catch(error){const code=String((error as {stderr:string}).stderr).match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1];throw Object.assign(new Error("Synthetic SQL transport error"),{code});}},callbacks:async(c:Record<string,string>,id:string,version:number,rows:{hash:string;field:string;value:string}[])=>{sql(callbacks({...context,...c},{id,version},rows));}};
+  const replies:{text:string;reply_markup?:{inline_keyboard:{text:string;callback_data:string}[][]}}[]=[];
+  const bot=createBot("9001:synthetic_token",port,{state:{botId:"9001",offset:0,inbox:[],credentials:[{user:String(user.id),capability:context.capability,challengeHash:"synthetic",createdAt:Date.now()}]},save:()=>{},sign:v=>hash("synthetic signing key:"+v).slice(0,48)},info);
+  bot.api.config.use(async(prev,method,payload)=>{if(method==="sendMessage")replies.push(payload as typeof replies[number]);return {ok:true,result:method==="answerCallbackQuery"?true:{message_id:1,date:1,chat,text:"ok"}} as Awaited<ReturnType<typeof prev>>;});
+  const send=async(text:string,id:number)=>bot.handleUpdate({update_id:id,message:{message_id:id,date:Math.floor(Date.now()/1000),chat,from:user,text}});
+  const click=async(data:string,id:number)=>bot.handleUpdate({update_id:id,callback_query:{id:"synthetic-"+id,from:user,chat_instance:"synthetic",data,message:{message_id:1,date:Math.floor(Date.now()/1000),chat,from:info}}});
+  await new Promise(resolve=>setTimeout(resolve,1100)); // Telegram timestamps have second precision; stay after opening.
+  await send("Gasté 25 soles en almuerzo",4600);expect(replies.at(-1)!.text).toContain("Sin registrar");
+  const old=replies.at(-1)!.reply_markup!.inline_keyboard.flat().find(b=>b.text==="Corregir importe")!.callback_data;
+  await click(old,4601);expect(replies.at(-1)!.text).toContain("¿Cuál es el importe?");
+  await send("30,10",4602);expect(replies.at(-1)!.text).toContain("S/ 30.10");
+  const cancel=replies.at(-1)!.reply_markup!.inline_keyboard.flat().find(b=>b.text==="Cancelar borrador")!.callback_data;
+  await click(cancel,4603);expect(replies.at(-1)!.text).toContain("Borrador cancelado");
+  await click(old,4604);expect(replies.at(-1)!.text).toContain("cambió o venció");
+  expect(sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin")).toBe("0");
+ });
+ it("expired drafts reject interactions and keep actual balance unchanged",()=>{
+  const d=JSON.parse(sql(command(ac,start("4500"))));sql(`update telegram_private.drafts set created_at=now()-interval '20 minutes',expires_at=now()-interval '5 minutes' where id='${d.id}';`,"supabase_admin");
+  denied(command(ac,{action:"amend",id:d.id,version:d.version,updateId:"4501",payload:d.payload}),"23514");
+  expect(JSON.parse(sql(catalog(ac)))[0].balance_minor).toBe("10000");
+  expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
  });
 });

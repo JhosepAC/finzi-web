@@ -16,16 +16,17 @@ async function main() {
  const port=gateway(url),stop=new AbortController();
  const shutdown=()=>stop.abort(); process.once("SIGINT",shutdown);process.once("SIGTERM",shutdown);
  try {
-  const probe=createBot(token,port,{state:{botId:"0",offset:0,inbox:[],credentials:[]},save:()=>{}});await probe.init();
+  const probe=createBot(token,port,{state:{botId:"0",offset:0,inbox:[],credentials:[]},save:()=>{},sign:()=>""});await probe.init();
   const info=probe.botInfo;
   if(!Number.isSafeInteger(info.id))throw new Error("Unsafe bot identity");
   if(process.env.TELEGRAM_BOT_USERNAME && process.env.TELEGRAM_BOT_USERNAME.toLowerCase()!==info.username?.toLowerCase())throw new Error("Configured bot username does not match token identity");
-  await port.lock(String(info.id));
+  await port.checkConnection();
   const webhook=await probe.api.getWebhookInfo();if(webhook.url)throw new Error("Remove the existing webhook explicitly before polling");
   const store=openStore(process.env.FINZI_TELEGRAM_STORE??path.join(base,"store"),key,String(info.id));
   const bot=createBot(token,port,store,info);
   if(process.argv.includes("--check")){console.log("Telegram configuration, identity, custody and restricted connection verified.");return;}
-  await bot.api.setMyCommands([{command:"start",description:"Vincular o revisar tu cuenta de Finzi"}]);
+  await port.lock(String(info.id));
+  await bot.api.setMyCommands([{command:"start",description:"Vincular o revisar tu cuenta de Finzi"},{command:"borrador",description:"Revisar el borrador vigente"},{command:"cancelar",description:"Cancelar el borrador sin registrar dinero"}]);
   console.log("Finzi Telegram: local polling started.");let failures=0,lastPrune=0;
   while(!stop.signal.aborted) {
    try {

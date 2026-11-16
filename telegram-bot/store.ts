@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
@@ -38,5 +38,5 @@ export function openStore(directory: string, keyFile: string, botId: string) {
   const fd=openSync(temporary,"wx",0o600);try{writeFileSync(fd,Buffer.concat([iv,cipher.getAuthTag(),encrypted]));fsyncSync(fd);}finally{closeSync(fd);}renameSync(temporary,filename);
  }
  function save(){try{persist();}catch{throw new Error("Custody failure");}}
- return {state,save};
+ return {state,save,sign:(value:string)=>createHmac("sha256",key).update("callback:"+botId+":"+value).digest("hex").slice(0,48)};
 }
