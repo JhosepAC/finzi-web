@@ -288,7 +288,7 @@ describe("Telegram phase 5: explicit atomic confirmation with real roles",()=>{
  const register=(c:Context,d:{id:string;version:number},token:string)=>`select telegram_private.register_callbacks(${ctx({...c,scope:"draft:write"})},'${d.id}',${d.version},'[{"hash":"${hash(token)}","field":"confirm","value":"confirm"}]');`;
  const count=(u:User)=>Number(sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin"));
  async function permission(u:User,c:Context,allow:boolean){const status=await u.c.schema("api").rpc("telegram_link_status");expect(status.error).toBeNull();const l=status.data.links.find((l:{id:string})=>l.id===c.linkId);const r=await u.c.schema("api").rpc("telegram_set_movement_permission",{p_id:c.linkId,p_version:l.version,p_allow:allow});expect(r.error).toBeNull();}
- function pending(c=ac,u=a,patch:object={}){const receivedAt=new Date().toISOString();return JSON.parse(sql(command(c,{action:"start",updateId:next(),text:"Synthetic confirmation source",payload:{kind:"expense",amount:"25.10",currency:"PEN",accountId:u.account,categoryId:category,description:"Synthetic confirmed expense",note:"",timezone:"America/Lima",receivedAt,occurredAt:receivedAt,warnings:[],...patch}})));}
+ function pending(c=ac,u=a,patch:object={}){const receivedAt=sql(`select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"');`);return JSON.parse(sql(command(c,{action:"start",updateId:next(),text:"Synthetic confirmation source",payload:{kind:"expense",amount:"25.10",currency:"PEN",accountId:u.account,categoryId:category,description:"Synthetic confirmed expense",note:"",timezone:"America/Lima",receivedAt,occurredAt:receivedAt,warnings:[],...patch}})));}
  const prepared=()=>{const d=pending(),token=secret();sql(register(ac,d,token));return {d,token};};
  beforeAll(async()=>{a=await setup();b=await setup();ac=await bind(a,"88001"+Math.floor(Math.random()*1000000));bc=await bind(b,"89001"+Math.floor(Math.random()*1000000));expect((await a.c.schema("api").rpc("initialize_categories")).error).toBeNull();const categories=await a.c.schema("api").rpc("read_categories");category=categories.data.categories.find((c:{kind:string;parent_id:string|null})=>c.kind==="expense"&&!c.parent_id).id;});
  it("keeps old links read/draft only until the web owner explicitly grants publication",async()=>{
@@ -459,6 +459,32 @@ describe("Telegram phase 6: scoped read-only queries",()=>{
   const blocking=asyncSql(`begin;select 1 from finance.profiles where user_id='${a.uid}' for update;insert into ops.deletion_blocks(user_id) values('${a.uid}');select 'locked';select pg_sleep(0.5);commit;`,"supabase_admin",out=>{if(out.includes("locked"))ready();});await locked;
   const port=gateway(process.env.TELEGRAM_DATABASE_URL!);try{await expect(port.query(ac,open("saldo"))).rejects.toMatchObject({code:"42501"});await blocking;}finally{await port.close();}
   expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+ });
+
+});
+
+
+describe("Telegram phase 7: effective permissions and privacy audit",()=>{
+ it("keeps every private table under FORCE RLS, outside executor ownership and inaccessible to gateway DML",()=>{
+  expect(sql("select count(*) from pg_class t join pg_namespace n on n.oid=t.relnamespace join pg_roles r on r.oid=t.relowner where n.nspname='telegram_private' and t.relkind='r' and (not t.relrowsecurity or not t.relforcerowsecurity or r.rolname='app_executor' or has_table_privilege('finzi_telegram_gateway',t.oid,'SELECT,INSERT,UPDATE,DELETE'));","supabase_admin")).toBe("0");
+ });
+ it("has no public function execution and restricts the real gateway role",()=>{
+  expect(sql("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace cross join lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where n.nspname='telegram_private' and a.grantee=0 and a.privilege_type='EXECUTE';","supabase_admin")).toBe("0");
+  expect(sql(`select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='telegram_private' and not coalesce('search_path=""'=any(p.proconfig),false);`,"supabase_admin")).toBe("0");
+  expect(sql("select rolsuper or rolbypassrls or rolinherit or rolcreaterole or rolcreatedb or rolreplication from pg_roles where rolname=session_user;")).toBe("f");
+  expect(sql("select count(*) from pg_auth_members m join pg_roles r on r.oid=m.member where r.rolname=session_user;")).toBe("0");
+ });
+ it("does not log bound sensitive parameters on SQL errors",()=>{expect(sql("show log_parameter_max_length_on_error;")).toBe("0");});
+ it("exports no query credentials and purges report snapshots/cursors through the personal deletion worker",async()=>{
+  const u=await setup(),c=await bind(u,"97001"+Math.floor(Math.random()*1000000));expect((await u.c.schema("api").rpc("telegram_set_query_permission",{p_id:c.linkId,p_version:1,p_allow:true})).error).toBeNull();
+  const queryContext=ctx({...c,scope:"report:read"});const q=JSON.parse(sql(`select telegram_private.read_query(${queryContext},'{"action":"open","command":"saldo","updateId":"7100"}');`));
+  sql(`insert into telegram_private.query_cursors(token_hash,user_id,session_id,page) values(decode('${hash(secret())}','hex'),'${u.uid}','${q.id}',0);`,"supabase_admin");
+  const email=(await u.c.auth.getUser()).data.user!.email!;expect((await u.c.auth.signInWithPassword({email,password:"telegram isolated test password 2026"})).error).toBeNull();
+  const proof=await u.c.schema("api").rpc("issue_reauth_proof",{p_purpose:"export_data"});expect(proof.error).toBeNull();const data=await u.c.schema("api").rpc("export_personal_data",{p_proof:proof.data.token,p_format:"json"});expect(data.error).toBeNull();expect(JSON.stringify(data.data.telegram)).not.toMatch(/capability|token_hash|callback_hash|query_cursors/);
+  const deletion=await u.c.schema("api").rpc("issue_reauth_proof",{p_purpose:"delete_account"});const receipt=crypto.randomUUID(),lease=secret();expect(deletion.error).toBeNull();expect((await u.c.schema("api").rpc("request_deletion",{p_request_id:receipt,p_tracking_token:secret(),p_proof:deletion.data.token,p_confirmation:"ELIMINAR"})).error).toBeNull();
+  denied(`select telegram_private.read_query(${queryContext},'{"action":"open","command":"saldo","updateId":"7101"}');`);
+  sql(`update ops.deletion_receipts set lease_hash=decode('${hash(lease)}','hex'),lease_until=now()+interval '2 minutes' where id='${receipt}';`,"supabase_admin");sql(`begin;set local role finzi_deletion_worker;select ops.deletion_step('${receipt}','${lease}','manifest','${hash("synthetic manifest")}');select ops.deletion_step('${receipt}','${lease}','purge',null);commit;`,"supabase_admin");
+  for(const table of ["query_sessions","query_cursors"])expect(sql(`select count(*) from telegram_private.${table} where user_id='${u.uid}';`,"supabase_admin")).toBe("0");
  });
 
 });

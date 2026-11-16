@@ -65,4 +65,14 @@ describe("Telegram runtime: encrypted custody and durable polling",()=>{
   h.setQueryPermission(false);await h.bot.handleUpdate(message("/saldo",7));expect(h.replies.at(-1)).toContain("Autoriza las consultas");
  });
 
+ it("bounds enrollment retries and refuses oversized text before any draft or report operation",async()=>{
+  const h=harness();for(let i=0;i<6;i++)await h.bot.handleUpdate(message("/start "+String(i).padStart(64,"a"),20+i));expect(h.calls).toHaveLength(5);expect(h.replies.at(-1)).toContain("Espera unos minutos");
+  h.setActive();h.setQueryPermission(true);await h.bot.handleUpdate(message("x".repeat(2001),30));expect(h.replies.at(-1)).toContain("hasta 2000 caracteres");expect(h.queryCalls).toHaveLength(0);
+ });
+ it("does not dispatch forged callbacks or callbacks from a different private sender",async()=>{
+  const h=harness();await h.bot.handleUpdate(message("/start "+"a".repeat(64),40));h.setActive();h.setQueryPermission(true);
+  for(const [sender,data] of [[7001,"f6:forged"],[7002,"f6:"+"a".repeat(48)]] as const){await h.bot.handleUpdate({update_id:++h.store.state.offset,callback_query:{id:"synthetic",from:{id:sender,is_bot:false,first_name:"Synthetic"},chat_instance:"synthetic",data,message:{message_id:1,date:Math.floor(Date.now()/1000),chat:{id:7001,type:"private",first_name:"Synthetic"}}}});}
+  expect(h.queryCalls).toHaveLength(0);
+ });
+
 });
