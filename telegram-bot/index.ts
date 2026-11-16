@@ -1,3 +1,4 @@
+import { queryCommands } from "./queries.ts";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -26,13 +27,13 @@ async function main() {
   const bot=createBot(token,port,store,info);
   if(process.argv.includes("--check")){console.log("Telegram configuration, identity, custody and restricted connection verified.");return;}
   await port.lock(String(info.id));
-  await bot.api.setMyCommands([{command:"start",description:"Vincular o revisar tu cuenta de Finzi"},{command:"borrador",description:"Revisar el borrador vigente"},{command:"cancelar",description:"Cancelar el borrador sin registrar dinero"}]);
+  await bot.api.setMyCommands([{command:"start",description:"Vincular o revisar tu cuenta de Finzi"},{command:"borrador",description:"Revisar el borrador vigente"},{command:"cancelar",description:"Cancelar el borrador sin registrar dinero"},...queryCommands.map(command=>({command,description:({hoy:"Resumen de hoy",semana:"Últimos siete días",mes:"Resumen del mes",saldo:"Saldos por cuenta",gastos:"Gastos por categoría",ingresos:"Ingresos del mes",cuentas:"Cuentas y estados",categorias:"Categorías y disponibilidad",pendientes:"Borradores del bot"})[command]}))]);
   console.log("Finzi Telegram: local polling started.");let failures=0,lastPrune=0;
   while(!stop.signal.aborted) {
    try {
     await port.assertLock();
     await drain(store,u=>bot.handleUpdate(u));
-    if(Date.now()-lastPrune>300000){await pruneCredentials(port,store,String(info.id));lastPrune=Date.now();}
+    if(Date.now()-lastPrune>300000){await pruneCredentials(port,store,String(info.id));await port.sweepQueries();lastPrune=Date.now();}
     const updates=await bot.api.getUpdates({offset:store.state.offset,timeout:20,limit:100,allowed_updates:["message","callback_query"]},stop.signal as unknown as NonNullable<Parameters<typeof bot.api.getUpdates>[1]>);
     receive(store,updates);failures=0;
    } catch(error) {

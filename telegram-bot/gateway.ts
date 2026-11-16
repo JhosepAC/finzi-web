@@ -17,7 +17,12 @@ export function gateway(url: string) {
   async command(c:Record<string,string>,command:Record<string,unknown>){const [r]=await sql`select telegram_private.draft_command(${sql.json({...c,scope:"draft:write"})}::jsonb,${sql.json(command)}::jsonb) value`;return r.value;},
   async callbacks(c:Record<string,string>,id:string,version:number,choices:{hash:string;field:string;value:string}[]){await sql`select telegram_private.register_callbacks(${sql.json({...c,scope:"draft:write"})}::jsonb,${id}::uuid,${version},${sql.json(choices)}::jsonb)`;},
   async confirm(c:Record<string,string>,tokenHash:string,updateId:string){const [r]=await sql`select telegram_private.confirm_draft(${sql.json({...c,scope:"movement:confirm"})}::jsonb,${tokenHash},${updateId}) value`;return r.value;},
+  async query(c:Record<string,string>,op:Record<string,unknown>){return sql.begin(async tx=>{
+   const context=sql.json({...c,scope:"report:read"});await tx`select telegram_private.lock_query(${context}::jsonb)`;
+   const [r]=await tx`select telegram_private.read_query(${context}::jsonb,${sql.json(op)}::jsonb) value`;return r.value;
+  });},
+  async sweepQueries(){await sql`select telegram_private.cleanup_queries(500)`;},
   close:()=>sql.end({timeout:5})
  };
 }
-export type Gateway = Pick<ReturnType<typeof gateway>,"claim"|"context"|"catalog"|"command"|"callbacks"|"confirm">;
+export type Gateway = Pick<ReturnType<typeof gateway>,"claim"|"context"|"catalog"|"command"|"callbacks"|"confirm"|"query">;

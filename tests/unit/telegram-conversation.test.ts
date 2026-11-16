@@ -7,7 +7,7 @@ const catalog:Catalog={timezone:"America/Lima",accounts:[{id:"cash",name:"Efecti
 const c={linkId:"test",capability:"test"},received="2026-11-16T15:00:00.000Z";
 const sign=(v:string)=>createHmac("sha256","synthetic signing key").update(v).digest("hex").slice(0,48);
 function fixture(){let current:Draft|null=null,replay:Draft|null=null;const registered:{hash:string;field:string;value:string}[][]=[],commands:Record<string,unknown>[]=[];
- const port:Gateway={confirm:async()=>{throw new Error("Unexpected confirmation");},claim:async()=>{},context:async()=>c,catalog:async()=>catalog,callbacks:async(_c,_id,_v,rows)=>{registered.push(rows);},command:async(_c,cmd)=>{commands.push(cmd);if(cmd.action==="replay")return replay;if(cmd.action==="read")return current;return {...current,payload:cmd.payload,id:"draft",version:2,state:"needs_input",awaiting:"amount",expiresAt:"2026-11-16T15:15:00Z"};}};
+ const port:Gateway={query:async()=>{throw new Error("Unexpected query");},confirm:async()=>{throw new Error("Unexpected confirmation");},claim:async()=>{},context:async()=>c,catalog:async()=>catalog,callbacks:async(_c,_id,_v,rows)=>{registered.push(rows);},command:async(_c,cmd)=>{commands.push(cmd);if(cmd.action==="replay")return replay;if(cmd.action==="read")return current;return {...current,payload:cmd.payload,id:"draft",version:2,state:"needs_input",awaiting:"amount",expiresAt:"2026-11-16T15:15:00Z"};}};
  const draft:Draft={id:"draft",version:2,state:"pending",awaiting:null,payload:parseMessage("Gasté 25 soles en almuerzo",catalog,received).payload,expiresAt:"2026-11-16T15:15:00Z"};
  return {port,draft,registered,commands,setCurrent:(d:Draft)=>{current=d;},setReplay:(d:Draft)=>{replay=d;}};
 }

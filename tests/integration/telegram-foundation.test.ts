@@ -232,7 +232,7 @@ describe("Telegram phase 4: versioned conversations without financial publicatio
   const user={id:Number(context.telegramUserId),is_bot:false,first_name:"Synthetic"},chat={id:user.id,type:"private" as const,first_name:"Synthetic"};
   const info={id:9001,is_bot:true as const,first_name:"Finzi test",username:"finzi_test_bot",can_join_groups:false,can_read_all_group_messages:false,supports_inline_queries:false,can_connect_to_business:false,has_main_web_app:false,has_topics_enabled:false,allows_users_to_create_topics:false,can_manage_bots:false,supports_join_request_queries:false};
   let publicationAllowed=false,catalogUnavailable=false,failNotification=false,expiredAck=false;
-  const port={confirm:async(c:Record<string,string>,tokenHash:string,updateId:string)=>JSON.parse(sql(`select telegram_private.confirm_draft(${ctx({...context,...c,scope:"movement:confirm"})},'${tokenHash}','${updateId}');`)),claim:async()=>{},context:async()=>({...context,canConfirm:String(publicationAllowed)}),catalog:async(c:Record<string,string>)=>{if(catalogUnavailable)throw new Error("Catalog deliberately unavailable after commit");return JSON.parse(sql(`select telegram_private.conversation_catalog(${ctx({...context,...c,scope:"catalog:read"})});`));},command:async(c:Record<string,string>,cmd:Record<string,unknown>)=>{try{const result=sql(command({...context,...c},cmd));return result?JSON.parse(result):null;}catch(error){const code=String((error as {stderr:string}).stderr).match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1];throw Object.assign(new Error("Synthetic SQL transport error"),{code});}},callbacks:async(c:Record<string,string>,id:string,version:number,rows:{hash:string;field:string;value:string}[])=>{sql(callbacks({...context,...c},{id,version},rows));}};
+  const port={query:async()=>{throw new Error("Unexpected query");},confirm:async(c:Record<string,string>,tokenHash:string,updateId:string)=>JSON.parse(sql(`select telegram_private.confirm_draft(${ctx({...context,...c,scope:"movement:confirm"})},'${tokenHash}','${updateId}');`)),claim:async()=>{},context:async()=>({...context,canConfirm:String(publicationAllowed)}),catalog:async(c:Record<string,string>)=>{if(catalogUnavailable)throw new Error("Catalog deliberately unavailable after commit");return JSON.parse(sql(`select telegram_private.conversation_catalog(${ctx({...context,...c,scope:"catalog:read"})});`));},command:async(c:Record<string,string>,cmd:Record<string,unknown>)=>{try{const result=sql(command({...context,...c},cmd));return result?JSON.parse(result):null;}catch(error){const code=String((error as {stderr:string}).stderr).match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1];throw Object.assign(new Error("Synthetic SQL transport error"),{code});}},callbacks:async(c:Record<string,string>,id:string,version:number,rows:{hash:string;field:string;value:string}[])=>{sql(callbacks({...context,...c},{id,version},rows));}};
   const replies:{text:string;reply_markup?:{inline_keyboard:{text:string;callback_data:string}[][]}}[]=[];
   const bot=createBot("9001:synthetic_token",port,{state:{botId:"9001",offset:0,inbox:[],credentials:[{user:String(user.id),capability:context.capability,challengeHash:"synthetic",createdAt:Date.now()}]},save:()=>{},sign:v=>hash("synthetic signing key:"+v).slice(0,48)},info);
   bot.api.config.use(async(prev,method,payload)=>{if(method==="answerCallbackQuery"&&expiredAck)return {ok:false,error_code:400,description:"Bad Request: query is too old"};if(method==="sendMessage"){if(failNotification&&(payload as {text:string}).text.startsWith("Movimiento registrado"))throw new Error("Synthetic notification outage after commit");replies.push(payload as typeof replies[number]);}return {ok:true,result:method==="answerCallbackQuery"?true:{message_id:1,date:1,chat,text:"ok"}} as Awaited<ReturnType<typeof prev>>;});
@@ -377,4 +377,77 @@ describe("Telegram phase 5: explicit atomic confirmation with real roles",()=>{
   sql(`begin;set local role finzi_deletion_worker;select ops.deletion_step('${receipt}','${lease}','manifest','${hash("synthetic manifest")}');select ops.deletion_step('${receipt}','${lease}','purge',null);commit;`,"supabase_admin");
   expect(sql(`select count(*) from telegram_private.confirmations where user_id='${u.uid}';`,"supabase_admin")).toBe("0");
  });
+});
+
+
+describe("Telegram phase 6: scoped read-only queries",()=>{
+ let a:User,b:User,ac:Context,bc:Context;let sequence=6000;
+ const query=(c:Context,op:object)=>`select telegram_private.read_query(${ctx({...c,scope:"report:read"})},${quote(JSON.stringify(op))}::jsonb);`;
+ const open=(command:string,currency="PEN")=>({action:"open",command,currency,updateId:String(++sequence)});
+ const read=(op:object,c=ac)=>JSON.parse(sql(query(c,op)));
+ beforeAll(async()=>{a=await setup();b=await setup();ac=await bind(a,"94001"+Math.floor(Math.random()*1000000));bc=await bind(b,"95001"+Math.floor(Math.random()*1000000));await a.c.schema("api").rpc("initialize_categories");
+  expect((await a.c.schema("api").rpc("create_category",{p_request_id:crypto.randomUUID(),p_parent_id:null,p_kind:"expense",p_name:"Synthetic extra category",p_description:"",p_color:"blue",p_icon:"tag",p_image_path:null})).error).toBeNull();
+ });
+ it("requires explicit query permission and rejects other owners and financial publication permissions",async()=>{
+  denied(query(ac,open("mes")));const foreign=await b.c.schema("api").rpc("telegram_set_query_permission",{p_id:ac.linkId,p_version:1,p_allow:true});expect(foreign.error?.code).toBe("42501");
+  expect((await a.c.schema("api").rpc("telegram_set_query_permission",{p_id:ac.linkId,p_version:1,p_allow:true})).error).toBeNull();
+  expect((await a.c.schema("api").rpc("telegram_link_status")).data.links[0]).toMatchObject({can_report:true,can_confirm:false});
+  denied(query(bc,open("mes")));denied("select * from telegram_private.query_sessions;");denied("select api.read_overview();");
+  expect((await b.c.schema("api").rpc("telegram_set_query_permission",{p_id:bc.linkId,p_version:1,p_allow:true})).error).toBeNull();
+  expect(read(open("categorias"),bc).total).toBe(0);
+ });
+ it("matches core reports for local today, rolling seven days and month, including empty USD",async()=>{
+  for(const command of ["hoy","semana","mes","gastos","ingresos"]){for(const currency of ["PEN","USD"]){
+   const q=read(open(command,currency));const report=await a.c.schema("api").rpc("read_overview",{p_currency:currency,p_period:"custom",p_from:q.from,p_to:q.to});expect(report.error).toBeNull();
+   expect(q).toMatchObject({income_minor:report.data.income_minor,expense_minor:report.data.expense_minor,timezone:report.data.timezone});
+   if(command==="semana")expect((new Date(q.to).getTime()-new Date(q.from).getTime())/86400000).toBe(6);
+  }}
+  expect(read(open("saldo"))).toMatchObject({balance_minor:"10000",total:1});expect(read(open("saldo","USD"))).toMatchObject({balance_minor:"0",total:0});
+ });
+ it("paginates owner-bound snapshots and keeps totals stable across pages and replays",()=>{
+  const op=open("categorias"),q=read(op);expect(q.total).toBeGreaterThan(10);expect(q.items).toHaveLength(10);expect(read(op)).toEqual(q);
+  denied(query(ac,{...op,command:"cuentas"}),"40001");
+  const token=secret();sql(query(ac,{action:"buttons",id:q.id,page:0,choices:[{hash:hash(token),page:1}]}));
+  const page=read({action:"page",tokenHash:hash(token)});expect(page.page).toBe(1);expect(page.as_of).toBe(q.as_of);expect(page.total).toBe(q.total);
+  denied(query(bc,{action:"page",tokenHash:hash(token)}),"P0002");
+  denied(query(ac,{action:"buttons",id:q.id,page:0,choices:[{hash:hash(secret()),page:50}]}),"23514");
+  sql(`update telegram_private.query_sessions set expires_at=now()-interval '1 second' where id='${q.id}';`,"supabase_admin");denied(query(ac,{action:"page",tokenHash:hash(token)}),"P0002");
+ });
+ it("rejects cached pages after a timezone change and invalidates snapshots on permission withdrawal",async()=>{
+  const q=read(open("categorias")),token=secret();sql(query(ac,{action:"buttons",id:q.id,page:0,choices:[{hash:hash(token),page:1}]}));
+  sql(`update finance.profiles set timezone='UTC',version=version+1 where user_id='${a.uid}';`,"supabase_admin");denied(query(ac,{action:"page",tokenHash:hash(token)}),"40001");
+  const status=await a.c.schema("api").rpc("telegram_link_status");expect((await a.c.schema("api").rpc("telegram_set_query_permission",{p_id:ac.linkId,p_version:status.data.links[0].version,p_allow:false})).error).toBeNull();
+  denied(query(ac,{action:"page",tokenHash:hash(token)}));expect(sql(`select count(*) from telegram_private.query_sessions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+  expect(sql(`select count(*) from finance.transactions where user_id in ('${a.uid}','${b.uid}');`,"supabase_admin")).toBe("0");
+ });
+ it.skipIf(!process.env.TELEGRAM_DATABASE_URL)("reads nonempty synthetic history across income pages using the production driver without creating movements",async({skip})=>{
+  // Reuse only reserved synthetic accounts from previous local financial suites.
+  const fixture=sql(`select jsonb_build_object('uid',m.user_id) from finance.movement_details m join auth.users u on u.id=m.user_id join finance.profiles p on p.user_id=m.user_id join finance.accounts a on a.user_id=m.user_id and a.id=m.account_id where u.email like '%@example.test' and u.email_confirmed_at is not null and p.onboarding_completed_at is not null and not exists(select 1 from ops.deletion_blocks b where b.user_id=m.user_id) and m.kind='income' and m.status='posted' and m.deleted_at is null and a.status<>'deleted' and m.currency_code='PEN' and m.occurred_at>=date_trunc('month',now()) group by m.user_id having count(*)>10 order by count(*) limit 1;`,"supabase_admin");
+  if(!fixture){skip();return;}const uid=JSON.parse(fixture).uid as string;
+  const web=(statement:string)=>sql(`begin;set local role app_executor;set local request.jwt.claims='{"sub":"${uid}"}';${statement};commit;`,"supabase_admin");
+  const status=JSON.parse(web("select api.telegram_link_status()"));for(const l of status.links)if(!l.revoked_at)web(`select api.telegram_revoke_link_versioned('${l.id}',${l.version})`);
+  const challenge=secret(),capability=secret(),identity="96001"+Math.floor(Math.random()*1000000);
+  const attempt=JSON.parse(web(`select api.telegram_issue_link('${hash(challenge)}')`));sql(`select telegram_private.claim_link('${challenge}','9001','${identity}','${identity}','${hash(capability)}');`);
+  const linked=JSON.parse(web(`select api.telegram_activate_link('${attempt.id}')`));web(`select api.telegram_set_query_permission('${linked.id}',1,true)`);
+  const c={linkId:linked.id,generation:String(linked.generation??1),botId:"9001",telegramUserId:identity,chatId:identity,capability};
+  // Generation is issued by the server, never guessed from older links.
+  const resolved=JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${identity}','${identity}');`));Object.assign(c,resolved);
+  const port=gateway(process.env.TELEGRAM_DATABASE_URL!),before=sql(`select count(*) from finance.transactions where user_id='${uid}';`,"supabase_admin");
+  try{
+   const q=await port.query(c,{action:"open",command:"ingresos",currency:"PEN",updateId:"6600"});expect(q.total).toBeGreaterThan(10);expect(q.items).toHaveLength(10);
+   const report=JSON.parse(web(`select api.read_overview('PEN','custom',null,'${q.from}','${q.to}',null)`));expect(q.income_minor).toBe(report.income_minor);expect(BigInt(q.income_minor)).toBeGreaterThan(0n);
+   const pageToken=secret();await port.query(c,{action:"buttons",id:q.id,page:0,choices:[{hash:hash(pageToken),page:1}]});const next=await port.query(c,{action:"page",tokenHash:hash(pageToken)});expect(next.page).toBe(1);expect(next.items.length).toBeGreaterThan(0);expect(next.income_minor).toBe(q.income_minor);expect(next.as_of).toBe(q.as_of);expect(next.items[0].id).not.toBe(q.items[0].id);
+   for(const command of ["hoy","semana","mes","gastos"]){const r=await port.query(c,{action:"open",command,currency:"PEN",updateId:String(++sequence)});const core=JSON.parse(web(`select api.read_overview('PEN','custom',null,'${r.from}','${r.to}',null)`));expect(r.income_minor).toBe(core.income_minor);expect(r.expense_minor).toBe(core.expense_minor);}
+   expect(sql(`select count(*) from finance.transactions where user_id='${uid}';`,"supabase_admin")).toBe(before);
+  }finally{await port.close();const st=JSON.parse(web("select api.telegram_link_status()"));const l=st.links.find((v:{id:string})=>v.id===linked.id);if(l&&!l.revoked_at)web(`select api.telegram_revoke_link_versioned('${l.id}',${l.version})`);}
+},90000);
+
+ it.skipIf(!process.env.TELEGRAM_DATABASE_URL)("blocks queries when personal deletion wins the profile lock",async()=>{
+  const status=await a.c.schema("api").rpc("telegram_link_status");expect((await a.c.schema("api").rpc("telegram_set_query_permission",{p_id:ac.linkId,p_version:status.data.links[0].version,p_allow:true})).error).toBeNull();
+  let ready!:()=>void;const locked=new Promise<void>(r=>{ready=r;});
+  const blocking=asyncSql(`begin;select 1 from finance.profiles where user_id='${a.uid}' for update;insert into ops.deletion_blocks(user_id) values('${a.uid}');select 'locked';select pg_sleep(0.5);commit;`,"supabase_admin",out=>{if(out.includes("locked"))ready();});await locked;
+  const port=gateway(process.env.TELEGRAM_DATABASE_URL!);try{await expect(port.query(ac,open("saldo"))).rejects.toMatchObject({code:"42501"});await blocking;}finally{await port.close();}
+  expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+ });
+
 });
