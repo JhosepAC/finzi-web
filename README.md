@@ -1,95 +1,209 @@
-# Finzi
+<p align="center">
+  <img src="src/app/icon.svg" alt="Icono de Finzi" width="80" height="80" />
+</p>
 
-Finanzas personales gratuitas con Next.js y Supabase. Incluye registro/verificación, recuperación y sesiones, onboarding inicial, perfil y seguridad, cuentas personales, categorías propias e **ingresos, gastos, transferencias y correcciones trazables reales**. Inicio muestra saldos reconstruidos, seis períodos, comparación, evolución y distribución con acceso al historial, separado en PEN/USD. No existe modo de simulación ni datos financieros de ejemplo en la aplicación.
+<h1 align="center">Finzi</h1>
 
-## Ejecutar localmente
+<p align="center">
+  Tus cuentas, movimientos y compromisos financieros en un solo lugar.
+  <br />
+  Finanzas personales gratuitas, sin publicidad ni suscripciones.
+</p>
 
-Requisitos: Node.js 24 (probado con 24.21.0), pnpm 12.14.0 y Docker. Las imágenes de Supabase requieren descarga inicial y espacio local. No hace falta cuenta cloud.
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&amp;logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/React-19-149ECA?logo=react&amp;logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript 6" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&amp;logoColor=white" alt="Supabase y PostgreSQL" />
+</p>
 
-```powershell
+<p align="center">
+  <a href="#funcionalidades">Funcionalidades</a> ·
+  <a href="#tecnologías">Tecnologías</a> ·
+  <a href="#instalación-local">Instalación</a> ·
+  <a href="#documentación-técnica">Documentación</a>
+</p>
+
+---
+
+## Acerca del proyecto
+
+**Finzi** es una aplicación web de finanzas personales para registrar el dinero que entra y sale, consultar saldos y organizar compromisos de pago. Reúne cuentas, categorías, movimientos, estadísticas, deudas y gastos fijos en una interfaz en español adaptada a escritorio y móvil.
+
+Trabaja con **soles peruanos (PEN) y dólares estadounidenses (USD)** por separado. La información financiera proviene de los registros del usuario: la aplicación no incluye un modo de demostración ni saldos ficticios.
+
+> **Estado:** en desarrollo, con ejecución y validación locales. El registro público y el despliegue de producción tienen requisitos de seguridad, operación y privacidad pendientes. Consulta la [hoja de ruta](docs/product/ROADMAP.md).
+
+## Funcionalidades
+
+| Módulo | Qué puedes hacer |
+| --- | --- |
+| **Inicio** | Consultar saldo actual, ingresos, gastos y flujo del período; explorar evolución, categorías, cuentas, compromisos pendientes y movimientos recientes. |
+| **Cuentas** | Registrar efectivo, cuentas bancarias, ahorros y otras cuentas personales; gestionar aperturas, archivar y transferir entre cuentas de la misma moneda. |
+| **Movimientos** | Registrar ingresos y gastos en modales, buscar y filtrar automáticamente, consultar el detalle, duplicar, corregir, archivar o eliminar con trazabilidad. |
+| **Categorías** | Organizar ingresos y gastos con categorías y subcategorías, iconos, colores e imágenes privadas. |
+| **Estadísticas** | Comparar períodos, consultar ingresos, gastos, balance neto y ahorro calculado; explorar gráficos interactivos y variaciones por categoría. |
+| **Deudas** | Registrar acreedor, importe y vencimiento; gestionar abonos y consultar el historial de pagos. |
+| **Gastos fijos** | Organizar pagos semanales, quincenales, mensuales, trimestrales o anuales; consultar vencimientos en tarjetas, lista o calendario. |
+| **Mi perfil** | Editar nombre, moneda preferida y zona horaria, con confirmación del efecto sobre la agrupación del historial. |
+| **Sesión y seguridad** | Registrarse, verificar correo, recuperar o cambiar contraseña y cerrar la sesión actual o todas las sesiones. |
+| **Mis datos** | Descargar una copia personal en JSON o movimientos filtrados en CSV; solicitar la eliminación de la cuenta y seguir su estado con un comprobante privado. |
+
+Los pagos de deudas y gastos fijos permiten **crear un gasto o vincular uno existente**, para conservar la relación con Movimientos y evitar descontar el dinero dos veces. La recurrencia genera los siguientes vencimientos; no realiza cargos bancarios automáticos.
+
+## Tecnologías
+
+| Área | Herramientas |
+| --- | --- |
+| Aplicación web | Next.js 16, React 19 y TypeScript 6 |
+| Datos y autenticación | Supabase Auth, PostgreSQL 17, Supabase Storage y SDK/RPC sin ORM |
+| Interfaz | CSS, Lucide React y tipografía Manrope servida localmente |
+| Validación | Zod |
+| Pruebas | Vitest y Playwright |
+| Calidad | ESLint y comprobación de tipos con TypeScript |
+| Entorno local | Node.js 24, pnpm 12.14.0 y Docker |
+
+Las versiones exactas y los scripts se encuentran en [package.json](package.json); las dependencias están fijadas en [pnpm-lock.yaml](pnpm-lock.yaml).
+
+## Documentación técnica
+
+### Arquitectura
+
+Finzi es un **monolito modular**. Next.js integra las rutas web y los endpoints HTTP; los módulos separan presentación, lógica de dominio e infraestructura. PostgreSQL mantiene las reglas de integridad y las operaciones financieras atómicas mediante funciones RPC y migraciones SQL versionadas.
+
+```text
+finzi/
+├── src/
+│   ├── app/                  # Rutas, endpoints HTTP, estilos globales y recursos
+│   ├── modules/
+│   │   ├── accounts/         # Cuentas, aperturas y saldos
+│   │   ├── classification/   # Categorías, subcategorías e imágenes
+│   │   ├── debts/            # Deudas y abonos
+│   │   ├── fixed-expenses/   # Compromisos recurrentes y pagos
+│   │   ├── identity/         # Acceso, perfil, seguridad y datos personales
+│   │   ├── reporting/        # Inicio, estadísticas y consultas agregadas
+│   │   └── transactions/     # Movimientos, transferencias y correcciones
+│   └── shared/               # Dinero, fechas y componentes compartidos
+├── supabase/                 # Configuración local y migraciones SQL
+├── scripts/                  # Entorno local y procesamiento de eliminaciones
+├── tests/                    # Pruebas unitarias, de integración y E2E
+├── .env.example              # Variables de configuración
+└── package.json              # Dependencias y comandos
+```
+
+### Reglas financieras y privacidad
+
+- **Importes exactos:** dinero representado con tipos decimales en PostgreSQL y unidades menores enteras con `bigint` en el dominio.
+- **Monedas separadas:** los reportes no suman PEN con USD y no existe conversión automática.
+- **Transferencias internas:** mueven dinero entre cuentas; no se cuentan como ingresos o gastos.
+- **Historia trazable:** las correcciones conservan el registro original y enlazan su reemplazo. Eliminar un movimiento retira su efecto y mantiene el rastro financiero.
+- **Operaciones atómicas e idempotentes:** las partidas se confirman juntas y los reintentos técnicos no duplican operaciones.
+- **Aislamiento por usuario:** identidad verificada, Row Level Security (RLS), referencias propias y validación en servidor y base de datos.
+- **Acciones sensibles:** cambiar contraseña, exportar y eliminar requieren la autorización correspondiente. Las autorizaciones son temporales y de un solo uso.
+
+El ahorro estadístico es el excedente positivo de ingresos menos gastos del período. **No representa el saldo de las cuentas ni dinero reservado.**
+
+## Instalación local
+
+### Requisitos
+
+- **Node.js 24**.
+- **pnpm 12.14.0**.
+- **Docker** instalado y en ejecución para Supabase local.
+
+No necesitas contratar un proyecto de Supabase para ejecutar el entorno local. La primera ejecución descarga las imágenes de sus servicios.
+
+### Puesta en marcha
+
+Clona este repositorio y abre su carpeta en una terminal. Después ejecuta:
+
+```sh
 pnpm install --frozen-lockfile
 pnpm supabase:start
 pnpm supabase:env
 pnpm dev
 ```
 
-Abrir [Finzi](http://127.0.0.1:3000/login). El correo de prueba llega a [Mailpit local](http://127.0.0.1:17324); usar direcciones sintéticas example.test. API Supabase: 17321; PostgreSQL: 17322. Mantener el puerto 3000 coherente con APP_URL. Las pruebas rechazan URLs cloud y no deben ejecutarse contra información personal.
+| Servicio | Dirección local |
+| --- | --- |
+| Aplicación | [http://127.0.0.1:3000/login](http://127.0.0.1:3000/login) |
+| Buzón de correo de desarrollo | [http://127.0.0.1:17324](http://127.0.0.1:17324) |
+| API de Supabase | `http://127.0.0.1:17321` |
+| PostgreSQL | Puerto `17322` |
 
-`pnpm supabase:env` crea `.env.local` con configuración publicable local y se niega a sobrescribirla. Variables en [.env.example](.env.example). No se requiere clave administrativa para solicitudes de la aplicación. Reiniciar Next al cambiar variables.
+Registra una identidad de prueba, confirma el correo desde el buzón local, configura tus preferencias y crea tu primera cuenta. Para desarrollo y pruebas utiliza datos sintéticos, por ejemplo direcciones `example.test`.
 
-`pnpm supabase:stop` conserva datos. **`pnpm supabase:reset` elimina los datos de prueba locales y reaplica migraciones**; no es necesario para actualizar. Los scripts no vinculan ni modifican proyectos cloud.
+### Variables de entorno
 
-## Actualizar un entorno existente
+`pnpm supabase:env` genera `.env.local` a partir del entorno local iniciado y **no sobrescribe un archivo existente**. La plantilla disponible es [.env.example](.env.example).
 
-Con Supabase local iniciado, aplicar las migraciones pendientes:
+| Variable | Uso |
+| --- | --- |
+| `SUPABASE_URL` | URL de la API de Supabase. |
+| `SUPABASE_PUBLISHABLE_KEY` | Clave publicable del proyecto; no una clave administrativa. |
+| `APP_URL` | Origen canónico de la aplicación. En local: `http://127.0.0.1:3000`. |
 
-```powershell
+La aplicación consume estas variables en el servidor. Mantén `APP_URL` coherente con el puerto de Next.js y reinicia el servidor cuando cambies la configuración. No publiques `.env.local` ni credenciales privadas.
+
+### Actualizar o detener Supabase
+
+Con el entorno local iniciado, aplica las migraciones pendientes:
+
+```sh
 pnpm exec supabase migration up --local
 ```
 
-A-06 añade las migraciones 20261114000600 y 20261114000700 para ledger y comprobación al commit bajo ejecutor restringido. A-07 añade 20261114000800 y 20261114000900 para transferencias, reemplazos y validación diferida de sus referencias. Son aditivas; no se reescriben migraciones anteriores ni se borran usuarios. A-08 añade 20261114001000, RPC de reporting de solo lectura con instantánea coherente. A-09 añade 20261114001100, auditoría de preferencias y comprobantes de reautenticación de un solo uso con RLS. No hay nuevas dependencias, servicios, claves o variables.
+Para detenerlo conservando los datos:
 
-## Recorrido actual
-
-Crear identidad → confirmar correo → configurar nombre/PEN/USD/zona → Inicio. Crear cuenta con moneda y saldo inicial; organizar categorías propias, opcionalmente copiar categorías iniciales; abrir Movimientos y registrar ingresos/gastos desde un formulario dentro de la página. Solo cuentas/categorías propias y activas; importes positivos y exactos; fecha ya ocurrida y no anterior a apertura.
-
-El historial permite búsqueda, filtros, detalle y paginación. Los totales corresponden al filtro completo y excluyen anulados, reemplazados, aperturas y transferencias. Anular exige motivo y conserva el rastro. La apertura queda bloqueada con cualquier historia, incluida anulación. Archivo de cuentas/categorías conserva información; no habilita nuevos registros sobre referencias inactivas.
-
-Ingreso/gasto, partida firmada y auditoría se confirman atómicamente; los reintentos no duplican operaciones, incluso tras perder la respuesta. RLS, FKs propias, control de versiones y bloqueos coordinados protegen aislamiento y concurrencia. Nunca se suman PEN y USD entre sí ni se convierte moneda automáticamente.
-
-Transferir mueve dinero entre dos cuentas propias, activas y distintas de la misma moneda. La interfaz anticipa ambos saldos y advierte negativos; dos partidas opuestas se confirman juntas. El flujo neto excluye transferencias incluso al filtrar una sola cuenta. Anular una transferencia retira ambos efectos al mismo tiempo.
-
-Corregir permite cambiar tipo, cuentas, importe, categoría, descripción, nota y fecha; exige motivo, revisión y versión vigente. Anula el original y publica su reemplazo en una sola transacción. El original y sus partidas permanecen intactos; cada registro admite un sucesor y cada sucesor puede corregirse. Ver trazabilidad recorre registros anteriores/reemplazos aunque estén fuera del filtro o página. Una fecha que no se edita conserva su instante exacto. No hay FX: corregir una moneda equivocada retira un registro y crea otro explícitamente en la cuenta elegida.
-
-Límite inicial compartido: 10000 registros por usuario, incluyendo anulados y reemplazos. Al llegar al límite, una corrección nueva se rechaza sin anular el original; los reintentos ya confirmados siguen funcionando. Cuentas/categorías archivadas se conservan en la historia; para corregir hay que seleccionar referencias activas.
-
-Inicio permite elegir día, semana (lunes–domingo), mes, trimestre, año y personalizado (hasta 3660 días, terminado hoy o antes). Compara con período anterior completo; rango personalizado con igual cantidad de días. Período en curso y base cero quedan señalados; no inventa porcentajes sin base. Saldo actual se etiqueta aparte de ingresos/gastos/flujo. Evolución muestra cierres diarios o mensuales con tabla exacta y sin saldos anteriores a aperturas. Distribución padre/hijos cuenta cada movimiento una vez. Los accesos desde métricas, categorías, cierres, cuentas y recientes conservan moneda/período al abrir su historial. Filtros/cursor/detalle sobreviven cambios de vista en memoria, sin URL o almacenamiento persistente de búsquedas. Duplicación explícita requiere revisar importe/fecha, usa clave nueva y conserva el original.
-
-Mi perfil abre /profile: formulario directo de nombre, moneda preferida y zona, correo verificado en consulta y español inicial. Cambiar zona avisa que reagrupará días/períodos y exige confirmación; no cambia instantes o saldos. Versión esperada, comparación de conflicto y reintentos conservan borrador; auditoría mínima atómica no duplica el nombre. El onboarding queda para usuarios nuevos; su antiguo enlace de edición lleva a /profile.
-
-/security muestra estado de acceso y permite cambiar contraseña confirmando primero la actual. El servidor emite autorización de cinco minutos, un solo uso, ligada a usuario/sesión/finalidad; secreto solo en cookie HttpOnly y hash privado en BD. Refresh no equivale a volver a verificar contraseña. Tras cambiar se solicita cierre global y nuevo inicio; un resultado incierto no se repite automáticamente. Cierres local/global explican vigencia residual de access tokens. /session conserva acceso compatible de AUTH. No hay administración avanzada de dispositivos, MFA o cambio de correo en este alcance. La autorización adicional protege rutas Finzi; no sustituye políticas del proveedor Auth directo, que deben verificarse antes de publicación.
-
-Exportación y eliminación locales están implementadas en /data y seguimiento en /deletion; requieren reautenticación específica y comprobante guardado. Ejecutar `pnpm deletion:worker --watch` para procesar solicitudes. Manifiestos cifrados y clave viven fuera del proyecto; antes de restaurar usar `pnpm deletion:worker --restore-manifests` con tráfico aislado. Respaldos/retención pública siguen pendientes y no se promete borrado instantáneo de copias. Ver [contrato](docs/development/DATA_PORTABILITY.md). El endurecimiento y piloto siguen pendientes según [ROADMAP](docs/product/ROADMAP.md). La simulación previa, sus fixtures, formularios, exportación y accesos se retiraron en A-06.
-
-## Comprobar
-
-Con Supabase local y `.env.local` configurado:
-
-```powershell
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm test:integration
-pnpm build
-pnpm start
-# En otra terminal:
-pnpm test:e2e
+```sh
+pnpm supabase:stop
 ```
 
-Para comprobar producción, detener desarrollo antes de build/start. Playwright reutiliza el servidor local fuera de CI y usa Edge en Windows. `PLAYWRIGHT_CHANNEL` cambia el canal; en otro entorno puede instalarse Chromium con `pnpm exec playwright install chromium`. Las pruebas crean usuarios y registros sintéticos aislados para verificar rutas reales; no son un modo de producto ni semillas de datos para usuarios.
+`pnpm supabase:reset` **borra los datos locales y reaplica las migraciones**. No es necesario para una actualización normal.
 
-## Documentación y estado
+## Comandos de desarrollo
 
-- [ROADMAP](docs/product/ROADMAP.md) y [avance incremental](IMPLEMENTATION_PROGRESS.md).
-- [Perfil y seguridad](docs/development/PROFILE_SECURITY.md), [Reporting real](docs/development/REAL_REPORTING.md), [Transferencias/reemplazos](docs/development/TRANSFERS_REPLACEMENTS.md), [contrato de movimientos](docs/development/MOVEMENTS.md), [cuentas](docs/development/ACCOUNTS.md) y [categorías](docs/development/CATEGORIES.md).
-- [Índice documental](docs/README.md), [decisiones](docs/architecture/DECISIONS.md) y [sistema visual](DESIGN.md).
+| Comando | Propósito |
+| --- | --- |
+| `pnpm dev` | Iniciar Next.js en desarrollo. |
+| `pnpm typecheck` | Generar tipos de rutas y comprobar TypeScript. |
+| `pnpm lint` | Comprobar ESLint sin advertencias permitidas. |
+| `pnpm test` | Ejecutar pruebas unitarias. |
+| `pnpm test:integration` | Ejecutar pruebas de integración contra los servicios locales. |
+| `pnpm test:e2e` | Ejecutar pruebas de navegador con Playwright. |
+| `pnpm build` | Compilar para producción. |
+| `pnpm start` | Servir la compilación de producción. |
 
-Se conserva el `.gitignore` original, incluidas docs/, AGENTS.md y carpetas de agentes. Solo docs/product/ROADMAP.md está versionado explícitamente por petición del usuario; los demás documentos ignorados son locales. Nunca incluir `.env`, cachés, capturas o logs con información personal en commits.
+Las pruebas de integración y E2E necesitan Supabase local y `.env.local`. Crean usuarios sintéticos para comprobar los flujos reales y rechazan entornos cloud.
 
-No hay despliegue ni infraestructura cloud contratada. Antes del registro público siguen pendientes HTTPS/correo, requisitos jurídicos/edad, capacidad gratuita, retención, respaldo y recuperación. Finzi continúa sin monetización, publicidad o servicios de pago. Manrope se sirve localmente con licencia SIL OFL en src/app/fonts/OFL.txt; el logo es el icono azul con f existente.
+Playwright utiliza Edge por defecto en Windows. Para usar Chromium:
 
+```sh
+pnpm exec playwright install chromium
+```
 
-## A-11 — Deudas
+Configura `PLAYWRIGHT_CHANNEL=chromium` en el entorno antes de ejecutar los E2E. Para revisar una compilación de producción, detén `pnpm dev` antes de ejecutar `pnpm build` y `pnpm start`.
 
-Deudas en el dashboard: registro/edición inline, acreedor, icono, categoría y vencimiento opcionales, PEN/USD separados; estados derivados y resumen original/pagado/pendiente. Filtros y tarjetas con disponibilidad real de cuentas activas. Pago parcial/final crea un gasto o vincula uno existente sin descontarlo otra vez; selector paginado, fecha/nota e historial con acceso al ledger. Reemplazos/anulaciones recalculan pendiente; SQL impide sobrepago, moneda/tipo distintos y doble asociación, con RLS/idempotencia/atomicidad reales.
+### Procesamiento de eliminaciones
 
-Eliminar deuda la oculta y conserva gastos/historia exportable; desvincular conserva el gasto; anular gasto lo revierte. JSON y eliminación de cuenta incluyen deudas/pagos/eventos. Límites gratuitos iniciales: 200 deudas/2000 pagos por usuario incluida historia, además del límite de movimientos. Sin intereses, desembolsos automáticos, servicios nuevos o costes. Autorización específica A-11; no completa el paso11 de endurecimiento/piloto. [Contrato local](docs/development/DEBTS.md) y [avance versionado](IMPLEMENTATION_PROGRESS.md).
+Las solicitudes de eliminación necesitan el worker local en ejecución:
 
-Para aislar buzones de pruebas locales puede definirse FINZI_TEST_MAILPIT_URL (solo loopback); las pruebas nuevas de Deudas admiten FINZI_TEST_DB_CONTAINER con nombre validado. El worker operacional conserva su alcance original; no se redirige silenciosamente a otro proyecto. La validación de A-11 documenta una migración externa incompatible en el Supabase compartido y usa un entorno local separado, sin revertir datos ajenos.
+```sh
+pnpm deletion:worker --watch
+```
 
+Si el worker está detenido, la solicitud permanece pendiente y la cuenta bloqueada. El comprobante privado permite consultar el estado en `/deletion`. El borrado de la instancia activa y la caducidad de las copias de seguridad son etapas distintas.
 
-## A-12 — Estadísticas
+## Estado y alcance
 
-Vista Estadísticas con cinco indicadores y cuatro gráficos interactivos: ingresos/gastos, distribución, balance acumulado del período y ahorro por intervalo. Seis períodos automáticos, PEN/USD separados, comparación de igual duración local y categorías con incrementos/reducciones/desglose; controles por teclado/táctil, tabla exacta y acceso al historial contextual. Ahorro confirmado=max(ingresos−gastos,0); tasa=ahorro/ingresos o No calculable sin ingresos. El balance conserva déficit; estos indicadores no son saldos de cuentas ni dinero reservado. No se suman los ahorros de intervalos para ocultar déficits.
+La funcionalidad actual incluye autenticación, cuentas, categorías, movimientos, transferencias, correcciones trazables, reporting, deudas, gastos fijos y gestión de datos personales. El desarrollo sigue una estrategia de integración frecuente con **Conventional Commits**.
 
-Solo movimientos vigentes: sin aperturas/transferencias, anulaciones/reemplazados o duplicación de gastos por deudas. API privada/RLS y una instantánea de lectura; no tablas, librerías o servicios nuevos. Cambios rápidos de filtros cancelan consultas; datos de otra moneda/período nunca se presentan bajo la selección actual. [Contrato local](docs/development/STATISTICS.md) y [ROADMAP versionado](docs/product/ROADMAP.md).
+La aplicación no incluye conexión bancaria, cambio de divisas, cobros automáticos, OCR ni funciones de IA. Los próximos pasos de endurecimiento, recuperación, capacidad y preparación del registro público están recogidos en la [hoja de ruta](docs/product/ROADMAP.md).
+
+## Autor
+
+Desarrollado por [Jhosep Argomedo](https://jhosep-ac.pages.dev/).
+
+---
+
+<p align="center">Finzi · Finanzas personales gratuitas, con control sobre tus datos.</p>
