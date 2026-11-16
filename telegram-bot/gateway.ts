@@ -13,10 +13,10 @@ export function gateway(url: string) {
   async assertLock() { const [r]=await sql`select pg_backend_pid() pid`;if(r.pid!==pid)throw new Error("Poller lease lost; restart explicitly"); },
   async claim(challenge: string,bot: string,user: string,chat: string,hash: string) { await sql`select telegram_private.claim_link(${challenge},${bot},${user},${chat},${hash})`; },
   async context(capability: string,bot: string,user: string,chat: string) { const [r]=await sql`select telegram_private.link_context(${capability},${bot},${user},${chat}) value`;return r.value as Record<string,string>|null; },
-  async catalog(c:Record<string,string>){const [r]=await sql`select telegram_private.conversation_catalog(${JSON.stringify({...c,scope:"catalog:read"})}::jsonb) value`;return r.value;},
-  async command(c:Record<string,string>,command:Record<string,unknown>){const [r]=await sql`select telegram_private.draft_command(${JSON.stringify({...c,scope:"draft:write"})}::jsonb,${JSON.stringify(command)}::jsonb) value`;return r.value;},
-  async callbacks(c:Record<string,string>,id:string,version:number,choices:{hash:string;field:string;value:string}[]){await sql`select telegram_private.register_callbacks(${JSON.stringify({...c,scope:"draft:write"})}::jsonb,${id}::uuid,${version},${JSON.stringify(choices)}::jsonb)`;},
-  async confirm(c:Record<string,string>,tokenHash:string,updateId:string){const [r]=await sql`select telegram_private.confirm_draft(${JSON.stringify({...c,scope:"movement:confirm"})}::jsonb,${tokenHash},${updateId}) value`;return r.value;},
+  async catalog(c:Record<string,string>){const [r]=await sql`select telegram_private.conversation_catalog(${sql.json({...c,scope:"catalog:read"})}::jsonb) value`;return r.value;},
+  async command(c:Record<string,string>,command:Record<string,unknown>){const [r]=await sql`select telegram_private.draft_command(${sql.json({...c,scope:"draft:write"})}::jsonb,${sql.json(command)}::jsonb) value`;return r.value;},
+  async callbacks(c:Record<string,string>,id:string,version:number,choices:{hash:string;field:string;value:string}[]){await sql`select telegram_private.register_callbacks(${sql.json({...c,scope:"draft:write"})}::jsonb,${id}::uuid,${version},${sql.json(choices)}::jsonb)`;},
+  async confirm(c:Record<string,string>,tokenHash:string,updateId:string){const [r]=await sql`select telegram_private.confirm_draft(${sql.json({...c,scope:"movement:confirm"})}::jsonb,${tokenHash},${updateId}) value`;return r.value;},
   close:()=>sql.end({timeout:5})
  };
 }

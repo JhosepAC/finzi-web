@@ -1,3 +1,4 @@
+import { gateway } from "../../telegram-bot/gateway";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { createHash, randomBytes } from "node:crypto";
@@ -254,6 +255,21 @@ describe("Telegram phase 4: versioned conversations without financial publicatio
   expect(sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin")).toBe("1");
   failNotification=false;catalogUnavailable=true;expiredAck=true;await click(confirmation,4611);const canonical=replies.at(-1)!.text;expect(canonical).toContain("Movimiento registrado");expect(canonical).toContain("S/ 25.00");await click(confirmation,4612);expect(replies.at(-1)!.text).toBe(canonical);
   expect(sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin")).toBe("1");
+ });
+ it.skipIf(!process.env.TELEGRAM_DATABASE_URL)("uses the actual postgres driver for draft updates and confirmation guards without publication",async()=>{
+  const port=gateway(process.env.TELEGRAM_DATABASE_URL!);
+  try{
+   expect((await port.catalog(ac)).timezone).toBe("America/Lima");
+   const d=await port.command(ac,start("4990",{amount:null}));expect(d.awaiting).toBe("amount");
+   const updated=await port.command(ac,{action:"amend",id:d.id,version:d.version,updateId:"4991",payload:{...d.payload,amount:"12.50"}});expect(updated.state).toBe("pending");
+   const token=secret();await port.callbacks(ac,updated.id,updated.version,[{hash:hash(token),field:"cancel",value:"cancel"}]);
+   const read=await port.command(ac,{action:"read",id:updated.id});expect(read.id).toBe(updated.id);
+   expect((await port.command(ac,{action:"choice",tokenHash:hash(token),updateId:"4992"})).state).toBe("cancelled");
+   // Even the actual financial entrypoint must reject a cancelled keyboard without publishing.
+   expect((await a.c.schema("api").rpc("telegram_set_movement_permission",{p_id:ac.linkId,p_version:1,p_allow:true})).error).toBeNull();
+   await expect(port.confirm(ac,hash(token),"4993")).rejects.toMatchObject({code:"P0002"});
+   expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+  }finally{await port.close();}
  });
  it("expired drafts reject interactions and keep actual balance unchanged",()=>{
   const d=JSON.parse(sql(command(ac,start("4500"))));sql(`update telegram_private.drafts set created_at=now()-interval '20 minutes',expires_at=now()-interval '5 minutes' where id='${d.id}';`,"supabase_admin");
