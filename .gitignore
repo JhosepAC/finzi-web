@@ -3,10 +3,10 @@
 .codex/
 .impeccable/
 skills-lock.json
-docs/
+# Private documentation: keep all docs local.
+/docs/
 AGENTS.md
 PRODUCT.md
-docs/product
 
 # Dependencies and framework output
 node_modules/

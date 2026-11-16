@@ -21,13 +21,19 @@
     "supabase:stop": "node scripts/supabase-local.mjs stop",
     "supabase:reset": "node scripts/supabase-local.mjs db reset --local",
     "supabase:env": "node scripts/local-env.mjs",
-    "deletion:worker": "node scripts/deletion-worker.mjs"
+    "deletion:worker": "node scripts/deletion-worker.mjs",
+    "telegram:recovery": "node scripts/telegram-recovery.ts",
+    "telegram:setup": "node scripts/telegram-setup.mjs",
+    "telegram:bot": "node --env-file-if-exists=.env.telegram.local telegram-bot/index.ts",
+    "telegram:check": "node --env-file-if-exists=.env.telegram.local telegram-bot/index.ts --check"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
+    "grammy": "1.46.0",
     "lucide-react": "1.72.0",
     "next": "16.4.6",
+    "postgres": "4.1.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "0.0.1",
