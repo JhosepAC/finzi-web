@@ -396,6 +396,17 @@ describe("Telegram phase 6: scoped read-only queries",()=>{
   expect((await b.c.schema("api").rpc("telegram_set_query_permission",{p_id:bc.linkId,p_version:1,p_allow:true})).error).toBeNull();
   expect(read(open("categorias"),bc).total).toBe(0);
  });
+ it.skipIf(!process.env.TELEGRAM_DATABASE_URL)("runs startup query cleanup with its actual restricted executor and preserves live sessions",async()=>{
+  const q=read(open("categorias")),live=read(open("cuentas"));
+  sql(query(ac,{action:"buttons",id:q.id,page:0,choices:[{hash:hash(secret()),page:1}]}));
+  sql(`update telegram_private.query_sessions set expires_at=now()-interval '1 second' where id='${q.id}';`,"supabase_admin");
+  const port=gateway(process.env.TELEGRAM_DATABASE_URL!);try{await port.sweepQueries();}finally{await port.close();}
+  expect(sql(`select count(*) from telegram_private.query_sessions where id='${q.id}';`,"supabase_admin")).toBe("0");
+  expect(sql(`select count(*) from telegram_private.query_cursors where session_id='${q.id}';`,"supabase_admin")).toBe("0");
+  expect(sql(`select count(*) from telegram_private.query_sessions where id='${live.id}';`,"supabase_admin")).toBe("1");
+  expect(sql("select has_table_privilege('postgres','telegram_private.query_sessions','UPDATE');","supabase_admin")).toBe("f");
+  expect(sql(`select count(*) from finance.transactions where user_id='${a.uid}';`,"supabase_admin")).toBe("0");
+ });
  it("matches core reports for local today, rolling seven days and month, including empty USD",async()=>{
   for(const command of ["hoy","semana","mes","gastos","ingresos"]){for(const currency of ["PEN","USD"]){
    const q=read(open(command,currency));const report=await a.c.schema("api").rpc("read_overview",{p_currency:currency,p_period:"custom",p_from:q.from,p_to:q.to});expect(report.error).toBeNull();
