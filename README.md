@@ -47,6 +47,7 @@ Trabaja con **soles peruanos (PEN) y dólares estadounidenses (USD)** por separa
 | **Gastos fijos** | Organizar pagos semanales, quincenales, mensuales, trimestrales o anuales; consultar vencimientos en tarjetas, lista o calendario. |
 | **Mi perfil** | Editar nombre, moneda preferida y zona horaria, con confirmación del efecto sobre la agrupación del historial. |
 | **Sesión y seguridad** | Registrarse, verificar correo, recuperar o cambiar contraseña y cerrar la sesión actual o todas las sesiones. |
+| **Telegram opcional** | Registrar ingresos/gastos con confirmación y consultar saldos/reportes desde un chat privado vinculado; permisos de registro y consulta independientes. |
 | **Mis datos** | Descargar una copia personal en JSON o movimientos filtrados en CSV; solicitar la eliminación de la cuenta y seguir su estado con un comprobante privado. |
 
 Los pagos de deudas y gastos fijos permiten **crear un gasto o vincular uno existente**, para conservar la relación con Movimientos y evitar descontar el dinero dos veces. La recurrencia genera los siguientes vencimientos; no realiza cargos bancarios automáticos.
@@ -195,6 +196,19 @@ pnpm deletion:worker --watch
 ```
 
 Si el worker está detenido, la solicitud permanece pendiente y la cuenta bloqueada. El comprobante privado permite consultar el estado en `/deletion`. El borrado de la instancia activa y la caducidad de las copias de seguridad son etapas distintas.
+
+### Bot de Telegram local
+
+El bot se ejecuta por separado y necesita Supabase local, internet y el equipo encendido. Las credenciales se guardan únicamente en `.env.telegram.local`; el almacén cifrado y su clave permanecen separados y fuera del repositorio. Los mensajes y respuestas pasan por Telegram.
+
+```sh
+pnpm telegram:check
+pnpm telegram:bot
+```
+
+`telegram:check` verifica configuración, identidad, custodia y permisos sin consumir mensajes. Para detener el bot usa **Ctrl+C**; reinicia con la misma configuración y custodia. La vinculación y los permisos se gestionan en **Mi perfil → Telegram**. Los borradores vencen a los 15 minutos y ningún movimiento se registra sin confirmación explícita.
+
+`pnpm telegram:setup` es solo para una instalación nueva: conserva y rechaza una configuración existente. `pnpm telegram:recovery` muestra conteos sin cambiar datos; la invalidación tras restaurar copias requiere mantenimiento con el gateway deshabilitado y confirmación explícita. No ofrece disponibilidad continua ni requiere servicios de pago.
 
 ## Estado y alcance
 
