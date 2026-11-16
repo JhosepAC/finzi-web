@@ -132,3 +132,9 @@ Integración solicitada15/11/2026: Estadísticas y Categorías avanzadas (b25fb3
 
 ## A-13 — Gastos Fijos (15/11/2026)
 Extensión solicitada y ejecutada localmente: compromisos periódicos, vencimientos derivados, pagos nuevos/vinculados y resumen mensual por moneda. [Contrato y validación](../development/FIXED_EXPENSES.md). No completa ni autoriza despliegue; pendientes de lanzamiento conservados.
+
+Rediseño Deudas15/11/2026: modales nativos de alta/edición/pago, resumen pendiente/disponible, filtros compactos y vistas tarjetas/lista con avance real. Seis E2E y revisión visual aprobados. [Contrato](../development/DEBTS.md). No cambia reglas financieras ni habilita cobros/crédito.
+
+Rediseño Gastos Fijos15/11/2026: resumen mensual con avance real, agenda de próximos pagos, filtros automáticos compactos y vistas tarjetas/lista/calendario; símbolos originales de categorías y modales protegidos. Tres E2E, TypeScript y ESLint aprobados; revisión responsive de escritorio/móvil. [Contrato](../development/FIXED_EXPENSES.md). Se conserva la semántica financiera de A-13.
+
+Rediseño Estadísticas15/11/2026: composición basada en la referencia aportada, cuatro indicadores, períodos compactos, gráficos barras/líneas con series seleccionables y detalle lateral de categoría. Comparativa adaptada a móvil; cálculos y datos exactos conservados. Cinco E2E aprobados y repetición del afectado tras ajustes visuales. [Contrato](../development/STATISTICS.md).
