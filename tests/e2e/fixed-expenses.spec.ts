@@ -1,6 +1,56 @@
 import { expect, test } from "@playwright/test";
 import { financialSession, localOrigin, navigate } from "../helpers/financial";
 
+test("vistas de compromisos, calendario filtrado y modales adaptables", async ({ page, context }) => {
+  const data = (await financialSession(page, context))!;
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  for (const [name, amount, day] of [["Alquiler del departamento", "850", "01"], ["Internet del hogar", "89.90", "18"], ["Telefonía móvil", "39.90", "25"], ["Suscripción de música", "20.90", "28"]]) {
+    const result = await context.request.post("/api/v1/fixed-expenses", { headers: { Origin: localOrigin }, data: { action: "create", requestId: crypto.randomUUID(), name, amount, dueDate: `${today.slice(0, 7)}-${day}`, frequency: "monthly", currency: "PEN", categoryId: data.expense.id, note: "" } });
+    expect(result.ok()).toBe(true);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await navigate(page, "Gastos Fijos");
+  await expect(page.locator(".fixed-row")).toHaveCount(4);
+  await page.screenshot({ path: ".impeccable/review/fixed-overview-desktop.png", fullPage: true });
+  await page.getByRole("button", { name: "Vista de lista", exact: true }).click();
+  await expect(page.locator(".fixed-list")).toHaveClass(/list/);
+  await page.getByRole("button", { name: "Vista de calendario", exact: true }).click();
+  const day = page.getByRole("button", { name: `${today.slice(0, 7)}-18: 1 vencimientos`, exact: true });
+  await day.click();
+  await expect(day).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".fixed-row")).toHaveCount(1);
+  await expect(page.locator(".fixed-row")).toContainText("Internet del hogar");
+  await page.screenshot({ path: ".impeccable/review/fixed-calendar.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: ".impeccable/review/fixed-calendar-mobile.png", fullPage: true });
+  await page.locator(".fixed-schedule-list li").filter({ hasText: "Alquiler del departamento" }).getByRole("button", { name: "Ver vencimiento", exact: true }).click();
+  await expect(page.locator(".fixed-row")).toHaveCount(1);
+  await expect(page.locator(".fixed-row")).toContainText("Alquiler del departamento");
+  await page.getByLabel("Buscar gasto", { exact: true }).fill("inexistente");
+  await expect(page.locator(".fixed-row")).toHaveCount(0);
+  await page.getByRole("button", { name: "Limpiar filtros", exact: true }).click();
+  await page.getByRole("button", { name: "Vista de tarjetas", exact: true }).click();
+  for (const width of [360, 390, 768, 1024]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: ".impeccable/review/fixed-overview-mobile.png", fullPage: true });
+  await page.getByRole("button", { name: "Nuevo gasto fijo", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nuevo gasto fijo", exact: true });
+  await expect(dialog).toHaveJSProperty("open", true);
+  await expect(dialog.getByLabel("Nombre del gasto")).toBeFocused();
+  await page.screenshot({ path: ".impeccable/review/fixed-editor-mobile.png" });
+  await dialog.getByLabel("Nombre del gasto").fill("Borrador");
+  page.once("dialog", (confirmation) => confirmation.dismiss());
+  await page.keyboard.press("Escape");
+  await expect(dialog.getByLabel("Nombre del gasto")).toHaveValue("Borrador");
+  page.once("dialog", (confirmation) => confirmation.accept());
+  await dialog.getByRole("button", { name: "Cerrar formulario" }).click();
+  await expect(dialog).not.toBeVisible();
+});
+
 test("registra compromiso, paga en modal, consulta meses e historial y elimina conservando pago", async ({ page, context }) => {
   test.setTimeout(90000);
   const data = (await financialSession(page, context))!;
