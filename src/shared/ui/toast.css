@@ -26,33 +26,33 @@
 }
 
 .finzi-toast-success {
-  background: #ffffff;
-  border: 1px solid #bbf7d0;
-  color: #14532d;
+  background: var(--tone-surface-ffffff, #ffffff);
+  border: 1px solid var(--tone-border-bbf7d0, #bbf7d0);
+  color: var(--tone-text-14532d, #14532d);
 }
 
 .finzi-toast-success .finzi-toast-icon {
-  color: #16a34a;
+  color: var(--tone-text-16a34a, #16a34a);
 }
 
 .finzi-toast-error {
-  background: #ffffff;
-  border: 1px solid #fecaca;
-  color: #7f1d1d;
+  background: var(--tone-surface-ffffff, #ffffff);
+  border: 1px solid var(--tone-border-fecaca, #fecaca);
+  color: var(--tone-text-7f1d1d, #7f1d1d);
 }
 
 .finzi-toast-error .finzi-toast-icon {
-  color: #dc2626;
+  color: var(--tone-text-dc2626, #dc2626);
 }
 
 .finzi-toast-info {
-  background: #ffffff;
-  border: 1px solid #bfdbfe;
-  color: #1e3a8a;
+  background: var(--tone-surface-ffffff, #ffffff);
+  border: 1px solid var(--tone-border-bfdbfe, #bfdbfe);
+  color: var(--tone-text-1e3a8a, #1e3a8a);
 }
 
 .finzi-toast-info .finzi-toast-icon {
-  color: #2563eb;
+  color: var(--tone-text-2563eb, #2563eb);
 }
 
 .finzi-toast-icon {
@@ -76,7 +76,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #64748b;
+  color: var(--tone-text-64748b, #64748b);
   border-radius: 6px;
   cursor: pointer;
   flex-shrink: 0;
@@ -85,7 +85,7 @@
 
 .finzi-toast-close:hover {
   background: rgba(0, 0, 0, 0.06);
-  color: #1e293b;
+  color: var(--tone-text-1e293b, #1e293b);
 }
 
 @keyframes finzi-toast-in {

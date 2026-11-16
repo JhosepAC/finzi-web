@@ -1,37 +1,37 @@
 .real-accounts { display: grid; gap: 20px; }
 .real-toolbar { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
 .real-toolbar > :is(.button, .home-primary-button) { width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; height: 48px; }
-.real-data-label { display: flex; gap: 8px; align-items: center; color: #16765a; font-size: 13px; margin-right: auto; }
+.real-data-label { display: flex; gap: 8px; align-items: center; color: var(--tone-text-16765a, #16765a); font-size: 13px; margin-right: auto; }
 .real-balances { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.real-balances article { padding: 26px; background: #fff; border: 1px solid #e4eaf4; border-radius: 16px; }
-.real-balances article:first-child { color: #fff; background: #1d4ed8; border-color: #1d4ed8; }
+.real-balances article { padding: 26px; background: var(--tone-surface-fff, #fff); border: 1px solid var(--tone-border-e4eaf4, #e4eaf4); border-radius: 16px; }
+.real-balances article:first-child { color: var(--tone-text-fff, #fff); background: var(--tone-surface-1d4ed8, #1d4ed8); border-color: var(--tone-border-1d4ed8, #1d4ed8); }
 .real-balances article > span { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
 .real-balances small { font-size: 12px; }
 .real-balances strong { display: block; font-size: clamp(24px, 2.5vw, 38px); font-weight: 650; letter-spacing: -.04em; margin: 24px 0 12px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .real-balances p { font-size: 12px; margin: 0; opacity: .9; }
-.real-account-list .panel-heading > span { font-size: 12px; color: #63718a; }
+.real-account-list .panel-heading > span { font-size: 12px; color: var(--tone-text-63718a, #63718a); }
 .archive-filter { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 16px 0; font-size: 13px; width: fit-content; cursor: pointer; }
-.archive-filter input, .archive-option input { width: 18px; height: 18px; accent-color: #1d4ed8; }
+.archive-filter input, .archive-option input { width: 18px; height: 18px; accent-color: var(--tone-text-1d4ed8, #1d4ed8); }
 .real-account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-.real-account-card { padding: 22px; border: 1px solid #dce5f3; border-radius: 14px; min-width: 0; }
+.real-account-card { padding: 22px; border: 1px solid var(--tone-border-dce5f3, #dce5f3); border-radius: 14px; min-width: 0; }
 .real-account-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.account-status { padding: 5px 8px; border-radius: 6px; font-size: 11px; background: #eaf6f0; color: #16765a; }
-.account-status.archived { background: #edf0f6; color: #53617a; }
+.account-status { padding: 5px 8px; border-radius: 6px; font-size: 11px; background: var(--tone-surface-eaf6f0, #eaf6f0); color: var(--tone-text-16765a, #16765a); }
+.account-status.archived { background: var(--tone-surface-edf0f6, #edf0f6); color: var(--tone-text-53617a, #53617a); }
 .real-account-card h3 { font-size: 15px; font-weight: 650; margin: 20px 0 8px; overflow-wrap: anywhere; }
-.real-account-type { font-size: 12px; color: #63718a; }
+.real-account-type { font-size: 12px; color: var(--tone-text-63718a, #63718a); }
 .real-account-balance { font-size: 24px; letter-spacing: -.035em; display: block; margin: 24px 0 12px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.real-opening-date { font-size: 11px; color: #63718a; line-height: 1.8; margin: 0; }
-.real-info { display: flex; align-items: flex-start; gap: 12px; padding: 20px; border-radius: 10px; background: #edf3ff; font-size: 12px; line-height: 1.8; color: #53617a; }
+.real-opening-date { font-size: 11px; color: var(--tone-text-63718a, #63718a); line-height: 1.8; margin: 0; }
+.real-info { display: flex; align-items: flex-start; gap: 12px; padding: 20px; border-radius: 10px; background: var(--tone-surface-edf3ff, #edf3ff); font-size: 12px; line-height: 1.8; color: var(--tone-text-53617a, #53617a); }
 .real-info svg { flex-shrink: 0; margin-top: 3px; }
 .real-info p { margin: 0; }
-.real-form-date { margin: 0; padding: 16px; font-size: 12px; color: #53617a; background: #f4f7fc; border-radius: 10px; line-height: 1.8; }
+.real-form-date { margin: 0; padding: 16px; font-size: 12px; color: var(--tone-text-53617a, #53617a); background: var(--tone-surface-f4f7fc, #f4f7fc); border-radius: 10px; line-height: 1.8; }
 .real-form-date span { display: block; }
 .archive-option { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; cursor: pointer; }
 .archive-option > span > svg { vertical-align: middle; margin-right: 6px; }
-.archive-option small { display: block; font-size: 12px; color: #63718a; margin-top: 8px; line-height: 1.8; }
+.archive-option small { display: block; font-size: 12px; color: var(--tone-text-63718a, #63718a); margin-top: 8px; line-height: 1.8; }
 .real-account-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
-.account-delete-trigger { width: 40px; min-height: 40px; color: #b91c1c; border-color: #f0cccc; }
-.account-delete-trigger:hover { color: #991b1b; background: #fdecec; border-color: #f3c3c3; }
+.account-delete-trigger { width: 40px; min-height: 40px; color: var(--tone-text-b91c1c, #b91c1c); border-color: var(--tone-border-f0cccc, #f0cccc); }
+.account-delete-trigger:hover { color: var(--tone-text-991b1b, #991b1b); background: var(--tone-surface-fdecec, #fdecec); border-color: var(--tone-border-f3c3c3, #f3c3c3); }
 .account-delete-dialog { width: min(480px, calc(100% - 32px)); }
 .delete-account-name { margin: 18px 0 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .account-delete-dialog .finzi-form-actions { margin-top: 26px; }

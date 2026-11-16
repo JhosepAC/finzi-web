@@ -3,18 +3,18 @@ select:not([multiple]):not([size]) {
   cursor: pointer;
   color: var(--ink);
   accent-color: var(--action);
-  border-color: #c3cddd;
+  border-color: var(--tone-border-c3cddd, #c3cddd);
   background-color: var(--surface);
   font-family: inherit;
 }
 
-select:not([multiple]):not([size]):hover:not(:disabled) { border-color: #8490a7; }
+select:not([multiple]):not([size]):hover:not(:disabled) { border-color: var(--tone-border-8490a7, #8490a7); }
 select:not([multiple]):not([size]):focus-visible {
   outline: 2px solid var(--action);
   outline-offset: 3px;
 }
 select:not([multiple]):not([size])[aria-invalid="true"] { border-color: var(--error); }
-select:not([multiple]):not([size]):disabled { cursor: not-allowed; color: var(--muted); background-color: #edf0f6; }
+select:not([multiple]):not([size]):disabled { cursor: not-allowed; color: var(--muted); background-color: var(--tone-surface-edf0f6, #edf0f6); }
 
 select:not([multiple]):not([size]) option {
   color: var(--ink);
@@ -25,7 +25,7 @@ select:not([multiple]):not([size]) option {
   font-style: normal;
 }
 select:not([multiple]):not([size]) option:checked { color: var(--action); background: var(--blue-surface); font-weight: 600; }
-select:not([multiple]):not([size]) option:disabled { color: var(--muted); background: #f4f7fc; font-weight: 400; }
+select:not([multiple]):not([size]) option:disabled { color: var(--muted); background: var(--tone-surface-f4f7fc, #f4f7fc); font-weight: 400; }
 
 /* The picker stays browser-managed: focus, typing, keyboard and form values. */
 @supports (appearance: base-select) and selector(::picker(select)) {
@@ -55,18 +55,18 @@ select:not([multiple]):not([size]) option:disabled { color: var(--muted); backgr
   select:not([multiple]):not([size])::picker(select) {
     padding: 6px;
     margin-block: 5px;
-    border: 1px solid #d6deec;
+    border: 1px solid var(--tone-border-d6deec, #d6deec);
     border-radius: 12px;
     background: var(--surface);
     color: var(--ink);
-    box-shadow: 0 10px 28px #1523431f;
+    box-shadow: 0 10px 28px var(--tone-shadow-1523431f, #1523431f);
     min-inline-size: anchor-size(width);
     max-inline-size: min(480px,calc(100vw - 24px));
     max-block-size: min(320px,calc(100dvh - 32px));
     overflow: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    scrollbar-color: #a9b7ce transparent;
+    scrollbar-color: var(--tone-text-a9b7ce, #a9b7ce) transparent;
     font-family: var(--font-manrope), "Segoe UI", sans-serif;
     font-size: 14px;
     line-height: 1.5;
@@ -87,7 +87,7 @@ select:not([multiple]):not([size]) option:disabled { color: var(--muted); backgr
   select:not([multiple]):not([size]) option:hover:not(:disabled),
   select:not([multiple]):not([size]) option:focus:not(:disabled) {
     color: var(--ink);
-    background: #f0f4fc;
+    background: var(--tone-surface-f0f4fc, #f0f4fc);
     outline: 2px solid var(--action);
     outline-offset: -2px;
   }

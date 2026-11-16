@@ -1,4 +1,5 @@
 "use client";
+import { ThemeSwitcher } from "@/shared/ui/theme-switcher";
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -63,7 +64,7 @@ export function Onboarding({ initial, zones, editing }: { initial: FinancialProf
       <p className="setup-privacy"><LockKeyhole size={17} aria-hidden="true" />No pediremos datos bancarios.</p>
     </aside>
     <div className="setup-body">
-      <header className="setup-header"><span>{editing ? "Editar perfil" : "Configura tu espacio"}</span><Link className="text-link" href="/session">Sesión y seguridad</Link></header>
+      <header className="setup-header"><ThemeSwitcher /><span>{editing ? "Editar perfil" : "Configura tu espacio"}</span><Link className="text-link" href="/session">Sesión y seguridad</Link></header>
       <main id="setup-main" className="setup-main">
         <div className="setup-progress" aria-live="polite">Paso {step + 1} de 3<span aria-hidden="true">{steps.map((s, i) => <i key={s} className={i <= step ? "filled" : ""} />)}</span></div>
         <div className="form-heading"><h1 ref={heading} tabIndex={-1}>{["¿Cómo te llamamos?", "Tus finanzas, a tu manera.", "Todo listo para empezar."][step]}</h1><p>{["Elige el nombre que quieres ver en Finzi. No tiene que ser tu nombre legal.", "Define la moneda de referencia y la zona horaria de tu espacio.", "Revisa tus preferencias. Podrás cambiarlas cuando lo necesites."][step]}</p></div>
