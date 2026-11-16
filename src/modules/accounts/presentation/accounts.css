@@ -1,5 +1,6 @@
 .real-accounts { display: grid; gap: 20px; }
-.real-toolbar { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.real-toolbar { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
+.real-toolbar > :is(.button, .home-primary-button) { width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; height: 48px; }
 .real-data-label { display: flex; gap: 8px; align-items: center; color: #16765a; font-size: 13px; margin-right: auto; }
 .real-balances { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .real-balances article { padding: 26px; background: #fff; border: 1px solid #e4eaf4; border-radius: 16px; }
@@ -23,21 +24,26 @@
 .real-info { display: flex; align-items: flex-start; gap: 12px; padding: 20px; border-radius: 10px; background: #edf3ff; font-size: 12px; line-height: 1.8; color: #53617a; }
 .real-info svg { flex-shrink: 0; margin-top: 3px; }
 .real-info p { margin: 0; }
-.real-feedback { font-size: 13px; line-height: 1.8; color: #16765a; }
-.real-feedback:empty { display: none; }
 .real-form-date { margin: 0; padding: 16px; font-size: 12px; color: #53617a; background: #f4f7fc; border-radius: 10px; line-height: 1.8; }
 .real-form-date span { display: block; }
 .archive-option { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; cursor: pointer; }
 .archive-option > span > svg { vertical-align: middle; margin-right: 6px; }
 .archive-option small { display: block; font-size: 12px; color: #63718a; margin-top: 8px; line-height: 1.8; }
+.real-account-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.account-delete-trigger { width: 40px; min-height: 40px; color: #b91c1c; border-color: #f0cccc; }
+.account-delete-trigger:hover { color: #991b1b; background: #fdecec; border-color: #f3c3c3; }
+.account-delete-dialog { width: min(480px, calc(100% - 32px)); }
+.delete-account-name { margin: 18px 0 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.account-delete-dialog .finzi-form-actions { margin-top: 26px; }
+.account-delete-dialog .feedback-slot { margin-top: 14px; }
 @media (max-width: 1200px) { .real-account-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 767px) {
- .real-toolbar { gap: 12px; }
- .real-toolbar > .home-primary-button { width: 100%; }
+ .real-toolbar { gap: 8px; }
+ .real-toolbar > :is(.button, .home-primary-button) { font-size: 12px; padding: 10px; gap: 6px; min-height: 44px; height: 44px; }
  .real-balances, .real-account-grid { grid-template-columns: 1fr; }
  .real-balances article { padding: 22px; }
  .real-balances strong { font-size: 30px; }
  .real-data-label { font-size: 12px; }
 }
 
-.real-feedback.failed { color: #b91c1c; }
+

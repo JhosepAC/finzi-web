@@ -9,14 +9,15 @@ export const postMovementSchema = z.object({
 }).strict();
 export const postTransferSchema = postMovementSchema.omit({ kind: true, categoryId: true }).extend({ kind: z.literal("transfer"), destinationId: z.uuid("Elige una cuenta de destino.") }).strict().refine((d) => d.accountId !== d.destinationId, { message: "El destino debe ser otra cuenta.", path: ["destinationId"] });
 export const createMovementSchema = z.discriminatedUnion("kind", [postMovementSchema, postTransferSchema]);
-const replacementFields = { id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de la corrección.").max(300, "Usa como máximo 300 caracteres.") };
+const replacementFields = { id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de la edición.").max(300, "Usa como máximo 300 caracteres.") };
 export const replaceMovementSchema = z.discriminatedUnion("kind", [
   postMovementSchema.extend(replacementFields).strict(),
   postTransferSchema.safeExtend(replacementFields).strict(),
 ]);
 export const movementDetailQuerySchema = z.object({ id: z.uuid() }).strict();
 export type MovementKind = "income" | "expense" | "transfer";
-export const voidMovementSchema = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de anulación.").max(300, "Usa como máximo 300 caracteres.") }).strict();
+export const voidMovementSchema = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1).max(2147483646), reason: z.string().trim().min(1, "Escribe el motivo de archivado.").max(300, "Usa como máximo 300 caracteres.") }).strict();
+export const deleteMovementSchema = voidMovementSchema.extend({ reason: z.string().trim().min(1, "Escribe el motivo de eliminación.").max(300, "Usa como máximo 300 caracteres.") }).strict();
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => { const parsed = new Date(`${value}T00:00:00Z`); return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value; });
 export const movementQuerySchema = z.object({
   currency: z.enum(["PEN", "USD"]).default("PEN"), kind: z.enum(["income", "expense", "transfer"]).optional(),
@@ -28,7 +29,7 @@ export const movementQuerySchema = z.object({
 export const movementSchema = z.object({ id: z.uuid(), kind: z.enum(["income", "expense", "transfer"]), description: z.string(), note: z.string(), amount_minor: z.string().regex(/^\d+$/),
   currency_code: z.enum(["PEN", "USD"]), account_id: z.uuid(), account_name: z.string(), destination_id: z.uuid().nullable(), destination_name: z.string().nullable(), category_id: z.uuid().nullable(), category_name: z.string().nullable(), parent_name: z.string().nullable(),
   occurred_at: z.string().datetime({ offset: true }), status: z.enum(["posted", "void"]), version: z.number().int().positive(), void_reason: z.string().nullable(), recorded_at: z.string().datetime({ offset: true }), voided_at: z.string().datetime({ offset: true }).nullable(),
-  replaces_id: z.uuid().nullable(), replaced_by_id: z.uuid().nullable(), replacement_reason: z.string().nullable() });
+  replaces_id: z.uuid().nullable(), replaced_by_id: z.uuid().nullable(), replacement_reason: z.string().nullable(), deleted_at: z.string().datetime({ offset: true }).nullable().optional(), deletion_reason: z.string().nullable().optional() });
 export const movementPageSchema = z.object({ currency_code: z.enum(["PEN", "USD"]), total_count: z.number().int().min(0).max(10000), income_minor: z.string().regex(/^\d+$/), expense_minor: z.string().regex(/^\d+$/),
   has_more: z.boolean(), next_cursor: z.object({ at: z.string().datetime({ offset: true }), id: z.uuid() }).nullable(), movements: z.array(movementSchema).max(50) });
 export type Movement = z.infer<typeof movementSchema>;

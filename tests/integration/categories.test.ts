@@ -142,19 +142,20 @@ async function cash(c: SupabaseClient) {
 const remove = (c: SupabaseClient, id: string, version: number) => c.schema("api").rpc("delete_category", { p_id: id, p_expected_version: version });
 const imageOf = (data: { categories: { id: string; image_path: string | null; movement_count: number; version: number }[] }, id: string) => data.categories.find((row) => row.id === id)!;
 describe("gestión de categorías: borrado definitivo, imágenes y almacenamiento", () => {
-  it("elimina solo categorías sin subcategorías ni movimientos, incluidos los anulados", async () => {
+  it("elimina categorías usadas conservando historia y rechaza padres con hijas", async () => {
     const x = await member(), account = await cash(x.c);
     const used = await create(x.c, { p_name: "Ocio" }); expect(used.error).toBeNull();
     const usedId = used.data.categories[0].id;
     const posted = await x.c.schema("api").rpc("post_movement", { p_request_id: crypto.randomUUID(), p_kind: "expense", p_account_id: account, p_category_id: usedId, p_amount: "10", p_description: "Cine", p_note: "", p_occurred_at: null });
     expect(posted.error).toBeNull();
     expect(imageOf((await read(x.c)).data, usedId).movement_count).toBe(1);
-    expect((await remove(x.c, usedId, 1)).error?.code).toBe("23503");
-    expect((await x.c.schema("api").rpc("void_movement", { p_id: posted.data.id, p_expected_version: 1, p_reason: "Prueba" })).error).toBeNull();
-    expect(imageOf((await read(x.c)).data, usedId).movement_count).toBe(1);
-    expect((await remove(x.c, usedId, 1)).error?.code).toBe("23503");
-    expect((await remove(x.c, crypto.randomUUID(), 1)).error?.code).toBe("P0002");
     expect((await remove(x.c, usedId, 9)).error?.code).toBe("40001");
+    expect((await remove(x.c, usedId, 1)).error).toBeNull();
+    expect((await x.c.schema("api").rpc("void_movement", { p_id: posted.data.id, p_expected_version: 1, p_reason: "Prueba" })).error).toBeNull();
+    expect((await read(x.c)).data.categories.some((row: { id: string }) => row.id === usedId)).toBe(false);
+    expect((await remove(x.c, usedId, 1)).error).toBeNull();
+    expect((await remove(x.c, crypto.randomUUID(), 1)).error?.code).toBe("P0002");
+    expect((await remove(x.c, usedId, 9)).error).toBeNull();
     const parent = await create(x.c, { p_request_id: crypto.randomUUID(), p_name: "Hogar" }); expect(parent.error).toBeNull();
     const parentId = parent.data.categories.find((row: { name: string }) => row.name === "Hogar").id;
     const child = await create(x.c, { p_request_id: crypto.randomUUID(), p_parent_id: parentId, p_name: "Luz" }); expect(child.error).toBeNull();
@@ -163,7 +164,7 @@ describe("gestión de categorías: borrado definitivo, imágenes y almacenamient
     expect((await remove(x.c, childId, 1)).error).toBeNull();
     expect((await read(x.c)).data.categories.some((row: { id: string }) => row.id === childId)).toBe(false);
     expect((await remove(x.c, parentId, 1)).error).toBeNull();
-    expect((await read(x.c)).data.categories).toHaveLength(1);
+    expect((await read(x.c)).data.categories).toHaveLength(0);
     const other = await member();
     expect((await remove(other.c, usedId, 1)).error?.code).toBe("P0002");
   });
