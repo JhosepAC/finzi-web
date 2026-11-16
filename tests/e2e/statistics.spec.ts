@@ -30,14 +30,14 @@ test("estadísticas API: identidad, filtros estrictos, fechas y caché privada",
 test("indicadores, cuatro gráficos y categorías concilian con movimientos reales", async ({ page, context }) => {
   const errors: string[] = []; page.on("pageerror", (e) => errors.push(e.message)); await financialSession(page, context); const fixture = await seed(context); await navigate(page, "Estadísticas");
   await page.getByRole("combobox", { name: "Período", exact: true }).selectOption("custom"); await page.getByLabel("Fecha inicial").fill("2026-05-01"); await page.getByLabel("Fecha final").fill("2026-05-31");
-  await expect(page.locator(".statistics-metric.income > strong")).toHaveText("S/ 200.00"); await expect(page.locator(".statistics-metric.expense > strong")).toHaveText("S/ 60.00"); await expect(page.locator(".statistics-metric.net > strong")).toHaveText("S/ 140.00"); await expect(page.locator(".statistics-metric.savings > strong")).toHaveText("S/ 140.00"); await expect(page.locator(".statistics-metric.rate > strong")).toHaveText("70,00%");
+  await expect(page.locator(".statistics-metric.income > strong")).toHaveText("S/ 200.00"); await expect(page.locator(".statistics-metric.expense > strong")).toHaveText("S/ 60.00"); await expect(page.locator(".statistics-metric.net > strong")).toHaveText("S/ 140.00"); await expect(page.locator(".statistics-savings-amount > strong")).toHaveText("S/ 140.00"); await expect(page.locator(".statistics-metric.rate > strong")).toHaveText("70,00%");
   await expect(page.locator(".statistics-metric.rate")).toContainText("+40,00 pp"); await expect(page.locator(".statistics-visuals > section")).toHaveCount(4);
   await page.locator(".statistics-donut-legend").getByRole("button", { name: /Transporte estadístico/ }).click(); await expect(page.locator(".statistics-donut-detail")).toContainText("S/ 10.00");
   await page.getByRole("button", { name: "Menor gasto", exact: true }).click(); await expect(page.locator(".statistics-categories tbody tr")).toHaveCount(1); await expect(page.locator(".statistics-categories tbody")).toContainText("Transporte estadístico");
   await page.getByRole("button", { name: "Mayor incremento", exact: true }).click(); await expect(page.locator(".statistics-categories tbody")).toContainText(fixture.expense.name);
   await page.getByRole("combobox", { name: "Intervalo de Ingresos vs. gastos", exact: true }).selectOption("4"); await expect(page.locator(".statistics-chart.flow .statistics-readout")).toContainText("S/ 200.00"); await page.locator(".statistics-chart.flow").getByRole("button", { name: "Ver movimientos del intervalo", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Tus movimientos.", exact: true })).toBeVisible(); await expect(page.locator(".ledger-record")).toHaveCount(1); await navigate(page, "Estadísticas"); await expect(page.getByLabel("Fecha inicial")).toHaveValue("2026-05-01"); await expect(page.locator(".statistics-metric.net > strong")).toHaveText("S/ 140.00");
-  await fixture.post("expense", "400", "2026-05-08", fixture.expense.id); await page.getByRole("button", { name: "Actualizar", exact: true }).click(); await expect(page.locator(".statistics-metric.net > strong")).toHaveText("−S/ 260.00"); await expect(page.locator(".statistics-metric.savings > strong")).toHaveText("S/ 0.00"); await expect(page.locator(".statistics-metric.rate > strong")).toHaveText("0,00%");
+  await fixture.post("expense", "400", "2026-05-08", fixture.expense.id); await page.getByRole("button", { name: "Actualizar", exact: true }).click(); await expect(page.locator(".statistics-metric.net > strong")).toHaveText("−S/ 260.00"); await expect(page.locator(".statistics-savings-amount > strong")).toHaveText("S/ 0.00"); await expect(page.locator(".statistics-metric.rate > strong")).toHaveText("0,00%");
   expect(await page.locator(".statistics-svg path").evaluateAll((paths) => paths.every((p) => !/NaN|Infinity/.test(p.getAttribute("d") ?? "")))).toBe(true); expect(errors).toEqual([]);
 });
 
@@ -60,6 +60,20 @@ test("vacío, teclado y gráficos responsive sin imágenes adicionales", async (
 
 test("datos exactos, interacción móvil y dos capturas de revisión", async ({ page, context }) => {
   await financialSession(page, context); await seed(context); await navigate(page, "Estadísticas"); await page.getByRole("combobox", { name: "Período", exact: true }).selectOption("custom"); await page.getByLabel("Fecha inicial").fill("2026-05-01"); await page.getByLabel("Fecha final").fill("2026-05-31"); await expect(page.locator(".statistics-metric.rate > strong")).toHaveText("70,00%");
+  const flow = page.locator(".statistics-chart.flow");
+  await flow.getByRole("button", { name: "Líneas", exact: true }).click();
+  await expect(flow.locator("path.flow-income")).toBeVisible();
+  await flow.getByRole("button", { name: "Ingresos", exact: true }).click();
+  await expect(flow.locator("path.flow-income")).toHaveCount(0);
+  await flow.getByRole("button", { name: "Ingresos", exact: true }).click();
+  await flow.getByRole("button", { name: "Barras", exact: true }).click();
+  await page.getByRole("button", { name: "Ver detalle de Transporte estadístico", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Transporte estadístico", exact: true });
+  await expect(drawer).toBeVisible(); await expect(drawer).toContainText("S/ 10.00");
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (process.env.CAPTURE_STATISTICS === "1") await page.screenshot({ path: ".impeccable/review/statistics-category-mobile.png" });
+  await page.keyboard.press("Escape"); await expect(drawer).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Ver detalle de Transporte estadístico", exact: true })).toBeFocused();
   if (process.env.CAPTURE_STATISTICS === "1") { await page.setViewportSize({ width: 1440, height: 1000 }); await page.evaluate(() => document.fonts.ready); await page.screenshot({ path: ".impeccable/review/statistics-desktop.png", fullPage: true }); }
   await page.setViewportSize({ width: 390, height: 844 }); await page.getByRole("combobox", { name: "Intervalo de Tendencia de ahorro", exact: true }).selectOption("4"); await expect(page.locator(".statistics-chart.savings .statistics-readout")).toContainText("S/ 200.00");
   const categoryNote = page.locator(".statistics-categories > .statistics-table-note"); await expect(categoryNote).toBeVisible(); expect(await categoryNote.evaluate((el) => el.scrollWidth <= el.clientWidth && el.getBoundingClientRect().right <= innerWidth)).toBe(true);
