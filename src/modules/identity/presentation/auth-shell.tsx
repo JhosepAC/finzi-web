@@ -1,3 +1,4 @@
+import { ThemeSwitcher } from "@/shared/ui/theme-switcher";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -22,7 +23,7 @@ export function AuthShell({ children, intent = "login" }: { children: ReactNode;
         <div className="auth-content">
           <header className="auth-header">
             <Link href="/login" className="wordmark mobile-brand" aria-label="Finzi, inicio de sesión"><FinziMark /><span>finzi</span></Link>
-            <nav aria-label="Acceso"><span>{registration ? "¿Ya tienes una cuenta?" : "¿Primera vez en Finzi?"}</span><Link className="text-link" href={registration ? "/login" : "/register"}>{registration ? "Iniciar sesión" : "Crear cuenta"}</Link></nav>
+            <ThemeSwitcher /><nav aria-label="Acceso"><span>{registration ? "¿Ya tienes una cuenta?" : "¿Primera vez en Finzi?"}</span><Link className="text-link" href={registration ? "/login" : "/register"}>{registration ? "Iniciar sesión" : "Crear cuenta"}</Link></nav>
           </header>
           <div className="auth-task">{children}</div>
           <footer className="auth-footer"><span>Tu espacio personal en Finzi</span></footer>

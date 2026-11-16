@@ -51,6 +51,8 @@ Trabaja con **soles peruanos (PEN) y dólares estadounidenses (USD)** por separa
 
 Los pagos de deudas y gastos fijos permiten **crear un gasto o vincular uno existente**, para conservar la relación con Movimientos y evitar descontar el dinero dos veces. La recurrencia genera los siguientes vencimientos; no realiza cargos bancarios automáticos.
 
+La interfaz ofrece **tema claro, oscuro y automático según el sistema**, con la preferencia conservada en este navegador.
+
 ## Tecnologías
 
 | Área | Herramientas |

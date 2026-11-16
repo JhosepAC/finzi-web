@@ -43,12 +43,12 @@ export function StatisticsTimeChart({ report, mode, onRange }: { report: Statist
   </section>;
 }
 
-const categoryColors: Record<string, string> = { blue: "#1d4ed8", green: "#247b68", amber: "#a36414", purple: "#7c4fb4", rose: "#a74667", cyan: "#15758b", slate: "#65738c" };
+const categoryColors: Record<string, string> = { blue: "var(--tone-text-1d4ed8, #1d4ed8)", green: "var(--tone-text-247b68, #247b68)", amber: "var(--tone-text-a36414, #a36414)", purple: "var(--tone-text-7c4fb4, #7c4fb4)", rose: "var(--tone-text-a74667, #a74667)", cyan: "var(--tone-text-15758b, #15758b)", slate: "var(--tone-text-65738c, #65738c)" };
 export function StatisticsDonut({ report, onCategory }: { report: Statistics; onCategory: (id: string) => void }) {
   const groups = report.categories.filter((c) => BigInt(c.amount_minor) > 0n), total = BigInt(report.expense_minor);
   const top = groups.slice(0, 5), rest = groups.slice(5), [selected, setSelected] = useState(0);
   const slices = [...top.map((c) => ({ id: c.id, name: c.name, amount: BigInt(c.amount_minor) })), ...(rest.length ? [{ id: "other", name: "Otras categorías", amount: rest.reduce((n, c) => n + BigInt(c.amount_minor), 0n) }] : [])];
-  const colors = [...top.map((c) => categoryColors[c.color] ?? "#65738c"), "#65738c"];
+  const colors = [...top.map((c) => categoryColors[c.color] ?? "var(--tone-text-65738c, #65738c)"), "var(--tone-text-65738c, #65738c)"];
   const active = slices[Math.min(selected, slices.length - 1)]; let offset = 0;
   const percent = (amount: bigint) => { const value = total ? (amount * 10000n + total / 2n) / total : 0n; return value === 0n && amount > 0n ? "Menos de 0,01%" : `${(Number(value) / 100).toLocaleString("es-PE", { maximumFractionDigits: 2 })}%`; };
   return <section className="statistics-panel statistics-distribution" aria-labelledby="statistics-distribution"><div className="statistics-panel-heading"><h2 id="statistics-distribution">Distribución de gastos</h2><span>{groups.length} categorías</span></div><p className="statistics-explanation">Cada categoría agrupa a sus subcategorías una sola vez. Porcentajes redondeados.</p>
