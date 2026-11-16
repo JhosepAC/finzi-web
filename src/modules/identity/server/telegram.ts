@@ -21,6 +21,7 @@ export async function changeTelegram(request:NextRequest){
   if(!username())return dataReply(503,{ok:false,message:"Telegram aún no está configurado."});
   challenge=randomBytes(32).toString("hex");result=await c.schema("api").rpc("telegram_issue_link",{p_challenge_hash:createHash("sha256").update(challenge).digest("hex")});
  }else if(d.action==="activate")result=await c.schema("api").rpc("telegram_activate_link",{p_attempt:d.attemptId});
+ else if(d.action==="query-permission")result=await c.schema("api").rpc("telegram_set_query_permission",{p_id:d.linkId,p_version:d.expectedVersion,p_allow:d.allow});
  else if(d.action==="movement-permission")result=await c.schema("api").rpc("telegram_set_movement_permission",{p_id:d.linkId,p_version:d.expectedVersion,p_allow:d.allow});
  else result=await c.schema("api").rpc("telegram_revoke_link_versioned",{p_id:d.linkId,p_version:d.expectedVersion});
  if(result.error){const code=result.error.code;return dataReply(code==="54000"?429:code==="23505"||code==="40001"?409:code==="42501"||code==="P0002"?403:503,{ok:false,message:code==="54000"?"Espera unos minutos antes de generar otro enlace.":code==="23505"?"Ya existe una cuenta vinculada. Desvincúlala antes de continuar.":"El vínculo cambió o venció. Actualiza su estado antes de continuar."});}
