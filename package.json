@@ -22,6 +22,7 @@
     "supabase:reset": "node scripts/supabase-local.mjs db reset --local",
     "supabase:env": "node scripts/local-env.mjs",
     "deletion:worker": "node scripts/deletion-worker.mjs",
+    "telegram:recovery": "node scripts/telegram-recovery.ts",
     "telegram:setup": "node scripts/telegram-setup.mjs",
     "telegram:bot": "node --env-file-if-exists=.env.telegram.local telegram-bot/index.ts",
     "telegram:check": "node --env-file-if-exists=.env.telegram.local telegram-bot/index.ts --check"

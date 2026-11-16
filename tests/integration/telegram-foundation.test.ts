@@ -1,3 +1,4 @@
+import {recoverySql} from "../../scripts/telegram-recovery";
 import { gateway } from "../../telegram-bot/gateway";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createClient } from "@supabase/supabase-js";
@@ -487,4 +488,29 @@ describe("Telegram phase 7: effective permissions and privacy audit",()=>{
   for(const table of ["query_sessions","query_cursors"])expect(sql(`select count(*) from telegram_private.${table} where user_id='${u.uid}';`,"supabase_admin")).toBe("0");
  });
 
+});
+
+
+describe("Telegram phase 8: local operations and recovery rehearsal",()=>{
+ it.skipIf(!process.env.TELEGRAM_DATABASE_URL)("passes readonly runtime preflight without polling or cleanup writes",async()=>{
+  const port=gateway(process.env.TELEGRAM_DATABASE_URL!);try{await port.checkConnection();await port.checkRuntime();}finally{await port.close();}
+ });
+ it("rejects nonexistent synthetic recovery targets before any data change",()=>{denied(recoverySql(true,crypto.randomUUID()),"P0001","supabase_admin");});
+ it("invalidates restored synthetic capabilities and pending work without touching the ledger",async()=>{
+  const u=await setup(),c=await bind(u,"98001"+Math.floor(Math.random()*1000000));const categories=await u.c.schema("api").rpc("initialize_categories");expect(categories.error).toBeNull();
+  expect((await u.c.schema("api").rpc("telegram_set_movement_permission",{p_id:c.linkId,p_version:1,p_allow:true})).error).toBeNull();
+  const received=sql(`select to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"');`),token=hash(secret());
+  const op={action:"start",updateId:"8090",text:"Synthetic recovery history",payload:{kind:"expense",amount:"25.00",currency:"PEN",accountId:u.account,categoryId:categories.data.categories.find((v:{kind:string})=>v.kind==="expense").id,description:"Synthetic preserved movement",note:"",timezone:"America/Lima",receivedAt:received,occurredAt:received,warnings:[]}};
+  const confirmed=JSON.parse(sql(`select telegram_private.draft_command(${ctx({...c,scope:"draft:write"})},${quote(JSON.stringify(op))}::jsonb);`));
+  sql(`select telegram_private.register_callbacks(${ctx({...c,scope:"draft:write"})},'${confirmed.id}',${confirmed.version},'[{"hash":"${token}","field":"confirm","value":"confirm"}]');select telegram_private.confirm_draft(${ctx({...c,scope:"movement:confirm"})},'${token}','8091');`);
+  const d=JSON.parse(sql(draft({...c,scope:"draft:write"},"8100")));expect((await u.c.schema("api").rpc("telegram_set_query_permission",{p_id:c.linkId,p_version:2,p_allow:true})).error).toBeNull();
+  sql(`select telegram_private.read_query(${ctx({...c,scope:"report:read"})},'{"action":"open","command":"saldo","updateId":"8101"}');`);
+  // Emulate link metadata returning from a stale backup, only for this synthetic identity.
+  const status=await u.c.schema("api").rpc("telegram_link_status");expect((await u.c.schema("api").rpc("telegram_revoke_link_versioned",{p_id:c.linkId,p_version:status.data.links[0].version})).error).toBeNull();
+  sql(`update telegram_private.links set revoked_at=null where id='${c.linkId}';update telegram_private.drafts set state='needs_input',source_text='Restored synthetic pending',terminal_at=null,version=version+1 where id='${d.id}';`,"supabase_admin");expect(JSON.parse(sql(catalog(c)))[0].balance_minor).toBe("7500");
+  const before=sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin");
+  const preview=JSON.parse(sql(recoverySql(false,u.uid),"supabase_admin"));expect(before).toBe("1");expect(preview.links).toBe(1);expect(preview.drafts).toBe(1);expect(preview.queries).toBe(1);
+  const applied=JSON.parse(execFileSync("node",["scripts/telegram-recovery.ts","--apply","--confirm=INVALIDATE_TELEGRAM_LINKS","--synthetic-user="+u.uid],{encoding:"utf8",stdio:"pipe"}));expect(applied).toMatchObject({mode:"applied",links:0,drafts:0,queries:0});denied(catalog(c));expect(sql(`select state from telegram_private.drafts where id='${d.id}';`,"supabase_admin")).toBe("cancelled");
+  expect(sql(`select count(*) from telegram_private.query_sessions where user_id='${u.uid}';`,"supabase_admin")).toBe("0");expect(sql(`select count(*) from finance.transactions where user_id='${u.uid}';`,"supabase_admin")).toBe(before);
+ });
 });

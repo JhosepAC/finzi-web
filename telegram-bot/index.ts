@@ -24,7 +24,7 @@ async function main() {
   const info=probe.botInfo;
   if(!Number.isSafeInteger(info.id))throw new Error("Unsafe bot identity");
   if(process.env.TELEGRAM_BOT_USERNAME && process.env.TELEGRAM_BOT_USERNAME.toLowerCase()!==info.username?.toLowerCase())throw new Error("Configured bot username does not match token identity");
-  await port.checkConnection();
+  await port.checkConnection();await port.checkRuntime();
   const webhook=await probe.api.getWebhookInfo();if(webhook.url)throw new Error("Remove the existing webhook explicitly before polling");
   stage="custody";
   const store=openStore(process.env.FINZI_TELEGRAM_STORE??path.join(base,"store"),key,String(info.id));

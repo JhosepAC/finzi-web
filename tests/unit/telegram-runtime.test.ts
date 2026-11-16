@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,unlinkSync } from "node:fs";
+import { copyFileSync,mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
@@ -73,6 +73,13 @@ describe("Telegram runtime: encrypted custody and durable polling",()=>{
   const h=harness();await h.bot.handleUpdate(message("/start "+"a".repeat(64),40));h.setActive();h.setQueryPermission(true);
   for(const [sender,data] of [[7001,"f6:forged"],[7002,"f6:"+"a".repeat(48)]] as const){await h.bot.handleUpdate({update_id:++h.store.state.offset,callback_query:{id:"synthetic",from:{id:sender,is_bot:false,first_name:"Synthetic"},chat_instance:"synthetic",data,message:{message_id:1,date:Math.floor(Date.now()/1000),chat:{id:7001,type:"private",first_name:"Synthetic"}}}});}
   expect(h.queryCalls).toHaveLength(0);
+ });
+
+ it("restores a matching synthetic key/store backup and refuses a mismatched key",()=>{
+  const f=fixture();f.store.state.credentials.push({user:"7001",challengeHash:"synthetic",capability:"a".repeat(64),createdAt:Date.now()});receive(f.store,[message("synthetic pending backup",100)]);
+  const restored=fixture();copyFileSync(f.key,restored.key);copyFileSync(path.join(f.directory,"9001.enc"),path.join(restored.directory,"9001.enc"));
+  expect(openStore(restored.directory,restored.key,"9001").state).toEqual(f.store.state);
+  writeFileSync(restored.key,randomBytes(32));expect(()=>openStore(restored.directory,restored.key,"9001")).toThrow();
  });
 
 });

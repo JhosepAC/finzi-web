@@ -6,6 +6,16 @@ export function gateway(url: string) {
  let pid: number|undefined;
  return {
   async checkConnection(){const [r]=await sql`select session_user username`;if(r.username!=="finzi_telegram_gateway")throw new Error("Invalid gateway role");},
+  async checkRuntime(){
+   const required=["claim_link(text,text,text,text,text)","link_context(text,text,text,text)","conversation_catalog(jsonb)","draft_command(jsonb,jsonb)","register_callbacks(jsonb,uuid,integer,jsonb)","confirm_draft(jsonb,text,text)","read_query(jsonb,jsonb)","lock_query(jsonb)","cleanup_queries(integer)"];
+   const [r]=await sql`select
+    exists(select 1 from pg_roles where rolname=session_user and not (rolsuper or rolbypassrls or rolinherit or rolcreaterole or rolcreatedb or rolreplication)) safe_role,
+    not exists(select 1 from pg_auth_members m join pg_roles r on r.oid=m.member where r.rolname=session_user) no_memberships,
+    not exists(select 1 from unnest(${required}::text[]) signature where to_regprocedure('telegram_private.'||signature) is null or not coalesce(has_function_privilege(session_user,to_regprocedure('telegram_private.'||signature),'EXECUTE'),false)) routines,
+    not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api' and has_function_privilege(session_user,p.oid,'EXECUTE')) no_api,
+    not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('finance','telegram_private') and c.relkind='r' and has_table_privilege(session_user,c.oid,'SELECT,INSERT,UPDATE,DELETE')) no_tables`;
+   if(!r.safe_role||!r.no_memberships||!r.routines||!r.no_api||!r.no_tables)throw new Error("Runtime preflight failed");
+  },
   async lock(bot: string) {
    const [r]=await sql`select pg_backend_pid() pid,pg_try_advisory_lock(hashtextextended(${"finzi-telegram:"+bot},0)) locked,session_user username`;
    if(!r.locked || r.username!=="finzi_telegram_gateway")throw new Error("Another poller or invalid role");pid=r.pid;
