@@ -9,6 +9,21 @@
 .ledger-prerequisite p { font-size: 14px; line-height: 1.7; margin: 0; max-width: 65ch; }
 .ledger-prerequisite > button { margin-left: auto; flex-shrink: 0; }
 .ledger-entry { padding: 0; }
+.finzi-dialog.ledger-dialog:has(.ledger-edit-entry) { width: min(640px,calc(100vw - 24px)); }
+.ledger-entry.ledger-edit-entry form { gap: 16px; padding: 24px; }
+.ledger-edit-entry .ledger-entry-heading { padding: 20px 24px; }
+.ledger-edit-entry .ledger-entry-heading h2 { font-size: 22px; }
+.ledger-edit-entry .ledger-entry-grid { gap: 16px; }
+.ledger-edit-entry .ledger-date { border: 0; padding: 0; }
+.ledger-edit-entry .ledger-date .field { margin-top: 0; max-width: none; }
+.ledger-edit-entry .ledger-edit-original { background: none; padding: 0; }
+.ledger-edit-original > summary, .ledger-edit-balances > summary { cursor: pointer; min-height: 36px; align-content: center; color: #53617a; font-size: 13px; }
+.ledger-edit-original > p { margin-top: 12px; padding: 14px; background: #f4f7fc; border-radius: 8px; }
+.ledger-edit-entry .ledger-replacement-confirm { padding-top: 0; border: 0; }
+.ledger-edit-entry .ledger-preview { margin-top: 10px; padding: 14px; }
+.ledger-edit-entry .field-hint { font-size: 12px; margin-block: 4px 0; }
+.ledger-edit-entry .field :is(input,select) { min-height: 44px; height: 44px; padding-block: 8px; }
+.ledger-edit-entry .field-hint:empty { display: none; }
 .ledger-entry-heading h2 { font-size: 24px; letter-spacing: -.03em; margin: 0; }
 .ledger-entry-heading p { color: #53617a; font-size: 13px; line-height: 1.7; margin: 8px 0 0; }
 .ledger-entry form { display: grid; gap: 24px; padding: 28px; }
