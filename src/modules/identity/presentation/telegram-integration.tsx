@@ -1,0 +1,30 @@
+"use client";
+import { useCallback,useEffect,useRef,useState } from "react";
+import { Check,ExternalLink,Link2,MessageCircle,RefreshCw,Unplug } from "lucide-react";
+import { Toast } from "@/shared/ui";
+import { telegramStatus,type TelegramStatus } from "../domain/telegram";
+export function TelegramIntegration(){
+ const [data,setData]=useState<TelegramStatus|null>(null),[pending,setPending]=useState(false),[error,setError]=useState(""),[loadError,setLoadError]=useState(""),[message,setMessage]=useState(""),[challenge,setChallenge]=useState(""),[confirmed,setConfirmed]=useState(""),[now,setNow]=useState(0);
+ const sequence=useRef(0);
+ const refresh=useCallback((signal?:AbortSignal)=>{const id=++sequence.current;
+ return fetch("/api/v1/integrations/telegram",{cache:"no-store",signal:signal?AbortSignal.any([signal,AbortSignal.timeout(10000)]):AbortSignal.timeout(10000)}).then(async r=>{if(!r.ok)throw new Error();return telegramStatus.parse(await r.json());}).then(value=>{if(id===sequence.current){setData(value);setNow(Date.now());setLoadError("");}}).catch(()=>{if(!signal?.aborted&&id===sequence.current)setLoadError("No pudimos actualizar Telegram. Reintenta en un momento.");});
+ },[]);
+ useEffect(()=>{const controller=new AbortController();void refresh(controller.signal);return()=>controller.abort();},[refresh]);
+ const current=data?.links.find(l=>!l.revoked_at),attempt=data?.attempts.find(a=>new Date(a.expires_at).getTime()>now);
+ const waiting=Boolean(attempt);
+ useEffect(()=>{if(!waiting)return;const controller=new AbortController();const timer=setInterval(()=>{if(!document.hidden)void refresh(controller.signal);},5000);return()=>{clearInterval(timer);controller.abort();};},[waiting,refresh]);
+ async function change(body:object){setPending(true);setError("");try{const r=await fetch("/api/v1/integrations/telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)}),b=await r.json();if(!r.ok){setError(b.message??"No pudimos confirmar la acción.");await refresh();return;}
+ if(typeof b.challenge==="string"&&/^[a-f0-9]{64}$/.test(b.challenge))setChallenge(b.challenge);else{setChallenge("");setConfirmed("");setMessage(current?"Telegram desvinculado.":"Telegram vinculado.");}await refresh();
+ }catch{setError("No pudimos confirmar la acción. Actualiza el estado antes de reintentar.");}finally{setPending(false);}}
+ const active=current&&new Date(current.expires_at).getTime()>now;
+ return <section className="home-panel telegram-integration" aria-labelledby="telegram-title"><Toast message={message} onClose={()=>setMessage("")}/><div className="settings-section-heading"><MessageCircle size={22} aria-hidden="true"/><h2 id="telegram-title">Telegram</h2><span className="settings-draft-state">{current?active?"Vinculado":"Vínculo vencido":data?.username?"Sin vincular":data?"Pendiente de configuración":"Cargando…"}</span></div>
+ <p>Al vincular, los mensajes que envíes al bot y sus respuestas pasarán por Telegram. Puedes revocar el acceso aquí.</p>
+ {current?<div className="telegram-connection"><div><span className="telegram-mark"><Check size={20} aria-hidden="true"/></span><div><strong>Identificador de Telegram: {current.telegram_user_id}</strong><small>{active?"Acceso vigente hasta":"El acceso venció el"} {new Date(current.expires_at).toLocaleDateString("es-PE")}</small></div></div><button type="button" className="button button-secondary" disabled={pending} onClick={()=>void change({action:"revoke",linkId:current.id,expectedVersion:current.version})}><Unplug size={17} aria-hidden="true"/>Desvincular Telegram</button></div>:data?.username?<div className="telegram-link-flow">
+ {!attempt?<button type="button" className="button button-primary" disabled={pending} onClick={()=>void change({action:"create"})}><Link2 size={17} aria-hidden="true"/>Generar enlace de Telegram</button>:<>
+ <div><strong>{attempt.claimed_at?"Revisa la solicitud":"Abre el bot para continuar"}</strong><p className="field-hint">{attempt.claimed_at?`Identificador de Telegram: ${attempt.telegram_user_id}. Confirma solo si corresponde a tu cuenta.`:"El enlace vence en cinco minutos. La vinculación requiere tu confirmación en esta pantalla."}</p></div>
+ {challenge&&!attempt.claimed_at&&<a className="button button-primary" href={`https://t.me/${data.username}?start=${challenge}`} target="_blank" rel="noreferrer">Abrir Telegram<ExternalLink size={16} aria-hidden="true"/></a>}
+ {attempt.claimed_at?<><label className="telegram-consent"><input type="checkbox" checked={confirmed===`${attempt.id}:${attempt.telegram_user_id}`} disabled={pending} onChange={e=>setConfirmed(e.target.checked?`${attempt.id}:${attempt.telegram_user_id}`:"")}/>Reconozco este identificador y autorizo la vinculación.</label><button type="button" className="button button-primary" disabled={confirmed!==`${attempt.id}:${attempt.telegram_user_id}`||pending} onClick={()=>void change({action:"activate",attemptId:attempt.id})}>Confirmar vinculación</button></>:!challenge&&<button type="button" className="button button-secondary" disabled={pending} onClick={()=>void change({action:"create"})}>Generar otro enlace</button>}
+ </>}
+ </div>:data&&<p className="field-hint">La integración estará disponible cuando se configure el bot local.</p>}
+ {(error||loadError)&&<p className="field-error" role="alert">{error||loadError}</p>}<button type="button" className="home-text-button" disabled={pending} onClick={()=>void refresh()}><RefreshCw size={15} aria-hidden="true"/>Actualizar conexión</button></section>;
+}
