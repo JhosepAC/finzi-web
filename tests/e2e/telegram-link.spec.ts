@@ -11,7 +11,7 @@ test("Telegram: web authorization, explicit approval, revocation and responsive 
  expect(profile.user_id).toMatch(/^[a-f0-9-]{36}$/);
  expect((await context.request.post("/api/v1/integrations/telegram",{headers:{Origin:"https://invalid.example"},data:{action:"create"}})).status()).toBe(403);
  expect((await context.request.post("/api/v1/integrations/telegram",{headers:{Origin:localOrigin},data:{action:"activate",attemptId:crypto.randomUUID()}})).status()).toBe(403);
- // Only bot availability/creation is fixture-backed: no real bot exists yet.
+ // Synthetic bot identity and challenge only: never sends to a real Telegram chat.
  // Claim, approval, cookie auth, status and revocation use the actual SQL and HTTP boundaries.
  let challenge="";
  await page.route("**/api/v1/integrations/telegram",async route=>{
@@ -31,7 +31,17 @@ test("Telegram: web authorization, explicit approval, revocation and responsive 
  await expect(panel.getByRole("button",{name:"Desvincular Telegram"})).toBeVisible();
  await expect(panel).toContainText(user);
  await page.getByRole("button",{name:"Cerrar notificación"}).click();
+ await expect(panel.getByRole("button",{name:"Autorizar registro por Telegram"})).toBeDisabled();
+ await panel.getByRole("checkbox",{name:"Permitir registrar los movimientos que confirme"}).check();
+ await panel.getByRole("button",{name:"Autorizar registro por Telegram"}).click();
+ await expect(panel.getByRole("button",{name:"Desactivar registro"})).toBeVisible();
+ expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canConfirm).toBe("true");
+ await page.getByRole("button",{name:"Cerrar notificación"}).click();
  for(const theme of ["light","dark"]){await page.getByLabel("Tema de la interfaz").selectOption(theme);await page.setViewportSize({width:1440,height:1100});await page.mouse.move(0,0);await expect(panel).toHaveCSS("background-color",theme==="dark"?"rgb(23, 23, 23)":"rgb(255, 255, 255)");await panel.screenshot({path:`.impeccable/review/telegram-${theme}.png`});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await panel.screenshot({path:`.impeccable/review/telegram-${theme}-mobile.png`});}
+ await panel.getByRole("button",{name:"Desactivar registro"}).click();
+ await expect(panel.getByRole("button",{name:"Autorizar registro por Telegram"})).toBeDisabled();
+ expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canConfirm).toBe("false");
+ await panel.screenshot({path:".impeccable/review/telegram-consent-dark-mobile.png"});
  await panel.getByRole("button",{name:"Desvincular Telegram"}).click();
  await expect(panel.getByRole("button",{name:"Generar enlace de Telegram",exact:true})).toBeVisible();
  expect(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}') is null;`,"finzi_telegram_gateway")).toBe("t");
