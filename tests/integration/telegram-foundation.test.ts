@@ -45,8 +45,11 @@ async function bind(u: User, identity: string) {
  expect(issued.error).toBeNull();
  const attempt = sql(`select telegram_private.claim_link(${quote(challenge)},'9001',${quote(identity)},${quote(identity)},${quote(hash(capability))});`);
  expect(attempt).toBe(issued.data.id);
+ expect(sql(`select telegram_private.link_context(${quote(capability)},'9001',${quote(identity)},${quote(identity)}) is null;`)).toBe("t");
  const activated = await u.c.schema("api").rpc("telegram_activate_link", { p_attempt: attempt });
  expect(activated.error).toBeNull();
+ const resolved=JSON.parse(sql(`select telegram_private.link_context(${quote(capability)},'9001',${quote(identity)},${quote(identity)});`));
+ expect(resolved.linkId).toBe(activated.data.id);expect(resolved.capability).toBeUndefined();
  return { linkId: activated.data.id as string, generation: "1", botId: "9001", telegramUserId: identity, chatId: identity, capability, scope: "catalog:read" };
 }
 type Context = Awaited<ReturnType<typeof bind>>;
@@ -119,7 +122,8 @@ describe("Telegram phase 2: real delegated roles, persistence and web regression
  it("challenge is single use, A cannot activate B, and an expired attempt cannot be claimed", async () => {
   const challenge=secret(); const issued=await a.c.schema("api").rpc("telegram_issue_link",{p_challenge_hash:hash(challenge)}); expect(issued.error).toBeNull();
   const command=`select telegram_private.claim_link(${quote(challenge)},'9001','999123','999123',${quote(hash(secret()))});`;
-  sql(command); denied(command);
+  const claimed=sql(command); expect(sql(command)).toBe(claimed);
+  denied(command.replaceAll("999123","999125"));
   expect((await b.c.schema("api").rpc("telegram_activate_link",{p_attempt:issued.data.id})).error?.code).toBe("42501");
   const second=secret(), next=await b.c.schema("api").rpc("telegram_issue_link",{p_challenge_hash:hash(second)}); expect(next.error).toBeNull();
   sql(`update telegram_private.link_attempts set created_at=now()-interval '10 minutes',expires_at=now()-interval '5 minutes' where id='${next.data.id}';`,"supabase_admin");
