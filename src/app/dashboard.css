@@ -22,7 +22,7 @@
 .profile-popover a { display: flex; align-items: center; min-height: 44px; padding: 10px; border-radius: 6px; font-size: 14px; text-decoration: none; }
 .profile-popover a:hover { background: var(--tone-surface-edf3ff, #edf3ff); color: var(--tone-text-1d4ed8, #1d4ed8); }
 .home-main { padding: 30px 36px 0; max-width: 1640px; margin: auto; }
-.home-primary-button { min-height: 44px; padding: 12px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; color: var(--tone-text-fff, #fff); background: var(--tone-surface-1d4ed8, #1d4ed8); border: 1px solid var(--tone-border-1d4ed8, #1d4ed8); border-radius: 9px; font-size: 14px; font-weight: 650; }
+.home-primary-button { min-height: 44px; padding: 12px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; color: var(--tone-text-fff, #fff); background: var(--tone-surface-1d4ed8, #1d4ed8); border: 0; border-radius: 9px; font-size: 14px; font-weight: 650; }
 .home-primary-button:hover:not(:disabled) { background: var(--tone-surface-173fb5, #173fb5); }
 .home-primary-button:disabled { background: var(--tone-surface-526da7, #526da7); }
 .home-icon-button { width: 44px; min-height: 44px; border: 1px solid var(--tone-border-d9e0ec, #d9e0ec); border-radius: 9px; background: var(--tone-surface-fff, #fff); color: var(--tone-text-52617c, #52617c); display: inline-grid; place-items: center; flex-shrink: 0; }

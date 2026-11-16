@@ -2,6 +2,8 @@
    Matte black uses neutral surfaces; electric blue identifies actions and focus. */
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --positive: #19a540;
+  --negative: rgb(246 45 66 / 0.76);
   --tone-border-173fb5: #686868;
   --tone-border-1d4ed8: #686868;
   --tone-border-2563eb: #686868;
@@ -65,13 +67,13 @@
   --tone-shadow-ffffff40: #00000040;
   --tone-surface-101c3c70: #00000070;
   --tone-surface-102a83: #102a83;
-  --tone-surface-14936d: #14936d;
+  --tone-surface-14936d: var(--positive);
   --tone-surface-15758b: #15758b;
-  --tone-surface-16765a: #16765a;
+  --tone-surface-16765a: var(--positive);
   --tone-surface-173fb5: #2045d6;
   --tone-surface-1d4ed8: #2855ff;
   --tone-surface-245fde: #2855ff;
-  --tone-surface-247b68: #247b68;
+  --tone-surface-247b68: var(--positive);
   --tone-surface-2858d6: #2855ff;
   --tone-surface-526da7: #526da7;
   --tone-surface-528af1: #528af1;
@@ -86,7 +88,7 @@
   --tone-surface-c47a7a: #c47a7a;
   --tone-surface-cbdcff: #222222;
   --tone-surface-cfe0ff: #222222;
-  --tone-surface-dc6965: #dc6965;
+  --tone-surface-dc6965: var(--negative);
   --tone-surface-dce8ff: #222222;
   --tone-surface-e1e7f1: #222222;
   --tone-surface-e3ebfe: #222222;
@@ -142,24 +144,24 @@
   --tone-surface-ffffff: #171717;
   --tone-text-061d6b55: #f5f5f555;
   --tone-text-071b6538: #f5f5f538;
-  --tone-text-087351: #8be8bd;
+  --tone-text-087351: var(--positive);
   --tone-text-102a83: #f5f5f5;
-  --tone-text-14532d: #8be8bd;
-  --tone-text-146347: #8be8bd;
-  --tone-text-14936d: #8be8bd;
+  --tone-text-14532d: var(--positive);
+  --tone-text-146347: var(--positive);
+  --tone-text-14936d: var(--positive);
   --tone-text-152343: #f5f5f5;
-  --tone-text-16634d: #8be8bd;
-  --tone-text-166534: #8be8bd;
-  --tone-text-16765a: #8be8bd;
-  --tone-text-16a34a: #8be8bd;
+  --tone-text-16634d: var(--positive);
+  --tone-text-166534: var(--positive);
+  --tone-text-16765a: var(--positive);
+  --tone-text-16a34a: var(--positive);
   --tone-text-173fb5: #8eafff;
   --tone-text-1742aa: #8eafff;
-  --tone-text-1d4ed8: #8eafff;
+  --tone-text-1d4ed8: #386bf1;
   --tone-text-1e293b: #f5f5f5;
   --tone-text-1e3a8a: #8eafff;
   --tone-text-244caa: #8eafff;
   --tone-text-244cb0: #8eafff;
-  --tone-text-247b68: #8be8bd;
+  --tone-text-247b68: var(--positive);
   --tone-text-253450: #f5f5f5;
   --tone-text-253f7c: #f5f5f5;
   --tone-text-254ba1: #8eafff;
@@ -179,29 +181,29 @@
   --tone-text-64748b: #bfbfbf;
   --tone-text-65738c: #bfbfbf;
   --tone-text-7542ab: #d3baff;
-  --tone-text-7f1d1d: #ffa69e;
+  --tone-text-7f1d1d: var(--negative);
   --tone-text-80500d: #ffd28a;
   --tone-text-835114: #ffd28a;
   --tone-text-8490a7: #bfbfbf;
   --tone-text-875712: #ffd28a;
   --tone-text-8c580b: #ffd28a;
-  --tone-text-991b1b: #ffa69e;
-  --tone-text-a13f35: #ffa69e;
-  --tone-text-a3332b: #ffa69e;
+  --tone-text-991b1b: var(--negative);
+  --tone-text-a13f35: var(--negative);
+  --tone-text-a3332b: var(--negative);
   --tone-text-a36414: #ffd28a;
-  --tone-text-a52c22: #ffa69e;
+  --tone-text-a52c22: var(--negative);
   --tone-text-a7b2c5: #bfbfbf;
   --tone-text-a9b7ce: #bfbfbf;
-  --tone-text-ab355c: #ffa69e;
-  --tone-text-b5473d: #ffa69e;
+  --tone-text-ab355c: var(--negative);
+  --tone-text-b5473d: var(--negative);
   --tone-text-b8c9e8: #bfbfbf;
-  --tone-text-b91c1c: #ffa69e;
-  --tone-text-bf3f40: #ffa69e;
+  --tone-text-b91c1c: var(--negative);
+  --tone-text-bf3f40: var(--negative);
   --tone-text-cfdeff: #f5f5f5;
   --tone-text-d3e3ff: #f5f5f5;
   --tone-text-d9e1ef: #f5f5f5;
-  --tone-text-dc2626: #ffa69e;
-  --tone-text-dc6965: #ffa69e;
+  --tone-text-dc2626: var(--negative);
+  --tone-text-dc6965: var(--negative);
   --tone-text-e0eaff: #f5f5f5;
   --tone-text-e3ecff: #ffffff;
   --tone-text-e7edf6: #f5f5f5;
@@ -217,7 +219,7 @@
 .theme-switcher select:not([multiple]):not([size]) { width: 100px; min-height: 38px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; background-color: var(--surface); color: var(--ink); }
 .home-topbar > .theme-switcher { margin-left: auto; }.home-topbar:has(.theme-switcher) .home-profile,.settings-app .home-topbar:has(.theme-switcher) > .home-avatar { margin-left: 0; }
 .auth-header { gap: 18px; }.deletion-tracking > .theme-switcher { float: right; }.setup-header { gap: 12px; }
-:root[data-theme="dark"] { --background: #090909; --surface: #171717; --ink: #f5f5f5; --muted: #bfbfbf; --action: #8eafff; --action-hover: #b5caff; --line: #333333; --control: #686868; --error: #ffa69e; --success: #8be8bd; --blue-surface: #222222; }
+:root[data-theme="dark"] { --background: #090909; --surface: #171717; --ink: #f5f5f5; --muted: #bfbfbf; --action: #8eafff; --action-hover: #b5caff; --line: #333333; --control: #686868; --error: var(--negative); --success: var(--positive); --blue-surface: #222222; }
 html[data-theme="dark"] body, html[data-theme="dark"] .home-app { background: #090909; }
 html[data-theme="dark"] :is(.home-sidebar,.home-topbar,.home-nav-dialog) { background: #101010; }
 html[data-theme="dark"] :is(input:not([type=checkbox]):not([type=radio]),textarea,select),html[data-theme="dark"] .settings-password-input { background-color: #121212; color: #f5f5f5; border-color: #686868; }
@@ -237,9 +239,11 @@ html[data-theme="dark"] ::selection { background: #2346bb; color: #fff; }
 @media(max-width:600px) { .home-topbar { gap: 10px; flex-wrap: wrap; }.home-topbar .theme-switcher { margin-left: auto; }.theme-switcher > svg { display: none; }.theme-switcher select:not([multiple]):not([size]) { width: 86px; font-size: 12px; }.auth-header { flex-wrap: wrap; }.auth-header > nav { flex-wrap: wrap; }.auth-header .theme-switcher { margin-left: auto; } }
 @media(forced-colors:active) { .theme-switcher select { border: 1px solid ButtonText; } }
 
-html[data-theme="dark"] .overview-balance .overview-quick-actions button { border-color: #686868; }
-
 html[data-theme="dark"] :is(.statistics-gridline,.chart-gridline) { stroke: #333333; }
 html[data-theme="dark"] :is(.statistics-zero,.chart-baseline) { stroke: #666666; }
 html[data-theme="dark"] :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 2px solid #8eafff; outline-offset: 3px; }
 @supports not (appearance: base-select) { html[data-theme="dark"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23bfbfbf' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); } }
+
+/* Navigation stays neutral in the dark theme, including the mobile drawer. */
+html[data-theme="dark"] :is(.home-nav,.home-nav-secondary) :is(a,button):is([aria-current="page"],:hover,:focus) { color: #ffffff; background-color: #222222; }
+html[data-theme="dark"] :is(.home-nav,.home-nav-secondary) :is(a,button):focus-visible { outline-color: #ffffff; }

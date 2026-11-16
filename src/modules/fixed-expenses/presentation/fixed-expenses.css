@@ -73,7 +73,7 @@
 .fixed-state.paid { color: var(--tone-text-16634d, #16634d); background: var(--tone-surface-eaf7f0, #eaf7f0); }
 .fixed-row-amount { grid-column: 1 / -1; font-size: 27px; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .fixed-row-actions { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--tone-border-e9edf4, #e9edf4); padding-top: 16px; }
-.fixed-workspace .button-primary { color: var(--tone-text-fff, #fff); background: var(--tone-surface-1d4ed8, #1d4ed8); border: 1px solid var(--tone-border-1d4ed8, #1d4ed8); min-height: 40px; padding: 9px 14px; font-size: 13px; }
+.fixed-workspace .button-primary { color: var(--tone-text-fff, #fff); background: var(--tone-surface-1d4ed8, #1d4ed8); min-height: 40px; padding: 9px 14px; font-size: 13px; }
 .fixed-workspace .button-primary:hover:not(:disabled) { background: var(--tone-surface-173fb5, #173fb5); }
 .fixed-row-actions details { position: relative; }
 .fixed-row-actions summary { cursor: pointer; font-size: 12px; padding: 12px 4px; color: var(--tone-text-53617a, #53617a); }
