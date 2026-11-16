@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import "./dashboard.css";
+import "@/shared/ui/select.css";
 import { SessionSync } from "@/modules/identity/presentation/session-sync";
 
 // A fresh per-response CSP nonce requires server rendering, including public AUTH forms.
