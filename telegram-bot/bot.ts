@@ -1,5 +1,5 @@
 import { messageDraft,renderDraft,type Draft } from "./conversation.ts";
-import { Bot } from "grammy";
+import { Bot,GrammyError } from "grammy";
 import { createHash,randomBytes } from "node:crypto";
 import type { UserFromGetMe } from "grammy/types";
 import type { Gateway } from "./gateway.ts";
@@ -34,14 +34,15 @@ export function createBot(token:string,port:Gateway,store:{state:State;save:()=>
   catch(error) { if(["42501","23514"].includes((error as {code?:string}).code??"")){await ctx.reply("El enlace venció o ya pertenece a otro intento. Genera uno nuevo en Finzi.");return;}throw error; }
   await ctx.reply(`Solicitud recibida. Tu identificador de Telegram es ${user}. Vuelve a Mi perfil en Finzi, comprueba el identificador y confirma la vinculación.`);
  });
- async function response(c:Record<string,string>,draft:Draft){return renderDraft(port,c,draft,await port.catalog(c),store.sign);}
- const expected=(error:unknown)=>["42501","40001","23514","P0002","22008","22P02","54000"].includes((error as {code?:string}).code??"");
+ async function response(c:Record<string,string>,draft:Draft){return renderDraft(port,c,draft,draft.state==="confirmed"?{timezone:"UTC",accounts:[],categories:[]}:await port.catalog(c),store.sign);}
+ const expected=(error:unknown)=>["42501","40001","23514","P0002","22008","22P02","54000","22003"].includes((error as {code?:string}).code??"");
  bot.on("callback_query",async(ctx)=>{
   const c=await authorized(String(ctx.from.id),String(ctx.chat!.id),String(ctx.me.id));
-  if(!c||!/^f4:[a-f0-9]{48}$/.test(ctx.callbackQuery.data??"")){await ctx.answerCallbackQuery({text:"Esta opción no está disponible."});return;}
-  await ctx.answerCallbackQuery();
-  try{const draft:Draft=await port.command(c,{action:"choice",tokenHash:hash(ctx.callbackQuery.data!),updateId:String(ctx.update.update_id)});const output=await response(c,draft);await ctx.reply(output.text,{reply_markup:output.keyboard});}
-  catch(error){if(!expected(error))throw error;await ctx.reply("La opción cambió o venció. Usa /borrador para revisar el estado actual, o /cancelar para empezar de nuevo.");}
+  if(!c||!/^f[45]:[a-f0-9]{48}$/.test(ctx.callbackQuery.data??"")){await ctx.answerCallbackQuery({text:"Esta opción no está disponible."});return;}
+  // A durable retry may outlive Telegram's callback acknowledgement window.
+  try{await ctx.answerCallbackQuery();}catch(error){if(!(error instanceof GrammyError&&error.error_code===400))throw error;}
+  try{const draft:Draft=ctx.callbackQuery.data!.startsWith("f5:")?await port.confirm(c,hash(ctx.callbackQuery.data!),String(ctx.update.update_id)):await port.command(c,{action:"choice",tokenHash:hash(ctx.callbackQuery.data!),updateId:String(ctx.update.update_id)});const output=await response(c,draft);await ctx.reply(output.text,{reply_markup:output.keyboard});}
+  catch(error){if(!expected(error))throw error;await ctx.reply("La opción cambió, venció o perdió autorización. Revisa /borrador y el historial en Finzi antes de volver a registrar el movimiento.");}
  });
  bot.on("message:text",async(ctx)=>{
   const c=await authorized(String(ctx.from.id),String(ctx.chat.id),String(ctx.me.id));
@@ -49,7 +50,7 @@ export function createBot(token:string,port:Gateway,store:{state:State;save:()=>
   if(ctx.message.text.length>2000){await ctx.reply("Usa un mensaje de hasta 2000 caracteres.");return;}
   try{const draft=await messageDraft(port,c,ctx.message.text,String(ctx.update.update_id),new Date(ctx.message.date*1000).toISOString());
    if(typeof draft==="string"){await ctx.reply(draft);return;}const output=await response(c,draft);await ctx.reply(output.text,{reply_markup:output.keyboard});
-  }catch(error){if(!expected(error))throw error;await ctx.reply("No pudimos actualizar el borrador: puede haber vencido o haber cambiado la cuenta, categoría o zona horaria. Revisa /borrador o usa /cancelar. No se registró ningún movimiento.");}
+  }catch(error){if(!expected(error))throw error;await ctx.reply("No pudimos actualizar el borrador: puede haber vencido o haber cambiado la cuenta, categoría o zona horaria. Revisa /borrador o usa /cancelar.");}
  });
  bot.on("message",async(ctx)=>{await ctx.reply("Por ahora solo se interpretan mensajes de texto. No envíes comprobantes o datos sensibles.");});
  return bot;

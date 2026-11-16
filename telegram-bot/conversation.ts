@@ -3,18 +3,23 @@ import type { Gateway } from "./gateway.ts";
 import { availableAccounts,availableCategories,clarify,parseMessage,type Catalog,type Field,type Payload } from "./parser.ts";
 import { openingMinor,formatMoney } from "../src/shared/money.ts";
 import { createHash } from "node:crypto";
-export type Draft={id:string;version:number;state:string;payload:Payload;awaiting:Field|null;expiresAt:string;page?:number};
+export type Draft={id:string;version:number;state:string;payload:Payload;awaiting:Field|null;expiresAt:string;page?:number;receipt?:{movementId:string;kind:"income"|"expense";amountMinor:string;currency:"PEN"|"USD";description:string;accountName:string;categoryName:string;occurredAt:string;timezone:string}|null};
 const hash=(v:string)=>createHash("sha256").update(v).digest("hex");
 const labels:Record<Field,string>={kind:"Tipo",amount:"Importe",currency:"Moneda",accountId:"Cuenta",categoryId:"Categoría",description:"Concepto",occurredAt:"Fecha"};
 const prompts:Record<Field,string>={kind:"¿Es un ingreso o un gasto?",amount:"¿Cuál es el importe? Escribe solo una cifra positiva, por ejemplo 25.50.",currency:"¿En qué moneda?",accountId:"Elige la cuenta que usaste.",categoryId:"Elige una categoría.",description:"Escribe un concepto de 1 a 200 caracteres.",occurredAt:"Escribe la fecha y hora: AAAA-MM-DD HH:mm, en tu zona horaria."};
 export async function renderDraft(port:Gateway,c:Record<string,string>,draft:Draft,catalog:Catalog,sign:(v:string)=>string){
+ if(draft.state==="confirmed"){
+  const r=draft.receipt;if(!r)throw new Error("Missing canonical confirmation receipt");
+  return {text:`Movimiento registrado · ${r.kind==="expense"?"Gasto":"Ingreso"}\nImporte: ${formatMoney(BigInt(r.amountMinor),r.currency)}\nCuenta: ${r.accountName}\nCategoría: ${r.categoryName}\nConcepto: ${r.description}\nFecha: ${new Intl.DateTimeFormat("es-PE",{dateStyle:"short",timeStyle:"short",timeZone:r.timezone}).format(new Date(r.occurredAt))} (${r.timezone})\nIdentificador: ${r.movementId}\nPuedes consultar su estado actual en Finzi.`,keyboard:undefined};
+ }
  if(!["needs_input","pending"].includes(draft.state))return {text:draft.state==="cancelled"?"Borrador cancelado. No se registró ningún movimiento.":"Este borrador venció. Envía un mensaje nuevo.",keyboard:undefined};
  const p=draft.payload,account=catalog.accounts.find(a=>a.id===p.accountId),category=catalog.categories.find(a=>a.id===p.categoryId);
  const categoryLabel=category?.parent_id?`${catalog.categories.find(c=>c.id===category.parent_id)?.name??"Categoría"} / ${category.name}`:category?.name;
  const amount=p.amount&&p.currency?formatMoney(openingMinor(p.amount),p.currency):p.amount??"Por indicar";
  const date=p.occurredAt?new Intl.DateTimeFormat("es-PE",{dateStyle:"short",timeStyle:"short",timeZone:p.timezone}).format(new Date(p.occurredAt)):"Por indicar";
  let text=`Borrador ${p.kind==="expense"?"de gasto":p.kind==="income"?"de ingreso":"de movimiento"} · Sin registrar\nImporte: ${amount}\nCuenta: ${account?.name??"Por elegir"}\nCategoría: ${categoryLabel??"Por elegir"}\nConcepto: ${p.description??"Por indicar"}\nFecha: ${date} (${p.timezone})\nVence: ${new Intl.DateTimeFormat("es-PE",{timeStyle:"short",timeZone:p.timezone}).format(new Date(draft.expiresAt))}`;
- if((p.accountId&&account?.status!=="active")||(p.categoryId&&(!category||category.effective_archived))||p.timezone!==catalog.timezone)text+="\nRevisa los datos: cambió la disponibilidad de la cuenta, categoría o zona horaria.";
+ const unavailable=(p.accountId&&account?.status!=="active")||(p.categoryId&&(!category||category.effective_archived))||p.timezone!==catalog.timezone;
+ if(unavailable)text+="\nRevisa los datos: cambió la disponibilidad de la cuenta, categoría o zona horaria.";
  if(p.warnings.length)text+="\n\n"+p.warnings.join("\n");
  const choices:{label:string;field:string;value:string}[]=[];
  const field=draft.awaiting;
@@ -28,11 +33,13 @@ export async function renderDraft(port:Gateway,c:Record<string,string>,draft:Dra
    if((page+1)*20<options.length)choices.push({label:"Siguiente",field:"page",value:String(page+1)});
    if(!options.length){text+="\nNo hay opciones activas compatibles. Revisa tus cuentas o categorías en Finzi.";choices.push({label:"Cambiar moneda",field:"edit",value:"currency"});}
   }
- }else{text+="\n\nVista previa completa. Todavía no se ha registrado. Puedes corregir los datos o cancelar; el registro se habilitará en la siguiente fase.";
+ }else{text+="\n\nVista previa completa. Revisa los datos antes de confirmar.";
+  if(c.canConfirm==="true"&&!unavailable&&draft.state==="pending"&&p.kind&&p.amount&&p.currency&&p.accountId&&p.categoryId&&p.description&&p.occurredAt)choices.push({label:"Confirmar movimiento",field:"confirm",value:"confirm"});
+  else if(c.canConfirm!=="true")text+="\nAutoriza el registro por Telegram desde Mi perfil en Finzi para confirmar este movimiento.";
   choices.push(...Object.entries(labels).map(([value,label])=>({label:"Corregir "+label.toLowerCase(),field:"edit",value})));
  }
  choices.push({label:"Cancelar borrador",field:"cancel",value:"cancel"});
- const keyboard=new InlineKeyboard();const rows=choices.map(choice=>{const token="f4:"+sign(JSON.stringify([draft.id,draft.version,choice.field,choice.value]));keyboard.text(choice.label,token).row();return {hash:hash(token),field:choice.field,value:choice.value};});
+ const keyboard=new InlineKeyboard();const rows=choices.map(choice=>{const token=(choice.field==="confirm"?"f5:":"f4:")+sign(JSON.stringify([draft.id,draft.version,choice.field,choice.value]));keyboard.text(choice.label,token).row();return {hash:hash(token),field:choice.field,value:choice.value};});
  await port.callbacks(c,draft.id,draft.version,rows);return {text,keyboard};
 }
 export async function messageDraft(port:Gateway,c:Record<string,string>,text:string,updateId:string,receivedAt:string):Promise<Draft|string>{

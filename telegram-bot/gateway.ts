@@ -16,7 +16,8 @@ export function gateway(url: string) {
   async catalog(c:Record<string,string>){const [r]=await sql`select telegram_private.conversation_catalog(${JSON.stringify({...c,scope:"catalog:read"})}::jsonb) value`;return r.value;},
   async command(c:Record<string,string>,command:Record<string,unknown>){const [r]=await sql`select telegram_private.draft_command(${JSON.stringify({...c,scope:"draft:write"})}::jsonb,${JSON.stringify(command)}::jsonb) value`;return r.value;},
   async callbacks(c:Record<string,string>,id:string,version:number,choices:{hash:string;field:string;value:string}[]){await sql`select telegram_private.register_callbacks(${JSON.stringify({...c,scope:"draft:write"})}::jsonb,${id}::uuid,${version},${JSON.stringify(choices)}::jsonb)`;},
+  async confirm(c:Record<string,string>,tokenHash:string,updateId:string){const [r]=await sql`select telegram_private.confirm_draft(${JSON.stringify({...c,scope:"movement:confirm"})}::jsonb,${tokenHash},${updateId}) value`;return r.value;},
   close:()=>sql.end({timeout:5})
  };
 }
-export type Gateway = Pick<ReturnType<typeof gateway>,"claim"|"context"|"catalog"|"command"|"callbacks">;
+export type Gateway = Pick<ReturnType<typeof gateway>,"claim"|"context"|"catalog"|"command"|"callbacks"|"confirm">;
