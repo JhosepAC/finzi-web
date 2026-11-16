@@ -11,7 +11,9 @@ test("tema global persistente, sistema, módulos y modales", async ({ page, cont
   await page.getByLabel("Tema de la interfaz").selectOption("light");
   await page.reload(); await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.getByLabel("Tema de la interfaz").selectOption("dark");
-  await expect(page.getByLabel("Correo electrónico", { exact: true })).toHaveCSS("background-color", "rgb(21, 24, 29)");
+  await expect(page.getByLabel("Correo electrónico", { exact: true })).toHaveCSS("background-color", "rgb(18, 18, 18)");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(9, 9, 9)");
+  await expect(page.getByRole("button", { name: "Iniciar sesión", exact: true })).toHaveCSS("background-color", "rgb(40, 85, 255)");
   await page.screenshot({ path: ".impeccable/review/theme-login.png", fullPage: true });
   const data = (await financialSession(page, context))!;
   const headers = { Origin: localOrigin };

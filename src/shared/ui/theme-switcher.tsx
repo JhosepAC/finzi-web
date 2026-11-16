@@ -12,7 +12,7 @@ function apply(value: Preference) {
   const dark = value === "dark" || value === "system" && matchMedia("(prefers-color-scheme: dark)").matches;
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   document.documentElement.dataset.themePreference = value;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#101114" : "#f3f6fc");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#090909" : "#f3f6fc");
   window.dispatchEvent(new Event("finzi-theme-change"));
 }
 function subscribe(callback: () => void) {

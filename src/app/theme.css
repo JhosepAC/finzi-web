@@ -1,57 +1,57 @@
 /* Palette bridge for existing module colors. Light values remain at each declaration.
-   Dark tones distinguish canvas, raised surfaces, controls and semantic foregrounds. */
+   Matte black uses neutral surfaces; electric blue identifies actions and focus. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --tone-border-173fb5: #536078;
-  --tone-border-1d4ed8: #536078;
-  --tone-border-2563eb: #536078;
-  --tone-border-53617a: #536078;
-  --tone-border-6c8ce4: #343942;
-  --tone-border-7d9bed: #343942;
-  --tone-border-8490a7: #536078;
-  --tone-border-a4b8e3: #343942;
-  --tone-border-a5b5d0: #343942;
-  --tone-border-b3b8c1: #343942;
-  --tone-border-b8c9e8: #343942;
-  --tone-border-b91c1c: #536078;
-  --tone-border-bbf7d0: #343942;
-  --tone-border-bfdbfe: #343942;
-  --tone-border-c3cddd: #343942;
-  --tone-border-c5d1e4: #343942;
-  --tone-border-cad5e7: #343942;
-  --tone-border-cbd6e7: #343942;
-  --tone-border-cbd9f4: #343942;
-  --tone-border-ccdafa: #343942;
-  --tone-border-cddaf0: #343942;
-  --tone-border-d0ddf5: #343942;
-  --tone-border-d1d8e5: #343942;
-  --tone-border-d1def7: #343942;
-  --tone-border-d4deec: #343942;
-  --tone-border-d5e0f4: #343942;
-  --tone-border-d6deec: #343942;
-  --tone-border-d9e0ec: #343942;
-  --tone-border-dbe3f0: #343942;
-  --tone-border-dce4f1: #343942;
-  --tone-border-dce4f3: #343942;
-  --tone-border-dce5f3: #343942;
-  --tone-border-dddfe2: #343942;
-  --tone-border-dfe6f1: #343942;
-  --tone-border-e0e7f1: #343942;
-  --tone-border-e1e7f1: #343942;
-  --tone-border-e4eaf4: #343942;
-  --tone-border-e5eaf2: #343942;
-  --tone-border-e5eaf3: #343942;
-  --tone-border-e7ecf4: #343942;
-  --tone-border-e9edf4: #343942;
-  --tone-border-edf0f5: #343942;
-  --tone-border-edf0f6: #343942;
-  --tone-border-efcccc: #343942;
-  --tone-border-efdddd: #343942;
-  --tone-border-f0cccc: #343942;
-  --tone-border-f3c3c3: #343942;
-  --tone-border-f5f7ff: #343942;
-  --tone-border-fecaca: #343942;
-  --tone-border-ffffff20: #34394220;
+  --tone-border-173fb5: #686868;
+  --tone-border-1d4ed8: #686868;
+  --tone-border-2563eb: #686868;
+  --tone-border-53617a: #686868;
+  --tone-border-6c8ce4: #333333;
+  --tone-border-7d9bed: #333333;
+  --tone-border-8490a7: #686868;
+  --tone-border-a4b8e3: #333333;
+  --tone-border-a5b5d0: #333333;
+  --tone-border-b3b8c1: #333333;
+  --tone-border-b8c9e8: #333333;
+  --tone-border-b91c1c: #686868;
+  --tone-border-bbf7d0: #333333;
+  --tone-border-bfdbfe: #333333;
+  --tone-border-c3cddd: #333333;
+  --tone-border-c5d1e4: #333333;
+  --tone-border-cad5e7: #333333;
+  --tone-border-cbd6e7: #333333;
+  --tone-border-cbd9f4: #333333;
+  --tone-border-ccdafa: #333333;
+  --tone-border-cddaf0: #333333;
+  --tone-border-d0ddf5: #333333;
+  --tone-border-d1d8e5: #333333;
+  --tone-border-d1def7: #333333;
+  --tone-border-d4deec: #333333;
+  --tone-border-d5e0f4: #333333;
+  --tone-border-d6deec: #333333;
+  --tone-border-d9e0ec: #333333;
+  --tone-border-dbe3f0: #333333;
+  --tone-border-dce4f1: #333333;
+  --tone-border-dce4f3: #333333;
+  --tone-border-dce5f3: #333333;
+  --tone-border-dddfe2: #333333;
+  --tone-border-dfe6f1: #333333;
+  --tone-border-e0e7f1: #333333;
+  --tone-border-e1e7f1: #333333;
+  --tone-border-e4eaf4: #333333;
+  --tone-border-e5eaf2: #333333;
+  --tone-border-e5eaf3: #333333;
+  --tone-border-e7ecf4: #333333;
+  --tone-border-e9edf4: #333333;
+  --tone-border-edf0f5: #333333;
+  --tone-border-edf0f6: #333333;
+  --tone-border-efcccc: #333333;
+  --tone-border-efdddd: #333333;
+  --tone-border-f0cccc: #333333;
+  --tone-border-f3c3c3: #333333;
+  --tone-border-f5f7ff: #333333;
+  --tone-border-fecaca: #333333;
+  --tone-border-ffffff20: #33333320;
   --tone-shadow-15234314: #00000014;
   --tone-shadow-1523431f: #0000001f;
   --tone-shadow-15234320: #00000020;
@@ -63,182 +63,183 @@
   --tone-shadow-edf3ff: #00000055;
   --tone-shadow-fff: #00000055;
   --tone-shadow-ffffff40: #00000040;
-  --tone-surface-101c3c70: #101c3c70;
+  --tone-surface-101c3c70: #00000070;
   --tone-surface-102a83: #102a83;
   --tone-surface-14936d: #14936d;
   --tone-surface-15758b: #15758b;
   --tone-surface-16765a: #16765a;
-  --tone-surface-173fb5: #173fb5;
-  --tone-surface-1d4ed8: #1d4ed8;
-  --tone-surface-245fde: #245fde;
+  --tone-surface-173fb5: #2045d6;
+  --tone-surface-1d4ed8: #2855ff;
+  --tone-surface-245fde: #2855ff;
   --tone-surface-247b68: #247b68;
-  --tone-surface-2858d6: #2858d6;
+  --tone-surface-2858d6: #2855ff;
   --tone-surface-526da7: #526da7;
   --tone-surface-528af1: #528af1;
-  --tone-surface-64748b: #23272f;
-  --tone-surface-65738c: #23272f;
+  --tone-surface-64748b: #292929;
+  --tone-surface-65738c: #292929;
   --tone-surface-7c4fb4: #7c4fb4;
-  --tone-surface-98c9ff24: #252c3924;
+  --tone-surface-98c9ff24: #29292924;
   --tone-surface-991b1b: #991b1b;
   --tone-surface-a36414: #a36414;
   --tone-surface-a74667: #a74667;
   --tone-surface-b91c1c: #b91c1c;
   --tone-surface-c47a7a: #c47a7a;
-  --tone-surface-cbdcff: #202736;
-  --tone-surface-cfe0ff: #202736;
+  --tone-surface-cbdcff: #222222;
+  --tone-surface-cfe0ff: #222222;
   --tone-surface-dc6965: #dc6965;
-  --tone-surface-dce8ff: #202736;
-  --tone-surface-e1e7f1: #202736;
-  --tone-surface-e3ebfe: #202736;
-  --tone-surface-e5ebf5: #202736;
-  --tone-surface-e5edff: #202736;
-  --tone-surface-e7edf7: #202736;
-  --tone-surface-e7edf8: #202736;
-  --tone-surface-e8effc: #202736;
-  --tone-surface-e8f7f0: #192f29;
-  --tone-surface-e9eef6: #202736;
-  --tone-surface-e9eef7: #202736;
-  --tone-surface-eaf0f8: #202736;
-  --tone-surface-eaf1ff: #202736;
-  --tone-surface-eaf6f0: #192f29;
-  --tone-surface-eaf7f0: #192f29;
-  --tone-surface-edf0f6: #1a1d23;
-  --tone-surface-edf2f9: #202736;
-  --tone-surface-edf3ff: #202736;
-  --tone-surface-eef2f8: #1a1d23;
-  --tone-surface-f0f3f8: #1a1d23;
-  --tone-surface-f0f3f9: #1a1d23;
-  --tone-surface-f0f4fa: #1a1d23;
-  --tone-surface-f0f4fc: #202736;
-  --tone-surface-f0f5fa: #1a1d23;
-  --tone-surface-f0f5ff: #202736;
-  --tone-surface-f0fdf4: #192f29;
-  --tone-surface-f1f4fa: #1a1d23;
-  --tone-surface-f1f5fa: #1a1d23;
-  --tone-surface-f1f6ff: #202736;
-  --tone-surface-f2f5fa: #1a1d23;
-  --tone-surface-f3f6fc: #1a1d23;
-  --tone-surface-f3f7ff: #202736;
-  --tone-surface-f4edfc: #2c253d;
-  --tone-surface-f4f7fc: #1a1d23;
-  --tone-surface-f5f7fb: #1a1d23;
-  --tone-surface-f5f8fc: #1a1d23;
-  --tone-surface-f6f8fd: #1a1d23;
-  --tone-surface-f6f9ff: #1a1d23;
-  --tone-surface-f7f9fd: #1a1d23;
-  --tone-surface-f8fafd: #1a1d23;
-  --tone-surface-fafbfe: #1a1d23;
-  --tone-surface-fcedea: #342224;
-  --tone-surface-fceef3: #2c253d;
-  --tone-surface-fcfdff: #1a1d23;
-  --tone-surface-fdecec: #342224;
-  --tone-surface-fef2f2: #342224;
-  --tone-surface-fff: #1a1d23;
-  --tone-surface-fff0ed: #342224;
-  --tone-surface-fff0ef: #342224;
-  --tone-surface-fff3dd: #30291d;
-  --tone-surface-fff4e3: #30291d;
-  --tone-surface-fff5df: #30291d;
-  --tone-surface-ffffff: #1a1d23;
-  --tone-text-061d6b55: #eef0f655;
-  --tone-text-071b6538: #eef0f638;
-  --tone-text-087351: #7cddbb;
-  --tone-text-102a83: #eef0f6;
-  --tone-text-14532d: #7cddbb;
-  --tone-text-146347: #7cddbb;
-  --tone-text-14936d: #7cddbb;
-  --tone-text-152343: #eef0f6;
-  --tone-text-16634d: #7cddbb;
-  --tone-text-166534: #7cddbb;
-  --tone-text-16765a: #7cddbb;
-  --tone-text-16a34a: #7cddbb;
-  --tone-text-173fb5: #96baff;
-  --tone-text-1742aa: #96baff;
-  --tone-text-1d4ed8: #96baff;
-  --tone-text-1e293b: #eef0f6;
-  --tone-text-1e3a8a: #96baff;
-  --tone-text-244caa: #96baff;
-  --tone-text-244cb0: #96baff;
-  --tone-text-247b68: #7cddbb;
-  --tone-text-253450: #eef0f6;
-  --tone-text-253f7c: #eef0f6;
-  --tone-text-254ba1: #96baff;
-  --tone-text-2563eb: #96baff;
-  --tone-text-264a91: #96baff;
-  --tone-text-334561: #eef0f6;
-  --tone-text-334966: #eef0f6;
-  --tone-text-36527d: #96baff;
-  --tone-text-36527f: #96baff;
-  --tone-text-415476: #96baff;
-  --tone-text-52617c: #afb8ca;
-  --tone-text-53617a: #afb8ca;
-  --tone-text-5a6680: #afb8ca;
-  --tone-text-637089: #afb8ca;
-  --tone-text-63718a: #afb8ca;
-  --tone-text-64718a: #afb8ca;
-  --tone-text-64748b: #afb8ca;
-  --tone-text-65738c: #afb8ca;
-  --tone-text-7542ab: #c3acff;
-  --tone-text-7f1d1d: #ff9992;
-  --tone-text-80500d: #f0c27c;
-  --tone-text-835114: #f0c27c;
-  --tone-text-8490a7: #afb8ca;
-  --tone-text-875712: #f0c27c;
-  --tone-text-8c580b: #f0c27c;
-  --tone-text-991b1b: #ff9992;
-  --tone-text-a13f35: #ff9992;
-  --tone-text-a3332b: #ff9992;
-  --tone-text-a36414: #f0c27c;
-  --tone-text-a52c22: #ff9992;
-  --tone-text-a7b2c5: #afb8ca;
-  --tone-text-a9b7ce: #96baff;
-  --tone-text-ab355c: #ff9992;
-  --tone-text-b5473d: #ff9992;
-  --tone-text-b8c9e8: #96baff;
-  --tone-text-b91c1c: #ff9992;
-  --tone-text-bf3f40: #ff9992;
-  --tone-text-cfdeff: #96baff;
-  --tone-text-d3e3ff: #96baff;
-  --tone-text-d9e1ef: #96baff;
-  --tone-text-dc2626: #ff9992;
-  --tone-text-dc6965: #ff9992;
-  --tone-text-e0eaff: #96baff;
-  --tone-text-e3ecff: #f5f7fb;
-  --tone-text-e7edf6: #96baff;
-  --tone-text-eaf0f6: #f5f7fb;
-  --tone-text-edf3ff: #f5f7fb;
-  --tone-text-f4f7fc: #f5f7fb;
-  --tone-text-f7f9fd: #f5f7fb;
-  --tone-text-fff: #f5f7fb;
-  --tone-text-ffffff: #f5f7fb;
+  --tone-surface-dce8ff: #222222;
+  --tone-surface-e1e7f1: #222222;
+  --tone-surface-e3ebfe: #222222;
+  --tone-surface-e5ebf5: #222222;
+  --tone-surface-e5edff: #222222;
+  --tone-surface-e7edf7: #222222;
+  --tone-surface-e7edf8: #222222;
+  --tone-surface-e8effc: #222222;
+  --tone-surface-e8f7f0: #18261f;
+  --tone-surface-e9eef6: #222222;
+  --tone-surface-e9eef7: #222222;
+  --tone-surface-eaf0f8: #222222;
+  --tone-surface-eaf1ff: #222222;
+  --tone-surface-eaf6f0: #18261f;
+  --tone-surface-eaf7f0: #18261f;
+  --tone-surface-edf0f6: #171717;
+  --tone-surface-edf2f9: #222222;
+  --tone-surface-edf3ff: #222222;
+  --tone-surface-eef2f8: #171717;
+  --tone-surface-f0f3f8: #171717;
+  --tone-surface-f0f3f9: #171717;
+  --tone-surface-f0f4fa: #171717;
+  --tone-surface-f0f4fc: #222222;
+  --tone-surface-f0f5fa: #171717;
+  --tone-surface-f0f5ff: #222222;
+  --tone-surface-f0fdf4: #18261f;
+  --tone-surface-f1f4fa: #171717;
+  --tone-surface-f1f5fa: #171717;
+  --tone-surface-f1f6ff: #222222;
+  --tone-surface-f2f5fa: #171717;
+  --tone-surface-f3f6fc: #171717;
+  --tone-surface-f3f7ff: #222222;
+  --tone-surface-f4edfc: #27212e;
+  --tone-surface-f4f7fc: #171717;
+  --tone-surface-f5f7fb: #171717;
+  --tone-surface-f5f8fc: #171717;
+  --tone-surface-f6f8fd: #171717;
+  --tone-surface-f6f9ff: #171717;
+  --tone-surface-f7f9fd: #171717;
+  --tone-surface-f8fafd: #171717;
+  --tone-surface-fafbfe: #171717;
+  --tone-surface-fcedea: #2b1d1d;
+  --tone-surface-fceef3: #27212e;
+  --tone-surface-fcfdff: #171717;
+  --tone-surface-fdecec: #2b1d1d;
+  --tone-surface-fef2f2: #2b1d1d;
+  --tone-surface-fff: #171717;
+  --tone-surface-fff0ed: #2b1d1d;
+  --tone-surface-fff0ef: #2b1d1d;
+  --tone-surface-fff3dd: #2a2419;
+  --tone-surface-fff4e3: #2a2419;
+  --tone-surface-fff5df: #2a2419;
+  --tone-surface-ffffff: #171717;
+  --tone-text-061d6b55: #f5f5f555;
+  --tone-text-071b6538: #f5f5f538;
+  --tone-text-087351: #8be8bd;
+  --tone-text-102a83: #f5f5f5;
+  --tone-text-14532d: #8be8bd;
+  --tone-text-146347: #8be8bd;
+  --tone-text-14936d: #8be8bd;
+  --tone-text-152343: #f5f5f5;
+  --tone-text-16634d: #8be8bd;
+  --tone-text-166534: #8be8bd;
+  --tone-text-16765a: #8be8bd;
+  --tone-text-16a34a: #8be8bd;
+  --tone-text-173fb5: #8eafff;
+  --tone-text-1742aa: #8eafff;
+  --tone-text-1d4ed8: #8eafff;
+  --tone-text-1e293b: #f5f5f5;
+  --tone-text-1e3a8a: #8eafff;
+  --tone-text-244caa: #8eafff;
+  --tone-text-244cb0: #8eafff;
+  --tone-text-247b68: #8be8bd;
+  --tone-text-253450: #f5f5f5;
+  --tone-text-253f7c: #f5f5f5;
+  --tone-text-254ba1: #8eafff;
+  --tone-text-2563eb: #8eafff;
+  --tone-text-264a91: #8eafff;
+  --tone-text-334561: #f5f5f5;
+  --tone-text-334966: #f5f5f5;
+  --tone-text-36527d: #f5f5f5;
+  --tone-text-36527f: #f5f5f5;
+  --tone-text-415476: #f5f5f5;
+  --tone-text-52617c: #bfbfbf;
+  --tone-text-53617a: #bfbfbf;
+  --tone-text-5a6680: #bfbfbf;
+  --tone-text-637089: #bfbfbf;
+  --tone-text-63718a: #bfbfbf;
+  --tone-text-64718a: #bfbfbf;
+  --tone-text-64748b: #bfbfbf;
+  --tone-text-65738c: #bfbfbf;
+  --tone-text-7542ab: #d3baff;
+  --tone-text-7f1d1d: #ffa69e;
+  --tone-text-80500d: #ffd28a;
+  --tone-text-835114: #ffd28a;
+  --tone-text-8490a7: #bfbfbf;
+  --tone-text-875712: #ffd28a;
+  --tone-text-8c580b: #ffd28a;
+  --tone-text-991b1b: #ffa69e;
+  --tone-text-a13f35: #ffa69e;
+  --tone-text-a3332b: #ffa69e;
+  --tone-text-a36414: #ffd28a;
+  --tone-text-a52c22: #ffa69e;
+  --tone-text-a7b2c5: #bfbfbf;
+  --tone-text-a9b7ce: #bfbfbf;
+  --tone-text-ab355c: #ffa69e;
+  --tone-text-b5473d: #ffa69e;
+  --tone-text-b8c9e8: #bfbfbf;
+  --tone-text-b91c1c: #ffa69e;
+  --tone-text-bf3f40: #ffa69e;
+  --tone-text-cfdeff: #f5f5f5;
+  --tone-text-d3e3ff: #f5f5f5;
+  --tone-text-d9e1ef: #f5f5f5;
+  --tone-text-dc2626: #ffa69e;
+  --tone-text-dc6965: #ffa69e;
+  --tone-text-e0eaff: #f5f5f5;
+  --tone-text-e3ecff: #ffffff;
+  --tone-text-e7edf6: #f5f5f5;
+  --tone-text-eaf0f6: #ffffff;
+  --tone-text-edf3ff: #ffffff;
+  --tone-text-f4f7fc: #ffffff;
+  --tone-text-f7f9fd: #ffffff;
+  --tone-text-fff: #ffffff;
+  --tone-text-ffffff: #ffffff;
 }
 /* Shared chrome and browser surfaces. The brand keeps its blue identity. */
 .theme-switcher { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; color: var(--muted); font-size: 12px; }
 .theme-switcher select:not([multiple]):not([size]) { width: 100px; min-height: 38px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; background-color: var(--surface); color: var(--ink); }
 .home-topbar > .theme-switcher { margin-left: auto; }.home-topbar:has(.theme-switcher) .home-profile,.settings-app .home-topbar:has(.theme-switcher) > .home-avatar { margin-left: 0; }
 .auth-header { gap: 18px; }.deletion-tracking > .theme-switcher { float: right; }.setup-header { gap: 12px; }
-:root[data-theme="dark"] { --background: #101114; --surface: #1a1d23; --ink: #eef0f6; --muted: #afb8ca; --action: #96baff; --action-hover: #bed3ff; --line: #343942; --control: #454e5e; --error: #ff9992; --success: #7cddbb; --blue-surface: #202b40; }
-html[data-theme="dark"] body, html[data-theme="dark"] .home-app { background: #101114; }
-html[data-theme="dark"] :is(.home-sidebar,.home-topbar,.home-nav-dialog) { background: #14161a; }
-html[data-theme="dark"] :is(input:not([type=checkbox]):not([type=radio]),textarea,select),html[data-theme="dark"] .settings-password-input { background-color: #15181d; color: #eef0f6; border-color: #454e5e; }
-html[data-theme="dark"] :is(input,textarea)::placeholder { color: #9aa6ba; opacity: 1; }
-html[data-theme="dark"] :is(input,textarea,select):disabled { background-color: #242831; color: #a5aec0; }
-html[data-theme="dark"] :is(input[type=checkbox],input[type=radio]) { accent-color: #88adff; }
-html[data-theme="dark"] :is(.button-primary,.home-primary-button,.overview-balance,.settings-identity-avatar,.data-reauth form > button) { background-color: #1d4ed8; color: #fff; }
-html[data-theme="dark"] .auth-intro { background: radial-gradient(ellipse at 80% 20%, #233a65 0%, transparent 55%), #152445; }
+:root[data-theme="dark"] { --background: #090909; --surface: #171717; --ink: #f5f5f5; --muted: #bfbfbf; --action: #8eafff; --action-hover: #b5caff; --line: #333333; --control: #686868; --error: #ffa69e; --success: #8be8bd; --blue-surface: #222222; }
+html[data-theme="dark"] body, html[data-theme="dark"] .home-app { background: #090909; }
+html[data-theme="dark"] :is(.home-sidebar,.home-topbar,.home-nav-dialog) { background: #101010; }
+html[data-theme="dark"] :is(input:not([type=checkbox]):not([type=radio]),textarea,select),html[data-theme="dark"] .settings-password-input { background-color: #121212; color: #f5f5f5; border-color: #686868; }
+html[data-theme="dark"] :is(input,textarea)::placeholder { color: #a6a6a6; opacity: 1; }
+html[data-theme="dark"] :is(input,textarea,select):disabled { background-color: #252525; color: #a6a6a6; }
+html[data-theme="dark"] :is(input[type=checkbox],input[type=radio]) { accent-color: #2855ff; }
+html[data-theme="dark"] :is(.button-primary,.home-primary-button,.settings-identity-avatar,.data-reauth form > button) { background-color: #2855ff; color: #fff; }
+html[data-theme="dark"] .auth-intro { background: #101010; }
+html[data-theme="dark"] :is(.overview-balance,.real-balances article:first-child) { background: #171717; border: 1px solid #333333; }
+html[data-theme="dark"] :is(.button-primary,.home-primary-button,.data-reauth form > button):hover:not(:disabled) { background-color: #2045d6; }
 html[data-theme="dark"] :is(dialog,.profile-popover) { box-shadow: 0 20px 64px #0008; }
 html[data-theme="dark"] dialog::backdrop { background: #000a; }
 html[data-theme="dark"] .category-symbol img { object-fit: cover; }
-html[data-theme="dark"] { scrollbar-color: #515c70 #14161a; }
-html[data-theme="dark"] ::selection { background: #37578c; color: #fff; }
+html[data-theme="dark"] { scrollbar-color: #626262 #101010; }
+html[data-theme="dark"] ::selection { background: #2346bb; color: #fff; }
 .theme-switcher :focus-visible { outline: 2px solid var(--action); outline-offset: 3px; }
 @media(max-width:600px) { .home-topbar { gap: 10px; flex-wrap: wrap; }.home-topbar .theme-switcher { margin-left: auto; }.theme-switcher > svg { display: none; }.theme-switcher select:not([multiple]):not([size]) { width: 86px; font-size: 12px; }.auth-header { flex-wrap: wrap; }.auth-header > nav { flex-wrap: wrap; }.auth-header .theme-switcher { margin-left: auto; } }
 @media(forced-colors:active) { .theme-switcher select { border: 1px solid ButtonText; } }
 
-html[data-theme="dark"] :is(input:not([type=checkbox]):not([type=radio]),textarea,select), html[data-theme="dark"] .settings-password-input { border-color: #65728a; }
-html[data-theme="dark"] .overview-balance .overview-quick-actions button { border-color: #90b3ff; }
+html[data-theme="dark"] .overview-balance .overview-quick-actions button { border-color: #686868; }
 
-html[data-theme="dark"] :is(.statistics-gridline,.chart-gridline) { stroke: #303640; }
-html[data-theme="dark"] :is(.statistics-zero,.chart-baseline) { stroke: #58657a; }
-html[data-theme="dark"] :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 2px solid #96baff; outline-offset: 3px; }
-@supports not (appearance: base-select) { html[data-theme="dark"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23afb8ca' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); } }
+html[data-theme="dark"] :is(.statistics-gridline,.chart-gridline) { stroke: #333333; }
+html[data-theme="dark"] :is(.statistics-zero,.chart-baseline) { stroke: #666666; }
+html[data-theme="dark"] :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline: 2px solid #8eafff; outline-offset: 3px; }
+@supports not (appearance: base-select) { html[data-theme="dark"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23bfbfbf' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); } }

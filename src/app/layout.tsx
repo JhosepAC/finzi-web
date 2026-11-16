@@ -23,6 +23,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const [requestCookies, requestHeaders] = await Promise.all([cookies(), headers()]);
   const stored = requestCookies.get("finzi-theme")?.value;
   const mode = stored === "dark" || stored === "light" ? stored : "system";
-  const bootstrap = `(function(){var p=${JSON.stringify(mode)};try{var s=localStorage.getItem('finzi-theme');if(s==='light'||s==='dark'||s==='system')p=s}catch(e){}var d=p==='dark'||p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.dataset.themePreference=p;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=d?'#101114':'#f3f6fc'})()`;
+  const bootstrap = `(function(){var p=${JSON.stringify(mode)};try{var s=localStorage.getItem('finzi-theme');if(s==='light'||s==='dark'||s==='system')p=s}catch(e){}var d=p==='dark'||p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.dataset.themePreference=p;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=d?'#090909':'#f3f6fc'})()`;
   return <html suppressHydrationWarning data-theme={mode === "dark" ? "dark" : "light"} data-theme-preference={mode} lang="es" data-type="software" className={manrope.variable}><head><script nonce={requestHeaders.get("x-nonce") ?? undefined} dangerouslySetInnerHTML={{ __html: bootstrap }} /></head><body><SessionSync />{children}</body></html>;
 }
