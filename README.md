@@ -30,9 +30,11 @@
 
 **Finzi** es una aplicación web de finanzas personales para registrar el dinero que entra y sale, consultar saldos y organizar compromisos de pago. Reúne cuentas, categorías, movimientos, estadísticas, deudas y gastos fijos en una interfaz en español adaptada a escritorio y móvil.
 
+Es un proyecto de uso personal y de portafolio, sin fines comerciales.
+
 Trabaja con **soles peruanos (PEN) y dólares estadounidenses (USD)** por separado. La información financiera proviene de los registros del usuario: la aplicación no incluye un modo de demostración ni saldos ficticios.
 
-> **Estado:** en desarrollo, con ejecución y validación locales. El registro público y el despliegue de producción tienen requisitos de seguridad, operación y privacidad pendientes. Consulta la [hoja de ruta](docs/product/ROADMAP.md).
+> **Estado:** despliegue personal completado en Vercel + Supabase + Cloudflare. Accede a [Finzi](https://finzi-beta.vercel.app) o a [@FinziAssistantBot](https://t.me/FinziAssistantBot). El procesamiento cloud de eliminaciones permanece deshabilitado por decisión operacional.
 
 ## Funcionalidades
 
@@ -164,6 +166,60 @@ pnpm supabase:stop
 
 `pnpm supabase:reset` **borra los datos locales y reaplica las migraciones**. No es necesario para una actualización normal.
 
+## Arquitectura desplegada
+
+| Componente | Servicio y estado |
+| --- | --- |
+| Web SSR y API | [Vercel Hobby](https://finzi-beta.vercel.app), Node 24, São Paulo `gru1` |
+| PostgreSQL 17, Auth y Storage privado | Supabase Free; 38 migraciones, RLS y RPC con sesión del usuario |
+| Telegram | [@FinziAssistantBot](https://t.me/FinziAssistantBot), webhook HTTPS en Cloudflare Workers |
+| Conexión Telegram a PostgreSQL | Hyperdrive, pooler de sesión 5432, TLS `verify-full`, caché desactivada |
+| Eliminación | Worker independiente publicado, Cron horario, **`DELETION_ENABLED=false`** |
+| Custodia de eliminación | D1 con manifiestos AES-GCM e inmutabilidad; clave fuera de la base |
+| Correo transaccional | Gmail SMTP configurado en Supabase Auth; confirmación de correo activa |
+
+```mermaid
+flowchart LR
+  Browser[Navegador] --> Web[Vercel: Next.js SSR y API]
+  Web --> Supabase[Supabase: Auth, PostgreSQL y Storage]
+  Telegram[Telegram] --> Bot[Cloudflare: webhook y Cron]
+  Bot --> Hyperdrive[Hyperdrive: TLS y rol restringido]
+  Hyperdrive --> Supabase
+  Deletion[Cloudflare: Deletion deshabilitado] -.-> Supabase
+  Deletion -.-> D1[D1: manifiestos cifrados]
+```
+
+El backend operativo conserva el nombre **finzi-staging**: no se ha creado otra base de producción. La web usa la identidad verificada del usuario; las claves administrativas están excluidas de Vercel y del navegador. Telegram recibe actualizaciones de forma durable e idempotente y el Cron procesa lotes acotados cada minuto, sin depender de una computadora personal.
+
+### URLs y configuración
+
+- **Aplicación:** https://finzi-beta.vercel.app
+- **Bot:** https://t.me/FinziAssistantBot
+- **Webhook:** https://finzi-telegram-staging.jhosep-ac.workers.dev/telegram/webhook (solo POST autenticado; no es una página web).
+- **Callback de Auth:** https://finzi-beta.vercel.app/auth/confirm
+
+| Superficie | Variables y secretos |
+| --- | --- |
+| Vercel | `APP_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TELEGRAM_BOT_USERNAME`, `ENABLE_EXPERIMENTAL_COREPACK=1` |
+| Telegram Worker | Vars públicas `TELEGRAM_WEBHOOK_BOT_ID`, `TELEGRAM_WEBHOOK_BOT_USERNAME`, `TELEGRAM_WEBHOOK_URL`; secretos `TELEGRAM_WEBHOOK_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_WEBHOOK_CUSTODY_KEY`, `TELEGRAM_WEBHOOK_CALLBACK_KEY`; binding `TELEGRAM_DB` |
+| Deletion Worker | `DELETION_ENABLED=false`; secretos `DELETION_DATABASE_URL`, `DELETION_MANIFEST_KEY`, `DELETION_OPERATIONS_KEY`, `SUPABASE_URL`; binding `DELETION_MANIFESTS` |
+| Supabase Auth | SMTP y contraseña de aplicación, únicamente en el panel de Auth |
+
+`APP_URL` coincide exactamente con el origen canónico, sin barra final; Site URL y callback están alineados en Supabase, sin comodines globales. No usar una URL aleatoria de preview como origen de confianza. Nunca introducir `service_role`, tokens de bot, contraseñas SQL o claves de cifrado en Vercel ni en `NEXT_PUBLIC_*`.
+
+### Despliegue y mantenimiento
+
+- [vercel.json](vercel.json) usa Next nativo, `pnpm install --frozen-lockfile`, `pnpm build` y `gru1`. Los despliegues automáticos por Git siguen desactivados; los despliegues son manuales.
+- [wrangler.telegram.jsonc](wrangler.telegram.jsonc) programa Telegram cada minuto. [wrangler.deletion.jsonc](wrangler.deletion.jsonc) programa la comprobación deshabilitada cada hora.
+- [.vercelignore](.vercelignore) excluye secretos, SQL, Workers, scripts y documentación privada del upload web.
+- `pnpm infra:check` verifica bindings, horarios y la deshabilitación de Deletion. `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` son comprobaciones locales; no publican.
+- `pnpm exec wrangler deployments list --config wrangler.telegram.jsonc` consulta versiones; `wrangler tail` permite seguir invocaciones. No guardar logs crudos: pueden contener cabeceras o datos personales. Sanitizar antes de conservar evidencia.
+- Los cambios de Cron pueden tardar hasta 15 minutos en propagarse. Una recepción HTTP 200 no acredita por sí sola el procesamiento y la respuesta.
+
+No se contratan planes, trials ni capacidad adicional. Ante cuotas agotadas o CPU elevada, pausar nueva carga y revisar métricas; no subir de plan automáticamente. El despliegue está cerrado administrativamente (`completed`); las suites remotas y operaciones financieras de prueba conservan autorizaciones específicas.
+
+OpenNext y los scripts `cloudflare:build/bundle/preview` quedan como referencia del spike descartado para SSR; **la web se despliega en Vercel**. CI compila Next y empaqueta los Workers con `--dry-run`, sin publicar.
+
 ## Comandos de desarrollo
 
 | Comando | Propósito |
@@ -187,34 +243,40 @@ pnpm exec playwright install chromium
 
 Configura `PLAYWRIGHT_CHANNEL=chromium` en el entorno antes de ejecutar los E2E. Para revisar una compilación de producción, detén `pnpm dev` antes de ejecutar `pnpm build` y `pnpm start`.
 
+### Correo de autenticación
+
+Las [plantillas de correo](supabase/templates/README.md) incluyen confirmación de registro, recuperación y cambio de correo, con diseño de Finzi. El desarrollo usa Mailpit local; la confirmación de correo y la doble confirmación del cambio permanecen activas.
+
+Gmail SMTP y las plantillas están configurados en Supabase. El piloto S1 validó registro, confirmación, recuperación, cambio de contraseña y acceso con la nueva contraseña; el diseño del correo fue aceptado por el usuario. El inventario SMTP no aplica cambios automáticamente y no contiene credenciales.
+
+```sh
+pnpm exec vitest run --config vitest.integration.config.ts tests/integration/auth-email-templates.test.ts --bail=1
+node scripts/preview-auth-emails.mjs
+```
+
+El primer control usa Auth y Mailpit reales **locales**; el segundo genera vistas sintéticas sin red. No envían correos a personas reales ni crean movimientos.
+
 ### Procesamiento de eliminaciones
 
-Las solicitudes de eliminación necesitan el worker local en ejecución:
+El Deletion Worker está publicado con D1 y Cron `0 * * * *`, pero **no elimina datos**: `DELETION_ENABLED=false` y la asignación SQL `cloud_enabled=false`. Dos invocaciones cloud deshabilitadas se comprobaron sin cambios de recibos/trabajos o manifiestos. Las pruebas locales cubren checkpoints, leases, recuperación, Auth, Storage y custodia cifrada.
 
-```sh
-pnpm deletion:worker --watch
-```
+Activarlo es una operación separada: exige revisar solicitudes pendientes, conservar D1 y su clave, validar las credenciales restringidas y realizar un piloto aislado con presupuesto CPU antes de autorizar ambas banderas. No cambiar una bandera como parte de un deploy rutinario. Mientras el procesamiento esté deshabilitado, una solicitud puede permanecer pendiente y la cuenta bloqueada; no prometer borrado completado.
 
-Si el worker está detenido, la solicitud permanece pendiente y la cuenta bloqueada. El comprobante privado permite consultar el estado en `/deletion`. El borrado de la instancia activa y la caducidad de las copias de seguridad son etapas distintas.
+El ejecutor Node/Docker legado se conserva para desarrollo autorizado; no iniciarlo en paralelo al consumidor cloud. `pnpm deletion:check:runtime` prueba el runtime local sin operaciones externas.
 
-### Bot de Telegram local
+### Telegram y desarrollo local
 
-El bot se ejecuta por separado y necesita Supabase local, internet y el equipo encendido. Las credenciales se guardan únicamente en `.env.telegram.local`; el almacén cifrado y su clave permanecen separados y fuera del repositorio. Los mensajes y respuestas pasan por Telegram.
+El bot publicado usa webhook y Cron; **no ejecutar polling contra ese mismo bot**. La vinculación y los permisos de consulta/registro se gestionan desde Mi perfil. Los borradores vencen a los 15 minutos y los movimientos requieren confirmación explícita.
 
-```sh
-pnpm telegram:check
-pnpm telegram:bot
-```
+Los comandos `pnpm telegram:setup`, `telegram:check`, `telegram:bot` y `telegram:recovery` siguen disponibles para un bot y entorno local separados. Setup conserva configuraciones existentes; la custodia no debe regenerarse para resolver errores. No reutilizar un token cloud activo en un consumidor local concurrente.
 
-`telegram:check` verifica configuración, identidad, custodia y permisos sin consumir mensajes. Para detener el bot usa **Ctrl+C**; reinicia con la misma configuración y custodia. La vinculación y los permisos se gestionan en **Mi perfil → Telegram**. Los borradores vencen a los 15 minutos y ningún movimiento se registra sin confirmación explícita.
-
-`pnpm telegram:setup` es solo para una instalación nueva: conserva y rechaza una configuración existente. `pnpm telegram:recovery` muestra conteos sin cambiar datos; la invalidación tras restaurar copias requiere mantenimiento con el gateway deshabilitado y confirmación explícita. No ofrece disponibilidad continua ni requiere servicios de pago.
+La documentación de planificación, evidencias y cierre se mantiene privadamente en `docs/`, excluida de Git por decisión del proyecto. Este README y las configuraciones versionadas constituyen la documentación pública del repositorio.
 
 ## Estado y alcance
 
 La funcionalidad actual incluye autenticación, cuentas, categorías, movimientos, transferencias, correcciones trazables, reporting, deudas, gastos fijos y gestión de datos personales. El desarrollo sigue una estrategia de integración frecuente con **Conventional Commits**.
 
-La aplicación no incluye conexión bancaria, cambio de divisas, cobros automáticos, OCR ni funciones de IA. Los próximos pasos de endurecimiento, recuperación, capacidad y preparación del registro público están recogidos en la [hoja de ruta](docs/product/ROADMAP.md).
+La aplicación no incluye conexión bancaria, cambio de divisas, cobros automáticos, OCR ni funciones de IA. El cierre cubre el despliegue personal aprobado. La eliminación habilitada, nuevas pruebas de carga, ampliaciones funcionales y una operación comercial multiusuario requieren su propia revisión; no se declaran probadas por este cierre.
 
 ## Autor
 

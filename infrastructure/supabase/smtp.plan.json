@@ -1,0 +1,93 @@
+{
+  "status": "deployed_s1_validated",
+  "project_ref": "mkzclztzyqdmftesnwcw",
+  "global_gate": "completed",
+  "automatic_apply_enabled": false,
+  "custom_smtp_enabled": true,
+  "public_signup_enabled": true,
+  "selected_provider": "gmail_personal",
+  "reported_remote_state": {
+    "source": "user_confirmation",
+    "reported_on": "2026-11-17",
+    "smtp_applied": true,
+    "authentication": "application_password",
+    "templates_pasted": [
+      "confirmation",
+      "recovery",
+      "email_change"
+    ],
+    "remote_read_back_performed": false,
+    "delivery_validated": false,
+    "security_settings_verified": false,
+    "site_url_verified": false,
+    "historical_snapshot": "Original manual configuration report before S1; later observed validation is in s1_validation."
+  },
+  "sender_name": "Finzi",
+  "sender_email": "",
+  "private_fields_note": "Sender address is intentionally omitted. Signup and canonical URLs reflect the authorized Phase 8 readback; the original manual report below is historical.",
+  "credentials_storage": "Supabase Auth SMTP settings only; never Vercel, Cloudflare, Git or browser",
+  "candidates": {
+    "gmail_personal": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "tls": "STARTTLS with certificate validation",
+      "username_source": "Exact controlled Gmail sender address",
+      "password_source": "Dedicated app password; 2-Step Verification remains enabled",
+      "domain_purchase_required": false
+    },
+    "brevo_free": {
+      "host": "smtp-relay.brevo.com",
+      "port": 587,
+      "tls": "STARTTLS with certificate validation",
+      "username_source": "Login field from Brevo SMTP dashboard, not necessarily account email",
+      "password_source": "SMTP key, not API key",
+      "sender_condition": "Verified mailbox, transactional activation and review of provider rewrite for freemail domains"
+    }
+  },
+  "auth_invariants": {
+    "email_confirmation_required": true,
+    "secure_email_change": true,
+    "secure_password_change": true,
+    "otp_expiry_seconds": 3600,
+    "minimum_resend_seconds": 60
+  },
+  "proposed_pilot_limits_not_applied": {
+    "auth_email_requests_per_hour": 10,
+    "controlled_daily_email_budget": 30
+  },
+  "site_url": "https://finzi-beta.vercel.app",
+  "redirect_allow_list": [
+    "https://finzi-beta.vercel.app/auth/confirm"
+  ],
+  "templates": {
+    "confirmation": {
+      "subject": "Confirma tu cuenta en Finzi",
+      "path": "supabase/templates/confirmation.html"
+    },
+    "recovery": {
+      "subject": "Recupera tu acceso a Finzi",
+      "path": "supabase/templates/recovery.html"
+    },
+    "email_change": {
+      "subject": "Confirma el cambio de correo en Finzi",
+      "path": "supabase/templates/email-change.html"
+    }
+  },
+  "s1_validation": {
+    "source": "user_acceptance_and_sanitized_runtime_evidence",
+    "accepted_on": "2026-11-17",
+    "registration_confirmation_validated": true,
+    "recovery_password_change_validated": true,
+    "new_password_login_validated": true,
+    "financial_impact_zero": true,
+    "report": "docs/deployment/32-PHASE7-S1-CLOSURE.md",
+    "spf_dkim_dmarc_reviewed": false,
+    "production_delivery_validated": false
+  },
+  "deployment": {
+    "origin": "https://finzi-beta.vercel.app",
+    "auth_configuration_verified": true,
+    "source": "phase8_stage2_readback",
+    "closure_on": "2026-11-18"
+  }
+}

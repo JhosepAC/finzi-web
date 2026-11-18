@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "finzi-deletion-staging",
+  "main": "deletion-worker/worker.ts",
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "triggers": {
+    "crons": [
+      "0 * * * *"
+    ]
+  },
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "DELETION_ENABLED": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "DELETION_MANIFESTS",
+      "database_name": "finzi-deletion-manifests-staging",
+      "database_id": "bca8d6c5-b08f-4af8-b0ee-a3c675fefb5b",
+      "migrations_dir": "infrastructure/deletion"
+    }
+  ],
+  "account_id": "218a72f885b0cb32352b3c54a778348c"
+}

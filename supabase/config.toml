@@ -76,6 +76,10 @@ content_path = "./supabase/templates/confirmation.html"
 subject = "Recupera tu acceso a Finzi"
 content_path = "./supabase/templates/recovery.html"
 
+[auth.email.template.email_change]
+subject = "Confirma el cambio de correo en Finzi"
+content_path = "./supabase/templates/email-change.html"
+
 [auth.sms]
 enabled = false
 

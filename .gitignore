@@ -50,3 +50,18 @@ Thumbs.db
 finzi-datos-*.json
 finzi-movimientos-*.csv
 finzi-comprobante-*.json
+
+# Cloudflare: generated bundles, local bindings and credentials
+.open-next/
+.wrangler/
+.cloudflare-bundle/
+.vercel/
+.dev.vars*
+!.dev.vars.example
+
+# Isolated hosted configuration state
+infrastructure/supabase/supabase/.temp/
+infrastructure/supabase/supabase/.branches/
+
+# Derived cloud migration workspace (sources stay immutable)
+.staging-migrations/

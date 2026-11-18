@@ -1,0 +1,46 @@
+name: Checks
+
+on:
+  push:
+    branches: [main, deployment/staging]
+  pull_request:
+    branches: [main, deployment/staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      WRANGLER_SEND_METRICS: "false"
+      WRANGLER_WRITE_LOGS: "false"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm infra:check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm exec wrangler deploy --config wrangler.telegram.jsonc --dry-run --outdir .cloudflare-bundle/telegram
+      - run: pnpm exec wrangler deploy --config wrangler.deletion.jsonc --dry-run --outdir .cloudflare-bundle/deletion
+      # No cloud credentials, deployments, remote migrations or financial tests.
+      # Next SSR targets Vercel; independent Telegram/deletion workers target Cloudflare.

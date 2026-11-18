@@ -50,8 +50,8 @@ describe("A-07 transferencias y reemplazos reales", () => {
   it("reintentos concurrentes reutilizan dos partidas y rechazan cambio de dirección/importe", async () => {
     const request = crypto.randomUUID(); const results = await Promise.all([transfer(a, target.id, { p_request_id: request, p_amount: "0.10" }), transfer(a, target.id, { p_request_id: request, p_amount: "0.10" })]);
     expect(results.map((r) => r.error)).toEqual([null, null]); expect(results[0].data.id).toBe(results[1].data.id);
-    expect((await transfer(a, target.id, { p_request_id: request, p_amount: "0.20" })).error?.code).toBe("40001");
-    expect((await transfer(a, a.account.id, { p_request_id: request, p_account_id: target.id, p_amount: "0.10" })).error?.code).toBe("40001");
+    expect((await transfer(a, target.id, { p_request_id: request, p_amount: "0.20" })).error?.code).toBe("PT409");
+    expect((await transfer(a, a.account.id, { p_request_id: request, p_account_id: target.id, p_amount: "0.10" })).error?.code).toBe("PT409");
     expect(sql(a.uid, `select count(*) from finance.transaction_entries where transaction_id='${results[0].data.id}'`)).toContain("2");
   });
   it("rechaza cuenta igual, ajena, cruce PEN/USD, archivo y fechas previas a cualquiera de las aperturas", async () => {
@@ -104,13 +104,13 @@ describe("A-07 transferencias y reemplazos reales", () => {
     const x = await setup(), original = await post(x), request = crypto.randomUUID();
     const first = await replace(x, original.data.id, { p_request_id: request }); expect(first.error).toBeNull();
     expect((await replace(x, first.data.id)).error).toBeNull(); const replay = await replace(x, original.data.id, { p_request_id: request }); expect(replay.error).toBeNull(); expect(replay.data).toEqual({ id: first.data.id, status: "void" });
-    expect((await replace(x, original.data.id, { p_request_id: request, p_reason: "Otro motivo" })).error?.code).toBe("40001");
-    expect((await post(x, { p_request_id: request, p_amount: "30", p_description: "Ingreso corregido" })).error?.code).toBe("40001");
+    expect((await replace(x, original.data.id, { p_request_id: request, p_reason: "Otro motivo" })).error?.code).toBe("PT409");
+    expect((await post(x, { p_request_id: request, p_amount: "30", p_description: "Ingreso corregido" })).error?.code).toBe("PT409");
   });
   it("dos correcciones concurrentes admiten un solo sucesor, mientras el reintento idéntico confirma el mismo", async () => {
     const x = await setup(), original = await post(x);
     const results = await Promise.all([replace(x, original.data.id), replace(x, original.data.id, { p_amount: "40" })]);
-    expect(results.filter((r) => !r.error)).toHaveLength(1); expect(results.find((r) => r.error)?.error?.code).toBe("40001");
+    expect(results.filter((r) => !r.error)).toHaveLength(1); expect(results.find((r) => r.error)?.error?.code).toBe("PT409");
     expect((await read(x)).data.total_count).toBe(2);
     const next = results.find((r) => !r.error)!.data.id, request = crypto.randomUUID();
     const retry = await Promise.all([replace(x, next, { p_request_id: request }), replace(x, next, { p_request_id: request })]); expect(retry.map((r) => r.error)).toEqual([null, null]); expect(retry[0].data.id).toBe(retry[1].data.id);
@@ -118,7 +118,7 @@ describe("A-07 transferencias y reemplazos reales", () => {
   it("carrera anular/corregir nunca deja dos registros vigentes ni revierte un sucesor", async () => {
     const x = await setup(), original = await post(x);
     const [correction, annul] = await Promise.all([replace(x, original.data.id), x.c.schema("api").rpc("void_movement", { p_id: original.data.id, p_expected_version: 1, p_reason: "No ocurrió" })]);
-    expect(annul.error).toBeNull(); if (correction.error) { expect(correction.error.code).toBe("40001"); expect((await balances(x))[x.account.id]).toBe("10000"); } else { expect((await balances(x))[x.account.id]).toBe("13000"); }
+    expect(annul.error).toBeNull(); if (correction.error) { expect(correction.error.code).toBe("PT409"); expect((await balances(x))[x.account.id]).toBe("10000"); } else { expect((await balances(x))[x.account.id]).toBe("13000"); }
     expect((await detail(x, original.data.id)).data.status).toBe("void");
   });
   it("aislamiento en detalle, corrección y destino: usuario ajeno y anónimo no leen ni escriben", async () => {
@@ -149,7 +149,7 @@ describe("A-07 transferencias y reemplazos reales", () => {
   });
   it("categoría archivada, motivo vacío y versión obsoleta no anulan el original", async () => {
     const x = await setup(), original = await post(x);
-    expect((await replace(x, original.data.id, { p_reason: " " })).error?.code).toBe("23514"); expect((await replace(x, original.data.id, { p_expected_version: 2 })).error?.code).toBe("40001");
+    expect((await replace(x, original.data.id, { p_reason: " " })).error?.code).toBe("23514"); expect((await replace(x, original.data.id, { p_expected_version: 2 })).error?.code).toBe("PT409");
     expect((await replace(x, original.data.id, { p_category_id: x.expense.id })).error?.code).toBe("23514");
     expect((await detail(x, original.data.id)).data.status).toBe("posted");
   });

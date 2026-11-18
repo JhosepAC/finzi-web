@@ -8,5 +8,5 @@
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules", ".agents", ".codex", ".impeccable", ".taste-skill"]
+  "exclude": ["docs", ".staging-migrations", ".vercel", ".open-next", ".wrangler", ".cloudflare-bundle", "node_modules", ".agents", ".codex", ".impeccable", ".taste-skill"]
 }

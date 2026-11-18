@@ -1,0 +1,21 @@
+select jsonb_build_object(
+ 'migrations',(select count(*) from supabase_migrations.schema_migrations),
+ 'cloud_enabled',(select cloud_enabled from ops.deletion_runtime_settings where singleton),
+ 'cloud_jobs',(select count(*) from ops.cloud_deletion_jobs),
+ 'cloud_peers',(select count(*) from ops.deletion_transport_peers),
+ 'active_deletion_leases',(select count(*) from ops.deletion_receipts where lease_until>clock_timestamp()),
+ 'enabled_telegram_bots',(select count(*) from telegram_private.transport_bots where enabled),
+ 'processable_telegram_events',(select count(*) from telegram_private.transport_events e join telegram_private.transport_bots b using(bot_id) where b.enabled and e.state in('pending','processing','ready','delivering')),
+ 'active_telegram_leases',(select count(*) from telegram_private.transport_events where lease_until>clock_timestamp()),
+ 'unsafe_rls',(select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('finance','ops','telegram_private') and c.relkind='r' and not(n.nspname='finance' and c.relname='currencies') and not(c.relrowsecurity and c.relforcerowsecurity)),
+ 'gateway_memberships',(select count(*) from pg_auth_members m join pg_roles r on r.oid=m.member where r.rolname='finzi_deletion_gateway'),
+ 'gateway_tables',(select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('finance','ops','telegram_private') and c.relkind='r' and has_table_privilege('finzi_deletion_gateway',c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')),
+ 'gateway_api',(select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='api' and has_function_privilege('finzi_deletion_gateway',p.oid,'EXECUTE')),
+ 'gateway_functions',(select jsonb_agg(n.nspname||'.'||p.proname order by p.proname) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in('finance','api','ops','telegram_private') and has_function_privilege('finzi_deletion_gateway',p.oid,'EXECUTE')),
+ 'gateway_unsafe',(select rolsuper or rolbypassrls or rolinherit or rolcreaterole or rolcreatedb or rolreplication from pg_roles where rolname='finzi_deletion_gateway'),
+ 'unsafe_definers',(select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in('api','finance','ops','telegram_private') and p.prosecdef and not(coalesce(p.proconfig,'{}') @> array['search_path=""'])),
+ 'auth_flow_user_id_type',(select format_type(atttypid,atttypmod) from pg_attribute where attrelid='auth.flow_state'::regclass and attname='user_id' and not attisdropped),
+ 'storage_policy_dependencies',(select jsonb_agg(distinct pn.nspname||'.'||f.proname order by pn.nspname||'.'||f.proname) from pg_policy p join pg_depend d on d.classid='pg_policy'::regclass and d.objid=p.oid and d.refclassid='pg_proc'::regclass join pg_proc f on f.oid=d.refobjid join pg_namespace pn on pn.oid=f.pronamespace where p.polrelid='storage.objects'::regclass and p.polname like 'category_images_%'),
+ 'migration_operator_worker_membership',exists(select 1 from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles u on u.oid=m.member where r.rolname='finzi_deletion_worker' and u.rolname='postgres'),
+ 'operator_grants',(select jsonb_agg(jsonb_build_object('role',r.rolname,'grantor',g.rolname,'admin',m.admin_option,'inherit',m.inherit_option,'set',m.set_option)) from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles u on u.oid=m.member join pg_roles g on g.oid=m.grantor where r.rolname='finzi_deletion_worker' and u.rolname='postgres')
+) as audit;

@@ -1,0 +1,45 @@
+# Upload only the web application. Worker runtimes stay on Cloudflare.
+telegram-bot/
+telegram-webhook/
+deletion-worker/
+/infrastructure/
+supabase/
+scripts/
+tests/
+vitest*.ts
+playwright.config.ts
+open-next.config.ts
+wrangler*.jsonc
+
+# Credentials, private documentation and local provider state
+.env*
+.dev.vars*
+*.pem
+*.key
+docs/
+AGENTS.md
+PRODUCT.md
+.git/
+.github/
+.vercel/
+.wrangler/
+.staging-migrations/
+.agents/
+.codex/
+.codegraph/
+.impeccable/
+.taste-skill/
+
+# Dependencies and generated output are rebuilt by Vercel
+node_modules/
+.next/
+.open-next/
+.cloudflare-bundle/
+out/
+build/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+*.log
+*.tsbuildinfo

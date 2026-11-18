@@ -1,0 +1,138 @@
+[
+  {
+    "file": "20261113000100_identity_profiles.sql",
+    "sha256_lf": "c92d6f6ffaa87576ee49562fc6eeba13ee723ba976cffff148725cb39fc06e82"
+  },
+  {
+    "file": "20261114000100_profile_onboarding.sql",
+    "sha256_lf": "b25d989d69c9c0cca119a5921eb73a2aa641556e2fff2e42f085fdb132891760"
+  },
+  {
+    "file": "20261114000200_accounts.sql",
+    "sha256_lf": "231eb8c07e26e2ff476e727905aaa6b4063bdbf4050d3831297f3a98612e0445"
+  },
+  {
+    "file": "20261114000300_account_identity.sql",
+    "sha256_lf": "9def9ef5c39475113e262d74e952c059f28dead8a77303d4d575764cc527395d"
+  },
+  {
+    "file": "20261114000400_account_request_scope.sql",
+    "sha256_lf": "e5ea2b758fdaf5e917c5d60443f17ca7f0380328581eee335f63fb625e0963f7"
+  },
+  {
+    "file": "20261114000500_personal_categories.sql",
+    "sha256_lf": "26536fca4d719119d00e153741d5f5b07d2f68c01e3f0ab028794f302272eded"
+  },
+  {
+    "file": "20261114000600_real_income_expenses.sql",
+    "sha256_lf": "148cc5099b1f9efeefab62888cc3d04da9be0c310781985da7d099ae0d6eb336"
+  },
+  {
+    "file": "20261114000700_ledger_commit_executor.sql",
+    "sha256_lf": "6ce00b1461118f55c8c581d79aa0f3d85d23b00a79973efd6d1c33e25fedd294"
+  },
+  {
+    "file": "20261114000800_transfers_replacements.sql",
+    "sha256_lf": "03d01deda4fac7917e21f13553613043a111137ad0a488c6e51bde010facd80a"
+  },
+  {
+    "file": "20261114000900_replacement_constraint_alias.sql",
+    "sha256_lf": "5af1cb9410d0c917f60f2d1ac5f484164bfbde7dfb41161d1ccd5e5430b5a94c"
+  },
+  {
+    "file": "20261114001000_real_reporting.sql",
+    "sha256_lf": "863fc1c70d0513a999178bd2c9f2796dcaeaaf74ccb8476ebab33d02aa5a5dc6"
+  },
+  {
+    "file": "20261114001100_profile_security.sql",
+    "sha256_lf": "2c82fa32eccc7b3d8a5770f6c419653aac4b810b62f40b96afe26436222293ed"
+  },
+  {
+    "file": "20261114001200_data_export_deletion.sql",
+    "sha256_lf": "e4a8c63b3fde003294645d4a21ea3f3e6395e4ad2d19b8bb8e419269bdb6accd"
+  },
+  {
+    "file": "20261114001300_ordered_deletion_tracking.sql",
+    "sha256_lf": "40534f1f972c05dd7ac37619ceb789306e8e5e29220ea09ed037fb23f4f2e4d1"
+  },
+  {
+    "file": "20261114001400_portability_metadata.sql",
+    "sha256_lf": "d2dd83d54cfa5b94ce50c61ecdc5837b22240ddd71d9a4c217842c7eebbdb756"
+  },
+  {
+    "file": "20261115000100_debts.sql",
+    "sha256_lf": "16cabee24a1b6428a08753d020014c90447285d86e76982e92f72f9e3006777a"
+  },
+  {
+    "file": "20261115000200_debt_portability_cleanup.sql",
+    "sha256_lf": "5ab6dd8dc606b8990eae92cd5f71b8d542511da21394b972eb4ad37a216eb1ff"
+  },
+  {
+    "file": "20261115000300_debt_snapshot.sql",
+    "sha256_lf": "51ec013de1a48970157ad283cfc514e44b28b1623b6d95df2801f3069e71caec"
+  },
+  {
+    "file": "20261115000400_debt_read_projection.sql",
+    "sha256_lf": "e0d784774e555304ab4e98455852e96cad6eb420d6cdc3cea456f8e7b36f1c6b"
+  },
+  {
+    "file": "20261115120000_category_management.sql",
+    "sha256_lf": "9b18546c51d8a6b2cc2b8d43e99d348e38c1c286fd2c4d75b7e3f968b0d67fda"
+  },
+  {
+    "file": "20261115150000_financial_statistics.sql",
+    "sha256_lf": "f24a9eac9a9d18a3fa1768480ae2f7b7cfca2314cce9875f1fff3e3cdb57acc4"
+  },
+  {
+    "file": "20261115160000_integrated_personal_export.sql",
+    "sha256_lf": "b1d7e0c9b62ba5727569264ba93b2450b81d7a90f083e712bda2ba33839622b6"
+  },
+  {
+    "file": "20261115170000_account_deletion.sql",
+    "sha256_lf": "b1a88095672af689f7061146b14ad18d961e6c0a4de3a97a5aeba3d3c7457f4e"
+  },
+  {
+    "file": "20261115180000_movement_deletion.sql",
+    "sha256_lf": "177597a2494c25df0bd58dc2970f67a5143e3ba38a10e0febce764d0b51d44c1"
+  },
+  {
+    "file": "20261115190000_used_category_deletion.sql",
+    "sha256_lf": "f0d529c89593eafdcef399c2a59b7116ef2ddf1e64b03cb825efb9fb8649dca1"
+  },
+  {
+    "file": "20261115200000_reuse_deleted_category_names.sql",
+    "sha256_lf": "fd436a7ef7deafe5898c95569b580259429d9ec4a3b25a1fe165de4a66e9f120"
+  },
+  {
+    "file": "20261116000100_fixed_expenses.sql",
+    "sha256_lf": "6fd437b1043f2ece2ca04248bbf8588b3af82112945466d635f3ad9c7fe0370d"
+  },
+  {
+    "file": "20261116000200_telegram_foundation.sql",
+    "sha256_lf": "5d5c0583e09e3b80a9e34729f73ce8c95cd9285cfb5407e3216b35f4937344fd"
+  },
+  {
+    "file": "20261116000300_telegram_privacy.sql",
+    "sha256_lf": "c9277d931e688de4b832cb3a5df66d9e0268a3286fc1aac766f2be8053702fb5"
+  },
+  {
+    "file": "20261116000400_telegram_runtime.sql",
+    "sha256_lf": "d06f14513cb29db5c068070c989153c264f50cabbfd2578876924ab769e22288"
+  },
+  {
+    "file": "20261116000500_telegram_conversations.sql",
+    "sha256_lf": "6764ebb4839ca7cd1e2eff26414177762a7ed2d3c084636dfb4663d93b63d6e3"
+  },
+  {
+    "file": "20261116000600_telegram_confirmation.sql",
+    "sha256_lf": "f5ce579923e64d14e1fca9673c612e10ff2e55c0a679de7c6b1a270069e8f990"
+  },
+  {
+    "file": "20261116000700_telegram_queries.sql",
+    "sha256_lf": "980b24ed59a1b8876d0db78ea181bdcd4316edc2b054dcdf77c4f2329d789781"
+  },
+  {
+    "file": "20261116000800_telegram_cleanup_lock.sql",
+    "sha256_lf": "751020879bb635a1d90434885cf9b133c04acc9cf95fe64c09973c5b62dd70fa"
+  }
+]

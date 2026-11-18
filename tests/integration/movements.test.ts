@@ -38,7 +38,7 @@ describe("ledger de ingresos/gastos: PostgreSQL, atomicidad y seguridad", () => 
   it("reintentos concurrentes idénticos solo confirman una partida/evento", async () => {
     const request = crypto.randomUUID(); const results = await Promise.all([post(a, { p_request_id: request, p_amount: "0.10" }), post(a, { p_request_id: request, p_amount: "0.10" })]);
     expect(results.every((r) => !r.error)).toBe(true); expect(results[0].data.id).toBe(results[1].data.id);
-    expect((await post(a, { p_request_id: request, p_amount: "0.20" })).error?.code).toBe("40001");
+    expect((await post(a, { p_request_id: request, p_amount: "0.20" })).error?.code).toBe("PT409");
     expect((await post(a, { p_amount: "0.20" })).error).toBeNull(); expect((await accounts(a)).data[0].balance_minor).toBe("13030");
     expect(sql(a.uid, `select count(*) from finance.transaction_events where transaction_id='${results[0].data.id}'`)).toContain("\n1\n");
   });

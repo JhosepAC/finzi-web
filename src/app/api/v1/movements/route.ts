@@ -59,7 +59,8 @@ async function write(request: NextRequest, mode: "create" | "void" | "replace" |
       ...(correction ? { p_id: correction.id, p_expected_version: correction.expectedVersion, p_reason: correction.reason, p_kind: correction.kind, p_destination_id: "destinationId" in correction ? correction.destinationId : null, p_category_id: "categoryId" in correction ? correction.categoryId : null }
         : d.kind === "transfer" ? { p_destination_id: d.destinationId } : { p_kind: d.kind, p_category_id: d.categoryId }),
     }) : await rpc.rpc(mode === "delete" ? "delete_movement" : "void_movement", { p_id: d.id, p_expected_version: d.expectedVersion, p_reason: d.reason });
-    if (result.error?.code === "40001") return reply(409, { ok: false, code: "CONFLICT", message: "Este intento ya confirmó otros datos o el movimiento cambió. Actualiza antes de continuar." });
+    if (result.error?.code === "PT409" || (result.error?.code === "40001" && (mode === "void" || mode === "delete"))) return reply(409, { ok: false, code: "CONFLICT", message: "Este intento ya confirmó otros datos o el movimiento cambió. Actualiza antes de continuar." });
+    if (result.error?.code === "40001") return reply(503, { ok: false, code: "RETRYABLE_TRANSACTION", message: "No pudimos confirmar el guardado por un conflicto temporal. Conserva este intento y reinténtalo con los mismos datos." });
     if (result.error?.code === "P0002") return reply(404, { ok: false, message: "No se encontró el movimiento, la cuenta o la categoría." });
     if (result.error?.code === "42501") return reply(403, { ok: false, message: "Completa tu perfil para registrar movimientos." });
     if (result.error?.code === "54000") return reply(409, { ok: false, message: "Alcanzaste el límite inicial de 10000 movimientos, incluidos los archivados." });
