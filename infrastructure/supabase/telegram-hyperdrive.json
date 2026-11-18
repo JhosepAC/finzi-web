@@ -1,0 +1,10 @@
+{
+  "id": "5350fb7d88f941ab82f0d93da36f778e",
+  "name": "finzi-telegram-staging",
+  "ca_certificate_id": "e0b4f615-b144-4147-850f-ec9bee42be6b",
+  "sslmode": "verify-full",
+  "caching_disabled": true,
+  "origin_connection_limit": 5,
+  "origin_port": 6543,
+  "project_ref": "mkzclztzyqdmftesnwcw"
+}

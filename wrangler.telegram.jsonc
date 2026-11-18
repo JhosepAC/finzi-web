@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "finzi-telegram-staging",
+  "main": "telegram-webhook/worker.ts",
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [],
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  },
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "TELEGRAM_WEBHOOK_BOT_ID": "9032264313",
+    "TELEGRAM_WEBHOOK_BOT_USERNAME": "FinziAssistantBot",
+    "TELEGRAM_WEBHOOK_URL": "https://finzi-telegram-staging.jhosep-ac.workers.dev/telegram/webhook"
+  },
+  "hyperdrive": [
+    {
+      "binding": "TELEGRAM_DB",
+      "id": "5350fb7d88f941ab82f0d93da36f778e"
+    }
+  ],
+  "account_id": "218a72f885b0cb32352b3c54a778348c"
+}

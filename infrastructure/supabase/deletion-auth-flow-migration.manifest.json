@@ -1,0 +1,8 @@
+[
+  {
+    "file": "supabase/migrations/20261117000200_deletion_auth_flow_cleanup.sql",
+    "sha256_lf": "53defa6db7214a09036a65b1fd88276bd38a8338d112be3b5c836fd5519b91a5",
+    "scope": "phase7-local-only-not-applied-remotely",
+    "reason": "Purge orphaned Auth PKCE flow_state only after identity removal and under the subject receipt lease; preserve final zero-data verification."
+  }
+]

@@ -1,0 +1,7 @@
+# Local workerd preview only. Blank values fail closed.
+# Copy to .dev.vars.staging (ignored). Never use production credentials.
+APP_URL=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+TELEGRAM_BOT_USERNAME=
+# No bot, database admin, deletion, or SMTP credentials belong in the web Worker.

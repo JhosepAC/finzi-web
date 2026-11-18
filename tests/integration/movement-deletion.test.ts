@@ -81,7 +81,10 @@ describe("eliminación de movimientos con PostgreSQL y roles reales", () => {
     const movement = (await post(a)).data;
     expect((await remove(a, movement.id, 2)).error?.code).toBe("40001");
     const results = await Promise.all([remove(a, movement.id), a.c.schema("api").rpc("replace_movement", { p_request_id: crypto.randomUUID(), p_id: movement.id, p_expected_version: 1, p_reason: "Carrera", p_kind: "income", p_account_id: a.account.id, p_destination_id: null, p_category_id: a.income.id, p_amount: "25", p_description: "Sucesor concurrente", p_note: "", p_occurred_at: null })]);
-    expect(results.filter((result) => !result.error)).toHaveLength(1); expect(results.find((result) => result.error)?.error?.code).toBe("40001");
+    expect(results.filter((result) => !result.error)).toHaveLength(1);
+    // Migration 36 changed replace_movement's permanent version conflict only.
+    if (results[0].error) expect(results[0].error.code).toBe("40001");
+    if (results[1].error) expect(results[1].error.code).toBe("PT409");
   });
   it("fallo inducido en la marca revierte anulación, partidas y saldos juntos", async () => {
     const movement = (await post(b)).data;

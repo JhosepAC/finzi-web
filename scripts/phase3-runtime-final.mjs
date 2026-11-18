@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import {readFileSync,writeFileSync,existsSync,renameSync} from "node:fs";
+import {resolve} from "node:path";
+import {execFileSync} from "node:child_process";
+import {unstable_dev} from "wrangler";
+import {openDatabase} from "../telegram-webhook/database.ts";
+import {runBatch} from "../telegram-webhook/processor.ts";
+import {runSupabase} from "./supabase-cli.mjs";
+assert.equal(process.env.WRANGLER_WRITE_LOGS,"false");assert.equal(process.env.WRANGLER_SEND_METRICS,"false");
+assert.equal(execFileSync("git",["branch","--show-current"],{encoding:"utf8"}).trim(),"deployment/staging");
+assert.equal(JSON.parse(readFileSync("infrastructure/supabase/staging-load-gate.json","utf8")).status,"paused");
+const p=readFileSync(".staging-migrations/phase3-completion-cohort-path.txt","utf8"),approved=JSON.parse(readFileSync(p+".consumed","utf8"));
+const prior=JSON.parse(readFileSync(`docs/deployment/evidence/phase3-controlled-runtime-validation-${approved.run_id}.json`,"utf8"));
+const terminal=JSON.parse(readFileSync(`docs/deployment/evidence/phase3-terminal-acceptance-${approved.run_id}.json`,"utf8"));assert.equal(terminal.status,"passed");assert(prior.results.slice(0,15).every(r=>r.status==="passed"));
+const marker=`.staging-migrations/phase3-runtime-${prior.run}.json`;
+const permit=JSON.parse(readFileSync(marker,"utf8"));assert.equal(permit.status,"approved");assert.equal(permit.run,prior.run);assert(!existsSync(marker+".consumed"));renameSync(marker,marker+".consumed");
+process.loadEnvFile(".env.telegram-webhook-staging.local");assert.equal(process.env.TELEGRAM_WEBHOOK_BOT_ID,"970000003");
+const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>k.startsWith("TELEGRAM_WEBHOOK_")));env.TELEGRAM_WEBHOOK_BOT_ID=prior.bot;env.TELEGRAM_WEBHOOK_BOT_TOKEN=prior.bot+":synthetic_test_only";
+const transport=new URL(env.TELEGRAM_WEBHOOK_DATABASE_URL);transport.port="6543";env.TELEGRAM_WEBHOOK_DATABASE_URL=transport.toString();
+const origin=new URL(env.TELEGRAM_WEBHOOK_DATABASE_URL);origin.port="6543";origin.searchParams.set("sslmode","verify-full");origin.searchParams.set("sslrootcert",resolve("infrastructure/supabase/prod-ca-2021.crt"));
+process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_TELEGRAM_DB=origin.toString();
+const vars=Object.fromEntries(Object.entries(env).filter(([k])=>k!=="TELEGRAM_WEBHOOK_DATABASE_URL"));
+const result={run:prior.run,bot:prior.bot,checks:[],published:false,financialOperations:0,realTelegramRequests:0};
+const output=`docs/deployment/evidence/phase3-runtime-final-${prior.run}.json`;
+const updateId=Date.now(),user=Number(String(updateId).slice(-10))*100+77;
+const event={update_id:updateId,message:{message_id:updateId,date:Math.floor(Date.now()/1000),from:{id:user,is_bot:false,first_name:"Synthetic"},chat:{id:user,type:"private"},text:"/start",entities:[{type:"bot_command",offset:0,length:6}]}};
+function row(){return JSON.parse(runSupabase(["db","query","--remote=mkzclztzyqdmftesnwcw","--read-only","--output-format","json",`select id,state,payload_ciphertext is not null as input_present,result_ciphertext is not null as output_present from telegram_private.transport_events where bot_id='${prior.bot}' and update_id=${updateId}`])).rows;}
+const launch=()=>unstable_dev("telegram-webhook/worker.ts",{config:"wrangler.telegram.jsonc",vars,port:0,local:true,persist:false,logLevel:"error",experimental:{disableExperimentalWarning:true,watch:false,disableDevRegistry:true}});
+const request=(worker,secret)=>worker.fetch("http://localhost/telegram/webhook",{method:"POST",headers:{"content-type":"application/json","X-Telegram-Bot-Api-Secret-Token":secret},body:JSON.stringify(event)});
+let worker,db;
+try{
+ assert.equal(Number(JSON.parse(runSupabase(["db","query","--remote=mkzclztzyqdmftesnwcw","--read-only","--output-format","json",`select count(*) as n from telegram_private.transport_events where bot_id='${prior.bot}' and state in ('pending','processing','ready','delivering')`])).rows[0].n),0);
+ worker=await launch();assert.equal((await request(worker,"wrong")).status,403);assert.equal((await request(worker,env.TELEGRAM_WEBHOOK_SECRET)).status,200);
+ const first=row();assert.equal(first.length,1);assert.equal(first[0].state,"pending");assert(first[0].input_present);result.checks.push("workerd_http200_after_durable_persistence_and_bad_secret_rejected");
+ await worker.stop();worker=undefined;
+ worker=await launch();assert.equal((await request(worker,env.TELEGRAM_WEBHOOK_SECRET)).status,200);assert.equal(row()[0].id,first[0].id);result.checks.push("workerd_restart_duplicate_same_durable_event");
+ await worker.stop();worker=undefined;
+ db=openDatabase(env.TELEGRAM_WEBHOOK_DATABASE_URL);await db.check();
+ const sender=async calls=>{assert.equal(calls.length,1);assert.equal(String(calls[0].payload.chat_id),String(user));};
+ assert.equal(await runBatch(db,env,"process",sender),true);assert.equal(row()[0].state,"ready");
+ assert.equal(await runBatch(db,env,"deliver",sender),true);assert.equal(row()[0].state,"done");assert(!row()[0].input_present&&!row()[0].output_present);result.checks.push("restart_recovery_separate_processor_and_outbox_stub_done");
+ result.status="passed";
+}catch{result.status="failed";process.exitCode=1;}finally{await worker?.stop();await db?.close();writeFileSync(output,JSON.stringify(result,null,2));console.log(JSON.stringify(result));}

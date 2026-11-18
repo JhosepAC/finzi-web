@@ -1,10 +1,12 @@
-import {syntheticTelegram} from "../helpers/telegram-runtime";
+import {syntheticTelegram} from "../helpers/telegram-webhook-runtime";
 import {test,expect} from "@playwright/test";
 import {randomBytes,createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {financialSession,localOrigin} from "../helpers/financial";
 const hash=(v:string)=>createHash("sha256").update(v).digest("hex");
 function sql(query:string,role="supabase_admin"){return execFileSync("docker",["exec","-i","supabase_db_finzi-auth","psql","-h","127.0.0.1","-U",role,"-d","postgres","-Atq","-v","ON_ERROR_STOP=1"],{input:query,encoding:"utf8",stdio:"pipe"}).trim();}
+let activeRuntime:ReturnType<typeof syntheticTelegram>|undefined;
+test.afterEach(async()=>{await activeRuntime?.close();activeRuntime=undefined;});
 test("Telegram: web authorization, explicit approval, revocation and responsive themes",async({page,context})=>{
  test.setTimeout(90000);
  expect((await context.request.get("/api/v1/integrations/telegram")).status()).toBe(401);
@@ -24,8 +26,8 @@ test("Telegram: web authorization, explicit approval, revocation and responsive 
  await page.goto("/profile");const panel=page.getByRole("region",{name:"Telegram",exact:true});
  await panel.getByRole("button",{name:"Generar enlace de Telegram",exact:true}).click();
  await expect(panel.getByRole("link",{name:"Abrir Telegram"})).toHaveAttribute("href",`https://t.me/finzi_fixture_bot?start=${challenge}`);
- const capability=randomBytes(32).toString("hex"),user="87001"+Math.floor(Math.random()*1000000);
- sql(`select telegram_private.claim_link('${challenge}','9001','${user}','${user}','${hash(capability)}');`,"finzi_telegram_gateway");
+ const user="87001"+Math.floor(Math.random()*1000000);
+ const telegram=syntheticTelegram(user);activeRuntime=telegram;await telegram.send(`/start ${challenge}`);
  await panel.getByRole("button",{name:"Actualizar conexión"}).click();
  await expect(panel.getByRole("button",{name:"Confirmar vinculación"})).toBeDisabled();
  await panel.getByRole("checkbox").check();await panel.getByRole("button",{name:"Confirmar vinculación"}).click();
@@ -36,17 +38,17 @@ test("Telegram: web authorization, explicit approval, revocation and responsive 
  await panel.getByRole("checkbox",{name:"Permitir registrar los movimientos que confirme"}).check();
  await panel.getByRole("button",{name:"Autorizar registro por Telegram"}).click();
  await expect(panel.getByRole("button",{name:"Desactivar registro"})).toBeVisible();
- expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canConfirm).toBe("true");
+ expect((await telegram.context())!.canConfirm).toBe("true");
  await page.getByRole("button",{name:"Cerrar notificación"}).click();
  await expect(panel.getByRole("button",{name:"Autorizar consultas por Telegram"})).toBeDisabled();
  await panel.getByRole("checkbox",{name:"Permitir consultar mis saldos y reportes"}).check();
  await panel.getByRole("button",{name:"Autorizar consultas por Telegram"}).click();
  await expect(panel.getByRole("button",{name:"Desactivar consultas"})).toBeVisible();
- expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canReport).toBe("true");
+ expect((await telegram.context())!.canReport).toBe("true");
  await page.getByRole("button",{name:"Cerrar notificación"}).click();
  const account=await context.request.post("/api/v1/accounts",{headers:{Origin:localOrigin},data:{requestId:crypto.randomUUID(),name:"Synthetic Telegram cash",type:"cash",currency:"PEN",openingBalance:"100"}});expect(account.status()).toBe(200);
  const categories=await context.request.post("/api/v1/categories",{headers:{Origin:localOrigin},data:{action:"initialize"}});expect(categories.status()).toBe(200);const expense=(await categories.json()).categories.find((c:{kind:string;parent_id:string|null})=>c.kind==="expense"&&!c.parent_id);
- const telegram=syntheticTelegram(capability,user);try{
+ {
   await new Promise(resolve=>setTimeout(resolve,1100));
   await telegram.send(`Gasté 25 soles en ${expense.name}`);expect(telegram.replies.at(-1)!.text).toContain("Sin registrar");
   const button=(label:string)=>telegram.replies.at(-1)!.reply_markup!.inline_keyboard.flat().find(b=>b.text===label)!.callback_data;
@@ -56,17 +58,17 @@ test("Telegram: web authorization, explicit approval, revocation and responsive 
   await telegram.send("/mes PEN");expect(telegram.replies.at(-1)!.text).toContain("Gastos: S/ 25.00");
   const overview=await context.request.get("/api/v1/overview?currency=PEN&period=month");expect(overview.status()).toBe(200);expect((await overview.json()).expense_minor).toBe("2500");
   const history=await context.request.get("/api/v1/movements?currency=PEN");expect(history.status()).toBe(200);expect((await history.json()).total_count).toBe(1);
- }finally{await telegram.close();}
+ }
  for(const theme of ["light","dark"]){await page.getByLabel("Tema de la interfaz").selectOption(theme);await page.setViewportSize({width:1440,height:1100});await page.mouse.move(0,0);await expect(panel).toHaveCSS("background-color",theme==="dark"?"rgb(23, 23, 23)":"rgb(255, 255, 255)");await panel.screenshot({path:`.impeccable/review/telegram-${theme}.png`});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await panel.screenshot({path:`.impeccable/review/telegram-${theme}-mobile.png`});}
  await panel.getByRole("button",{name:"Desactivar registro"}).click();
  await expect(panel.getByRole("button",{name:"Autorizar registro por Telegram"})).toBeDisabled();
- expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canConfirm).toBe("false");
+ expect((await telegram.context())!.canConfirm).toBe("false");
  await panel.screenshot({path:".impeccable/review/telegram-consent-dark-mobile.png"});
  await panel.getByRole("button",{name:"Desactivar consultas"}).click();
  await expect(panel.getByRole("button",{name:"Autorizar consultas por Telegram"})).toBeDisabled();
- expect(JSON.parse(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}');`,"finzi_telegram_gateway")).canReport).toBe("false");
+ expect((await telegram.context())!.canReport).toBe("false");
  await panel.getByRole("button",{name:"Desvincular Telegram"}).click();
  await expect(panel.getByRole("button",{name:"Generar enlace de Telegram",exact:true})).toBeVisible();
- const revoked=syntheticTelegram(capability,user);try{await revoked.send("/saldo");expect(revoked.replies.at(-1)!.text).toContain("Vincula tu cuenta");}finally{await revoked.close();}
- expect(sql(`select telegram_private.link_context('${capability}','9001','${user}','${user}') is null;`,"finzi_telegram_gateway")).toBe("t");
+ await telegram.send("/saldo");expect(telegram.replies.at(-1)!.text).toContain("Vincula tu cuenta");
+ expect(await telegram.context()).toBeNull();
 });

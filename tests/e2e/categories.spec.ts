@@ -108,7 +108,9 @@ test("plantillas propias no duplican ni reemplazan ediciones; carga fallida es r
   await expect(page.getByRole("heading", { name: "Tus categorías no están disponibles." })).toBeVisible(); await expect(page.getByText("Dale un lugar a cada gasto.")).toHaveCount(0); await page.unroute("**/api/v1/categories");
   await page.getByRole("button", { name: "Reintentar carga", exact: true }).click(); await expect(page.getByRole("button", { name: "Nueva categoría", exact: true })).toBeEnabled();
   await page.route("**/api/v1/categories", (route) => route.request().method() === "POST" ? route.fulfill({ status: 409, json: { ok: false, message: "El límite inicial es de 200 categorías, incluidas las archivadas." } }) : route.continue());
-  await page.getByRole("button", { name: "Usar categorías iniciales" }).click(); await expect(page.getByText("El límite inicial es de 200 categorías, incluidas las archivadas.")).toBeVisible(); await page.unroute("**/api/v1/categories");
+  await page.getByRole("button", { name: "Usar categorías iniciales" }).click(); await expect(page.getByText("El límite inicial es de 200 categorías, incluidas las archivadas.")).toBeVisible();
+  await page.getByRole("button", { name: "Cerrar notificación", exact: true }).click();
+  await page.unroute("**/api/v1/categories");
   await page.getByRole("button", { name: "Usar categorías iniciales" }).click(); await expect(page.getByRole("button", { name: "Usar categorías iniciales" })).toHaveCount(0);
   await page.getByRole("button", { name: "Editar categoría Alimentación" }).click(); const dialog = page.getByRole("dialog"); await dialog.getByLabel("Nombre de la categoría").fill("Comidas"); await dialog.getByRole("button", { name: "Guardar cambios" }).click(); await expect(dialog).not.toBeVisible();
   expect((await context.request.post("/api/v1/categories", { headers: { Origin: origin }, data: { action: "initialize" } })).status()).toBe(200);

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "supabase/migrations/20261117000100_cloud_deletion_worker.sql",
+    "sha256_lf": "8592653be8db2b35255669389a6453d4abf4443932bf4b76cf939d1d21b7fed9",
+    "scope": "phase4-local-only-not-applied-remotely"
+  },
+  {
+    "file": "infrastructure/deletion/0001_manifests.sql",
+    "sha256_lf": "ac25708ce65b4725e10e5dd0bd5a329ecf528d28a6400991579f35bbeed52caf",
+    "scope": "phase4-local-only-not-applied-remotely"
+  }
+]

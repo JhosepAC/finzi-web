@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const c = await client(); if (!c) return reply(401, { ok: false, message: "Tu sesión terminó. Inicia sesión de nuevo." });
     const result = await c.schema("api").rpc("fixed_expense_command", { p_command: parsed.data });
     const code = result.error?.code;
-    if (code === "40001") return reply(409, { ok: false, message: "El gasto fijo cambió o este intento ya confirmó otros datos. Actualiza antes de continuar." });
+    if (code === "PT409" || code === "40001") return reply(409, { ok: false, message: "El gasto fijo cambió o este intento ya confirmó otros datos. Actualiza antes de continuar." });
     if (code === "42501") return reply(403, { ok: false, message: "Completa tu perfil para gestionar gastos fijos." });
     if (code === "P0002") return reply(404, { ok: false, message: "No se encontró el gasto fijo o el pago. Actualiza los datos." });
     if (code === "54000") return reply(409, { ok: false, message: "Alcanzaste un límite inicial: 200 gastos fijos, 2000 pagos o 10000 movimientos, incluida su historia." });

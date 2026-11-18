@@ -1,0 +1,53 @@
+[
+  {
+    "file": "20261115180000_movement_deletion.sql",
+    "action": "defer-revoke",
+    "reason": "SQLSTATE 42501 statement 21: read_movements remains owned by app_executor after membership was revoked prematurely."
+  },
+  {
+    "file": "20261115190000_used_category_deletion.sql",
+    "action": "bounded-membership",
+    "reason": "Static same-cause audit: replaces app_executor-owned read_categories/delete_category without establishing migration membership."
+  },
+  {
+    "file": "20261116000300_telegram_privacy.sql",
+    "action": "advance-grant",
+    "reason": "Static same-cause audit: renames/moves app_executor-owned export_personal_data before original membership grant.",
+    "deferAppRevoke": true
+  },
+  {
+    "file": "20261116000100_fixed_expenses.sql",
+    "action": "fixed-expenses-ddl",
+    "reason": "SQLSTATE 42501 statement 37: target owner requires temporary CREATE on schema ops. Defer membership revoke through the following dynamic replacement of delete_category."
+  },
+  {
+    "file": "20261116000200_telegram_foundation.sql",
+    "action": "defer-function-acl-revoke",
+    "reason": "Managed PostgreSQL requires bounded migration membership until all owner-only REVOKE/GRANT statements finish. SQLSTATE 42501 confirmed in foundation statement 39.",
+    "deferAppRevoke": true
+  },
+  {
+    "file": "20261116000400_telegram_runtime.sql",
+    "action": "defer-function-acl-revoke",
+    "reason": "Managed PostgreSQL requires bounded migration membership until all owner-only REVOKE/GRANT statements finish. SQLSTATE 42501 confirmed in foundation statement 39.",
+    "deferAppRevoke": true
+  },
+  {
+    "file": "20261116000500_telegram_conversations.sql",
+    "action": "defer-function-acl-revoke",
+    "reason": "Managed PostgreSQL requires bounded migration membership until all owner-only REVOKE/GRANT statements finish. SQLSTATE 42501 confirmed in foundation statement 39.",
+    "deferAppRevoke": true
+  },
+  {
+    "file": "20261116000600_telegram_confirmation.sql",
+    "action": "defer-function-acl-revoke",
+    "reason": "Managed PostgreSQL requires bounded migration membership until all owner-only REVOKE/GRANT statements finish. SQLSTATE 42501 confirmed in foundation statement 39.",
+    "deferAppRevoke": true
+  },
+  {
+    "file": "20261116000700_telegram_queries.sql",
+    "action": "defer-function-acl-revoke",
+    "reason": "Managed PostgreSQL requires bounded migration membership until all owner-only REVOKE/GRANT statements finish. SQLSTATE 42501 confirmed in foundation statement 39.",
+    "deferAppRevoke": true
+  }
+]
